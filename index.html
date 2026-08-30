@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Manutenção GNL Brasil Logística - Sistema Integrado de Auditoria & Frota</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <style>
+    body { background-color: #f1f5f9; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .fade-in { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card-executive {
+      background-color: #ffffff;
+      border: 1px solid #a7f3d0; /* Emerald-200 */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border-radius: 0.75rem;
+    }
+  </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
+
+  <div id="login-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    
+    <div class="bg-white border border-emerald-200 rounded-2xl shadow-2xl max-w-md w-full p-8 fade-in text-center">
+
+      <!-- LOGO GNL BRASIL -->
+      <div class="flex justify-center mb-5">
+        <img src="Img/Logo Gnl Brasil.jpg" alt="Logo" onerror="this.style.display='none'">
+      </div>
+
+      <h2 class="text-2xl font-black text-slate-900 tracking-tight">
+        Gestão de Manutenção GNL Brasil Logística
+      </h2>
+
+      <p class="text-xs text-slate-500 mt-1 mb-6">
+        Acesso restrito ao Sistema de Gestão & Auditoria de Frota
+      </p>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
+            Usuário / Matrícula
+          </label>
+
+          <div class="relative">
+            <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+
+            <input
+              type="text"
+              id="login-user"
+              value="pcm.admin"
+              required
+              class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
+            Senha de Acesso
+          </label>
+
+          <div class="relative">
+            <i data-lucide="key-round" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+
+            <input
+              type="password"
+              id="login-pass"
+              placeholder="Digite a senha..."
+              required
+              class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+            >
+          </div>
+        </div>
+
+        <div id="login-error" class="hidden text-xs font-bold text-red-600 bg-red-50 border border-red-200 p-2 rounded text-center">
+          Senha incorreta! Tente novamente.
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center gap-2"
+        >
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          Entrar no Sistema
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <header class="bg-white border-b border-emerald-100 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+      
+      <div class="flex items-center gap-4 w-full md:w-auto">
+        <div id="logo-container" class="w-12 h-12 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
+          <img src="Img/Logo Gnl Brasil.jpg" alt="Logo Empresa" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';">
+          <i data-lucide="truck" class="w-6 h-6 text-emerald-600 hidden" id="logo-placeholder"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
+            Gestão de Manutenção GNL Brasil Logística <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Manaus & Maranhão</span>
+          </h1>
+          <p class="text-xs text-slate-500">Gestão Integrada de Frota, Preventivas e Auditoria</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+        <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 p-1.5 rounded-xl">
+          <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 ml-1"></i>
+          <span class="text-xs font-bold text-emerald-900">Unidade:</span>
+          <select id="global-unit-filter" onchange="filterByUnit()" class="bg-white border border-emerald-300 text-xs font-extrabold rounded-lg px-2 py-1 text-slate-800 outline-none cursor-pointer">
+            <option value="TODAS">🌐 Todas as Bases (AM + MA)</option>
+            <option value="AM">📍 Rio Preto / Manaus - AM</option>
+            <option value="MA">📍 Parnaíba - MA</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="text-right text-xs text-slate-500 hidden sm:block">
+            Hoje: <span id="current-date-display" class="font-bold text-emerald-700"></span>
+          </div>
+          <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition" title="Sair do Sistema">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
+
+    <nav class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
+      <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Visão Geral
+      </button>
+      <button onclick="switchTab('executive')" id="btn-tab-executive" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> Painel Diretoria
+      </button>
+      <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="calendar" class="w-4 h-4"></i> Calendário de Preventivas
+      </button>
+      <button onclick="switchTab('documents')" id="btn-tab-documents" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="file-text" class="w-4 h-4"></i> Documentação & Auditoria
+      </button>
+      <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="history" class="w-4 h-4"></i> Histórico Consolidado
+      </button>
+    </nav>
+
+    <section id="tab-dashboard" class="tab-content active fade-in space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card-executive p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Frota na Unidade</p>
+            <h3 class="text-3xl font-black text-slate-900 mt-1" id="kpi-total-fleet">0</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-cavalos-count">0</span> Cavalos | <span id="kpi-carretas-count">0</span> Carretas</p>
+          </div>
+          <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100"><i data-lucide="truck"></i></div>
+        </div>
+
+        <div class="card-executive p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Preventivas Mês</p>
+            <h3 class="text-3xl font-black text-emerald-600 mt-1" id="kpi-month-maint">0</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-maint-realized">0</span> Realizadas</p>
+          </div>
+          <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100"><i data-lucide="wrench"></i></div>
+        </div>
+
+        <div class="card-executive p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Aderência ao Plano</p>
+            <h3 class="text-3xl font-black text-blue-600 mt-1" id="kpi-adherence-rate">0%</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Programado vs Realizado</p>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-lg text-blue-600 border border-blue-100"><i data-lucide="target"></i></div>
+        </div>
+
+        <div class="card-executive p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Docs Alerta (&le; 15 dias)</p>
+            <h3 class="text-3xl font-black text-amber-600 mt-1" id="kpi-expiring-docs">0</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Pendências Urgentes</p>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-lg text-amber-600 border border-amber-100"><i data-lucide="alert-triangle"></i></div>
+        </div>
+      </div>
+
+      <div class="card-executive p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i data-lucide="bell" class="w-5 h-5 text-emerald-600"></i> Documentos em Atenção / Vencendo
+        </h2>
+        <div id="dashboard-critical-docs" class="space-y-3">
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-executive" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-emerald-900 to-slate-900 text-white border-none">
+        <div>
+          <span class="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Painel de Controle Executivo</span>
+          <h2 class="text-xl font-bold mt-1">Desempenho Operacional - Gestão de Manutenção GNL Brasil Logística</h2>
+          <p class="text-xs text-slate-300">Acompanhamento Real do Calendário de Manutenção Preventiva e Indicadores Porcentuais</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card-executive p-5">
+          <p class="text-xs font-bold text-slate-500 uppercase">Aderência Geral</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-3xl font-black text-emerald-600" id="exec-adherence-pct">0%</span>
+            <span class="text-xs text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded">Meta: &ge; 90%</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Cumprimento geral do cronograma.</p>
+        </div>
+
+        <div class="card-executive p-5 border-l-4 border-l-blue-500">
+          <p class="text-xs font-bold text-blue-700 uppercase">Aderência Percentual (Cavalo)</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-3xl font-black text-blue-600" id="exec-cavalo-pct">0%</span>
+            <span class="text-xs text-blue-800 bg-blue-100 font-bold px-2 py-0.5 rounded" id="exec-cavalo-ratio">0/0</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Realizado vs Programado (Cavalos)</p>
+        </div>
+
+        <div class="card-executive p-5 border-l-4 border-l-purple-500">
+          <p class="text-xs font-bold text-purple-700 uppercase">Aderência Percentual (Carreta)</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-3xl font-black text-purple-600" id="exec-carreta-pct">0%</span>
+            <span class="text-xs text-purple-800 bg-purple-100 font-bold px-2 py-0.5 rounded" id="exec-carreta-ratio">0/0</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Realizado vs Programado (Carretas)</p>
+        </div>
+
+        <div class="card-executive p-5">
+          <p class="text-xs font-bold text-slate-500 uppercase">Taxa Reprogramação</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-3xl font-black text-amber-600" id="exec-reprogram-pct">0%</span>
+            <span class="text-xs text-amber-700 bg-amber-100 font-bold px-2 py-0.5 rounded">Tolerância: &le; 10%</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Serviços reagendados/postergados.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2"><i data-lucide="truck" class="w-4 h-4 text-blue-600"></i> Cavalos: Programado vs Realizado</span>
+            <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200" id="chart-cavalo-percent-badge">0% Concluído</span>
+          </h3>
+          <div class="h-64"><canvas id="chartCavaloProgReal"></canvas></div>
+        </div>
+
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2"><i data-lucide="container" class="w-4 h-4 text-purple-600"></i> Carretas: Programado vs Realizado</span>
+            <span class="text-xs bg-purple-50 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200" id="chart-carreta-percent-badge">0% Concluído</span>
+          </h3>
+          <div class="h-64"><canvas id="chartCarretaProgReal"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-calendar" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Planejamento de Manutenção Preventiva</h2>
+          <p class="text-xs text-slate-500">Agende, altere status e filtre as exibições no calendário</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-lg">
+            <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-500 ml-1"></i>
+            <select id="calendar-type-filter" onchange="renderCalendar()" class="bg-white border border-slate-300 text-xs font-extrabold rounded-md px-2 py-1 text-slate-800 outline-none cursor-pointer">
+              <option value="TODOS">🚛 All (Cavalo + Carreta)</option>
+              <option value="Cavalo">🚜 Apenas Cavalos</option>
+              <option value="Carreta">📦 Apenas Carretas</option>
+            </select>
+          </div>
+
+          <button onclick="exportScheduleToCSV()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+          </button>
+
+          <div id="monthly-navigation-controls" class="hidden items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
+            <button onclick="changeMonth(-1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="calendar-month-year-label" class="text-xs font-bold px-3 text-slate-800">Setembro 2026</span>
+            <button onclick="changeMonth(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+
+          <button onclick="openMaintModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Agendar Preventiva
+          </button>
+
+          <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button onclick="setCalendarMode('weekly')" id="btn-view-weekly" class="px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition">Semanal</button>
+            <button onclick="setCalendarMode('monthly')" id="btn-view-monthly" class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">Mensal (Grade)</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="calendar-grid">
+      </div>
+    </section>
+
+    <section id="tab-documents" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Controle e Acompanhamento de Documentação Veicular</h2>
+          <p class="text-xs text-slate-500">Gestão de vigência e status de renovação (CRLV, CIPP, CIV, Tacógrafo)</p>
+        </div>
+        <button onclick="openDocModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+          <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Documento
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <p class="text-xs font-bold text-slate-400 uppercase">Total Cadastrado</p>
+          <h4 class="text-2xl font-extrabold text-slate-800" id="doc-metric-total">0</h4>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/50">
+          <p class="text-xs font-bold text-emerald-700 uppercase">Realizados / Renovados</p>
+          <h4 class="text-2xl font-extrabold text-emerald-600" id="doc-metric-realized">0</h4>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/50">
+          <p class="text-xs font-bold text-blue-700 uppercase">Programados / Em Andamento</p>
+          <h4 class="text-2xl font-extrabold text-blue-600" id="doc-metric-pending">0</h4>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/50">
+          <p class="text-xs font-bold text-amber-700 uppercase">Reprogramados</p>
+          <h4 class="text-2xl font-extrabold text-amber-600" id="doc-metric-reprogrammed">0</h4>
+        </div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="p-4">Unidade</th>
+                <th class="p-4">TAG / Frota</th>
+                <th class="p-4">Tipo</th>
+                <th class="p-4">Documento</th>
+                <th class="p-4">Vencimento</th>
+                <th class="p-4">Dias Restantes</th>
+                <th class="p-4">Situação / Status</th>
+                <th class="p-4 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="docs-table-body" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="history" class="w-5 h-5 text-emerald-600"></i> Histórico Consolidado e Trilha de Auditoria
+          </h2>
+          <p class="text-xs text-slate-500">Registro histórico completo de manutenções e acompanhamento de documentações</p>
+        </div>
+        <button onclick="clearHistory()" class="text-xs text-red-600 hover:text-red-800 font-bold border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg transition">
+          Limpar Histórico da Nuvem
+        </button>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="p-3">Data/Hora Registro</th>
+                <th class="p-3">Unidade</th>
+                <th class="p-3">Categoria</th>
+                <th class="p-3">Veículo / TAG</th>
+                <th class="p-3">Descrição do Evento / Serviço</th>
+                <th class="p-3">Data Alvo / Programada</th>
+                <th class="p-3">Status Final</th>
+              </tr>
+            </thead>
+            <tbody id="consolidated-history-tbody" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="modal-doc" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Novo Documento Veicular</h3>
+        <button onclick="closeDocModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-doc" onsubmit="saveDocument(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Operação</label>
+          <select id="doc-unit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="AM">Rio Preto da Eva / Manaus - AM</option>
+            <option value="MA">Parnaíba - MA</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">TAG do Veículo</label>
+          <input type="text" id="doc-tag" placeholder="Ex: CNC05, CV010" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none uppercase">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Veículo</label>
+          <select id="doc-type" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="Carreta">Carreta (Reboque)</option>
+            <option value="Cavalo">Cavalo (Trator)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Documento</label>
+          <input type="text" id="doc-name" placeholder="Ex: CRLV Anual, CIPP, CIV, Tacógrafo" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Data de Vencimento</label>
+          <input type="date" id="doc-exp" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Status Inicial</label>
+          <select id="doc-status" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="Programado">Programado / Em Andamento</option>
+            <option value="Realizado">Realizado / Renovado</option>
+            <option value="Reprogramado">Reprogramado</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeDocModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Documento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-maint" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Agendar Preventiva</h3>
+        <button onclick="closeMaintModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-maint" onsubmit="saveMaintenance(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Operação</label>
+          <select id="maint-unit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="AM">Rio Preto da Eva / Manaus - AM</option>
+            <option value="MA">Parnaíba - MA</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">TAG do Veículo</label>
+          <input type="text" id="maint-tag" placeholder="Ex: CNC05, CV010" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none uppercase">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Especificação do Veículo</label>
+          <select id="maint-type" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="Carreta">Carreta (Reboque)</option>
+            <option value="Cavalo">Cavalo (Trator)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Serviço Programado</label>
+          <input type="text" id="maint-service" placeholder="Ex: Revisão Freios ABS, Troca Óleo Motor" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Data da Programação</label>
+          <input type="date" id="maint-date" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeMaintModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Programação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT FIREBASE NUVEM INTEGRADO -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    Chart.register(ChartDataLabels);
+
+    // CONFIGURAÇÃO DO FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyDM3ZVkh8DKR8B2DSyNy0ZjXNBvOBwjDlU",
+      authDomain: "web-system-gnl-br-manut.firebaseapp.com",
+      databaseURL: "https://web-system-gnl-br-manut-default-rtdb.firebaseio.com",
+      projectId: "web-system-gnl-br-manut",
+      storageBucket: "web-system-gnl-br-manut.firebasestorage.app",
+      messagingSenderId: "68815057001",
+      appId: "1:68815057001:web:79c3b3c9ab45dae305b2f8",
+      measurementId: "G-952RZHSQJL"
+    };
+
+    // Inicialização do Firebase Realtime Database
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Variáveis de Estado Global
+    window.selectedUnit = 'TODAS';
+    window.calendarDate = new Date(2026, 8, 1); // Setembro 2026
+    window.currentCalendarView = 'monthly';
+    window.chartCavaloInstance = null;
+    window.chartCarretaInstance = null;
+
+    // Listas globais na memória local sincronizadas via Nuvem
+    window.fleetDocs = [];
+    window.maintenanceSchedule = [];
+    window.globalAuditHistory = [];
+
+    // Dados Padrão (utilizados apenas na inicialização inicial do banco)
+    const initialDocsDefault = [
+      { id: 1, unit: 'AM', tag: 'CN002', type: 'Carreta', docName: 'CRLV Anual', expDate: '2026-09-13', status: 'Programado' },
+      { id: 2, unit: 'AM', tag: 'CV010', type: 'Cavalo', docName: 'Cronotacógrafo', expDate: '2026-09-05', status: 'Realizado' },
+      { id: 3, unit: 'MA', tag: 'CNC05', type: 'Carreta', docName: 'CIPP / CIV', expDate: '2026-09-15', status: 'Programado' },
+      { id: 4, unit: 'MA', tag: 'CV008', type: 'Cavalo', docName: 'CRLV Anual', expDate: '2026-09-12', status: 'Reprogramado' }
+    ];
+
+    const initialMaintDefault = [
+      { id: 1, unit: 'AM', tag: 'CV010', type: 'Cavalo', service: 'Troca de Óleo e Filtros', date: '2026-08-31', status: 'Realizado' },
+      { id: 2, unit: 'AM', tag: 'CN002', type: 'Carreta', service: 'Revisão Sistema Freios', date: '2026-09-01', status: 'Programado' },
+      { id: 3, unit: 'MA', tag: 'CV008', type: 'Cavalo', service: 'Regulagem Válvulas', date: '2026-09-02', status: 'Programado' },
+      { id: 4, unit: 'MA', tag: 'CNC05', type: 'Carreta', service: 'Inspeção Quinta Roda & Suspensão', date: '2026-09-05', status: 'Programado' }
+    ];
+
+    // SINCRONIZAÇÃO EM TEMPO REAL COM O BANCO DE DADOS FIREBASE
+    function initFirebaseSync() {
+      // 1. Escutar Documentos
+      onValue(ref(db, 'fleetDocs'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.fleetDocs = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.fleetDocs = initialDocsDefault;
+          set(ref(db, 'fleetDocs'), initialDocsDefault);
+        }
+        renderDocuments();
+      });
+
+      // 2. Escutar Preventivas
+      onValue(ref(db, 'maintenanceSchedule'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.maintenanceSchedule = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.maintenanceSchedule = initialMaintDefault;
+          set(ref(db, 'maintenanceSchedule'), initialMaintDefault);
+        }
+        renderCalendar();
+        renderExecutiveCharts();
+      });
+
+      // 3. Escutar Histórico
+      onValue(ref(db, 'globalAuditHistory'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.globalAuditHistory = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.globalAuditHistory = [];
+          set(ref(db, 'globalAuditHistory'), []);
+        }
+        renderHistoryTable();
+      });
+    }
+
+    // SALVAR DADOS NO FIREBASE
+    window.saveData = function() {
+      set(ref(db, 'fleetDocs'), window.fleetDocs || []);
+      set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []);
+      set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []);
+    };
+
+    // --- AUTENTICAÇÃO / LOGIN LOCAL ---
+    window.handleLogin = function(e) {
+      e.preventDefault();
+      const pass = document.getElementById('login-pass').value.trim();
+      if (pass === '0000' || pass === '000') {
+        sessionStorage.setItem('pcm_auth', 'true');
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('login-error').classList.add('hidden');
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    };
+
+    window.checkAuth = function() {
+      const isAuth = sessionStorage.getItem('pcm_auth');
+      if (isAuth === 'true') {
+        document.getElementById('login-overlay').classList.add('hidden');
+      } else {
+        document.getElementById('login-overlay').classList.remove('hidden');
+      }
+    };
+
+    window.handleLogout = function() {
+      sessionStorage.removeItem('pcm_auth');
+      document.getElementById('login-pass').value = '';
+      checkAuth();
+    };
+
+    // --- LOG DE AUDITORIA ---
+    window.addAuditLog = function(unit, category, tag, details, targetDate, status) {
+      if (!window.globalAuditHistory) window.globalAuditHistory = [];
+      window.globalAuditHistory.unshift({
+        id: Date.now(),
+        timestamp: getNowFormatted(),
+        unit,
+        category,
+        tag,
+        details,
+        targetDate,
+        status
+      });
+      saveData();
+    };
+
+    window.clearHistory = function() {
+      if (confirm("Deseja realmente limpar todo o histórico de auditoria na nuvem?")) {
+        window.globalAuditHistory = [];
+        saveData();
+      }
+    };
+
+    // --- FILTRAGENS ---
+    window.filterByUnit = function() {
+      window.selectedUnit = document.getElementById('global-unit-filter').value;
+      renderDocuments();
+      renderCalendar();
+      renderExecutiveCharts();
+      renderHistoryTable();
+    };
+
+    window.getFilteredDocs = function() {
+      if (window.selectedUnit === 'TODAS') return window.fleetDocs;
+      return window.fleetDocs.filter(d => d.unit === window.selectedUnit);
+    };
+
+    window.getFilteredMaint = function() {
+      let data = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
+      const typeFilter = document.getElementById('calendar-type-filter')?.value || 'TODOS';
+      if (typeFilter !== 'TODOS') {
+        data = data.filter(m => m.type === typeFilter);
+      }
+      return data;
+    };
+
+    window.getFilteredHistory = function() {
+      if (window.selectedUnit === 'TODAS') return window.globalAuditHistory;
+      return window.globalAuditHistory.filter(h => h.unit === window.selectedUnit);
+    };
+
+    // --- EXPORTAR CSV ---
+    window.exportScheduleToCSV = function() {
+      const filteredMaint = getFilteredMaint();
+      if (filteredMaint.length === 0) {
+        alert("Nenhuma programação disponível para exportar com os filtros atuais.");
+        return;
+      }
+
+      let csvContent = "\uFEFF";
+      csvContent += "Unidade;TAG Veiculo;Tipo;Servico Programado;Data Programada;Status\n";
+
+      filteredMaint.forEach(m => {
+        const unitName = m.unit === 'AM' ? 'Rio Preto/Manaus (AM)' : 'Parnaiba (MA)';
+        csvContent += `"${unitName}";"${m.tag}";"${m.type}";"${m.service}";"${formatDateBR(m.date)}";"${m.status}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Programacao_GNL_${window.selectedUnit}_${getToday().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // --- HELPERS ---
+    window.getToday = function() {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      return now;
+    };
+
+    window.calculateDaysRemaining = function(targetDateStr) {
+      if (!targetDateStr) return 0;
+      const today = getToday();
+      const parts = targetDateStr.split('-');
+      const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const diffTime = targetDate - today;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    window.formatDateBR = function(dateStr) {
+      if(!dateStr) return '';
+      const parts = dateStr.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    };
+
+    window.getNowFormatted = function() {
+      const now = new Date();
+      return now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    window.getVehicleBadge = function(type) {
+      if (type === 'Cavalo') {
+        return `<span class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 border border-blue-200">
+                  <i data-lucide="truck" class="w-3 h-3"></i> Cavalo
+                </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded text-[10px] bg-purple-100 text-purple-800 border border-purple-200">
+                <i data-lucide="container" class="w-3 h-3"></i> Carreta
+              </span>`;
+    };
+
+    window.getUnitBadge = function(unit) {
+      if (unit === 'AM') {
+        return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 border border-amber-300">AM</span>`;
+      }
+      return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 border border-teal-300">MA</span>`;
+    };
+
+    // --- TROCA DE ABAS ---
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-600');
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      const activeBtn = document.getElementById(`btn-tab-${tabId}`);
+      activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+      activeBtn.classList.remove('text-slate-600');
+
+      if(tabId === 'executive') renderExecutiveCharts();
+      if(tabId === 'history') renderHistoryTable();
+    };
+
+    // --- MODAIS ---
+    window.openDocModal = function() { document.getElementById('modal-doc').classList.replace('hidden', 'flex'); };
+    window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
+    window.openMaintModal = function() { document.getElementById('modal-maint').classList.replace('hidden', 'flex'); };
+    window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
+
+    // --- DOCUMENTAÇÃO ---
+    window.saveDocument = function(e) {
+      e.preventDefault();
+      const unit = document.getElementById('doc-unit').value;
+      const tag = document.getElementById('doc-tag').value.toUpperCase();
+      const type = document.getElementById('doc-type').value;
+      const docName = document.getElementById('doc-name').value;
+      const expDate = document.getElementById('doc-exp').value;
+      const status = document.getElementById('doc-status').value;
+
+      window.fleetDocs.push({ id: Date.now(), unit, tag, type, docName, expDate, status });
+      addAuditLog(unit, 'Documentação', tag, `${docName} (${type}) cadastrado/atualizado`, expDate, status);
+
+      saveData();
+      closeDocModal();
+      document.getElementById('form-doc').reset();
+    };
+
+    window.toggleDocStatus = function(id, newStatus) {
+      const doc = window.fleetDocs.find(d => d.id === id);
+      if(doc) {
+        doc.status = newStatus;
+        addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado`, doc.expDate, newStatus);
+        saveData();
+      }
+    };
+
+    window.deleteDocument = function(id) {
+      if (confirm("Tem certeza que deseja excluir este documento?")) {
+        const item = window.fleetDocs.find(d => d.id === id);
+        if(item) {
+          addAuditLog(item.unit, 'Documentação', item.tag, `${item.docName} removido`, item.expDate, 'Excluído');
+        }
+
+        window.fleetDocs = window.fleetDocs.filter(d => d.id !== id);
+        saveData();
+      }
+    };
+
+    window.renderDocuments = function() {
+      const tbody = document.getElementById('docs-table-body');
+      const criticalContainer = document.getElementById('dashboard-critical-docs');
+      
+      if(!tbody || !criticalContainer) return;
+
+      tbody.innerHTML = '';
+      criticalContainer.innerHTML = '';
+
+      const activeDocs = getFilteredDocs();
+      let expiringCount = 0;
+
+      activeDocs.sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
+
+      const totalDocs = activeDocs.length;
+      const realizedDocs = activeDocs.filter(d => d.status === 'Realizado').length;
+      const pendingDocs = activeDocs.filter(d => d.status === 'Programado').length;
+      const reprogDocs = activeDocs.filter(d => d.status === 'Reprogramado').length;
+
+      document.getElementById('doc-metric-total').innerText = totalDocs;
+      document.getElementById('doc-metric-realized').innerText = realizedDocs;
+      document.getElementById('doc-metric-pending').innerText = pendingDocs;
+      document.getElementById('doc-metric-reprogrammed').innerText = reprogDocs;
+
+      activeDocs.forEach(item => {
+        const days = calculateDaysRemaining(item.expDate);
+        let alertBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+
+        if (days <= 7) {
+          alertBadge = 'bg-red-100 text-red-800 border-red-300';
+        } else if (days <= 15) {
+          alertBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+        }
+
+        if (days <= 15 && item.status !== 'Realizado') {
+          expiringCount++;
+          criticalContainer.innerHTML += `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200/80 shadow-sm">
+              <div class="flex items-center gap-3">
+                ${getUnitBadge(item.unit)}
+                <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${item.tag}</span>
+                ${getVehicleBadge(item.type)}
+                <div>
+                  <p class="text-sm font-semibold text-slate-800">${item.docName}</p>
+                  <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(item.expDate)}</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${alertBadge}">
+                ${days < 0 ? 'Vencido há ' + Math.abs(days) + ' dias' : 'Faltam ' + days + ' dias'}
+              </span>
+            </div>
+          `;
+        }
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-emerald-50/30 transition">
+            <td class="p-4">${getUnitBadge(item.unit)}</td>
+            <td class="p-4 font-bold text-slate-900">${item.tag}</td>
+            <td class="p-4">${getVehicleBadge(item.type)}</td>
+            <td class="p-4 text-slate-700 font-medium">${item.docName}</td>
+            <td class="p-4 text-slate-700">${formatDateBR(item.expDate)}</td>
+            <td class="p-4 font-bold ${days <= 15 ? 'text-amber-600' : 'text-slate-800'}">${days} dias</td>
+            <td class="p-4">
+              <select onchange="toggleDocStatus(${item.id}, this.value)" class="text-xs font-bold p-1.5 rounded border outline-none ${item.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':item.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-blue-100 text-blue-800 border-blue-300'}">
+                <option value="Programado" ${item.status==='Programado'?'selected':''}>Programado / Em Andamento</option>
+                <option value="Realizado" ${item.status==='Realizado'?'selected':''}>Realizado / Renovado</option>
+                <option value="Reprogramado" ${item.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+              </select>
+            </td>
+            <td class="p-4 text-center">
+              <button onclick="deleteDocument(${item.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir Documento"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('kpi-expiring-docs').innerText = expiringCount;
+      const rawMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
+      const uniqueFleet = new Set([...activeDocs.map(d => d.tag), ...rawMaint.map(m => m.tag)]).size;
+      document.getElementById('kpi-total-fleet').innerText = uniqueFleet;
+      document.getElementById('kpi-cavalos-count').innerText = new Set(activeDocs.filter(d => d.type==='Cavalo').map(d=>d.tag)).size;
+      document.getElementById('kpi-carretas-count').innerText = new Set(activeDocs.filter(d => d.type==='Carreta').map(d=>d.tag)).size;
+
+      lucide.createIcons();
+    };
+
+    // --- PREVENTIVAS E CALENDÁRIO ---
+    window.saveMaintenance = function(e) {
+      e.preventDefault();
+      const unit = document.getElementById('maint-unit').value;
+      const tag = document.getElementById('maint-tag').value.toUpperCase();
+      const type = document.getElementById('maint-type').value;
+      const service = document.getElementById('maint-service').value;
+      const date = document.getElementById('maint-date').value;
+
+      window.maintenanceSchedule.push({ id: Date.now(), unit, tag, type, service, date, status: 'Programado' });
+
+      addAuditLog(unit, 'Preventiva', tag, `${service} (${type})`, date, 'Programado');
+
+      saveData();
+      closeMaintModal();
+      document.getElementById('form-maint').reset();
+    };
+
+    window.toggleStatus = function(id, newStatus) {
+      const item = window.maintenanceSchedule.find(m => m.id === id);
+      if(item) {
+        item.status = newStatus;
+        addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status`, item.date, newStatus);
+        saveData();
+      }
+    };
+
+    window.deleteMaintenance = function(id) {
+      if (confirm("Tem certeza que deseja excluir esta programação de manutenção?")) {
+        const item = window.maintenanceSchedule.find(m => m.id === id);
+        if (item) {
+          addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Programação Removida`, item.date, 'Excluído');
+        }
+        window.maintenanceSchedule = window.maintenanceSchedule.filter(m => m.id !== id);
+        saveData();
+      }
+    };
+
+    window.setCalendarMode = function(mode) {
+      window.currentCalendarView = mode;
+      const btnWeekly = document.getElementById('btn-view-weekly');
+      const btnMonthly = document.getElementById('btn-view-monthly');
+      const navControls = document.getElementById('monthly-navigation-controls');
+
+      if (mode === 'weekly') {
+        btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
+        btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+        navControls.classList.replace('flex', 'hidden');
+      } else {
+        btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
+        btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+        navControls.classList.replace('hidden', 'flex');
+      }
+      renderCalendar();
+    };
+
+    window.changeMonth = function(delta) {
+      window.calendarDate.setMonth(window.calendarDate.getMonth() + delta);
+      renderCalendar();
+    };
+
+    window.renderCalendar = function() {
+      const container = document.getElementById('calendar-grid');
+      if (!container) return;
+
+      container.innerHTML = '';
+      const activeMaint = getFilteredMaint();
+
+      if (window.currentCalendarView === 'weekly') {
+        container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
+        
+        const weekDays = [
+          { name: 'Segunda', dateStr: '2026-08-31', displayDate: '31/08' },
+          { name: 'Terça', dateStr: '2026-09-01', displayDate: '01/09' },
+          { name: 'Quarta', dateStr: '2026-09-02', displayDate: '02/09' },
+          { name: 'Quinta', dateStr: '2026-09-03', displayDate: '03/09' },
+          { name: 'Sexta', dateStr: '2026-09-04', displayDate: '04/09' }
+        ];
+
+        weekDays.forEach((day) => {
+          const events = activeMaint.filter(m => m.date === day.dateStr);
+
+          container.innerHTML += `
+            <div class="card-executive p-4 min-h-[220px] flex flex-col">
+              <h3 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2 mb-3 flex justify-between items-center">
+                <span>${day.name}</span>
+                <span class="text-xs bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded">${day.displayDate}</span>
+              </h3>
+              <div class="space-y-2 flex-1">
+                ${events.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-4">Sem programação</p>' : ''}
+                ${events.map(s => `
+                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs space-y-2 hover:border-emerald-400 transition">
+                    <div class="flex justify-between items-center">
+                      <div class="flex items-center gap-1">
+                        ${getUnitBadge(s.unit)}
+                        <span class="font-extrabold text-slate-900">${s.tag}</span>
+                      </div>
+                      ${getVehicleBadge(s.type)}
+                    </div>
+                    <p class="text-slate-600 font-medium">${s.service}</p>
+                    <div class="flex items-center justify-between border-t border-slate-200 pt-2 gap-1">
+                      <select onchange="toggleStatus(${s.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none ${s.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':s.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-slate-200 text-slate-700'}">
+                        <option value="Programado" ${s.status==='Programado'?'selected':''}>Programado</option>
+                        <option value="Realizado" ${s.status==='Realizado'?'selected':''}>Realizado</option>
+                        <option value="Reprogramado" ${s.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+                      </select>
+                      <button onclick="deleteMaintenance(${s.id})" class="text-slate-400 hover:text-red-600 transition p-1" title="Excluir Programação">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        // VISÃO MENSAL GRADE
+        container.className = 'card-executive p-4';
+        const year = window.calendarDate.getFullYear();
+        const month = window.calendarDate.getMonth();
+        
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        document.getElementById('calendar-month-year-label').innerText = `${monthNames[month]} ${year}`;
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        let gridHTML = `
+          <div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-extrabold text-slate-500 uppercase">
+            <div class="text-red-400">Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div class="grid grid-cols-7 gap-2">
+        `;
+
+        for (let x = 0; x < firstDayIndex; x++) {
+          gridHTML += `<div class="bg-slate-100/40 border border-slate-100 rounded-lg p-2 min-h-[110px]"></div>`;
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const formattedDay = day < 10 ? '0' + day : day;
+          const formattedMonth = (month + 1) < 10 ? '0' + (month + 1) : (month + 1);
+          const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+          const events = activeMaint.filter(m => m.date === dateStr);
+
+          gridHTML += `
+            <div class="border border-slate-200 bg-white rounded-lg p-2 min-h-[110px] flex flex-col justify-between hover:border-emerald-500 transition shadow-sm">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${day}</span>
+                ${events.length > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">${events.length} prog</span>` : ''}
+              </div>
+              
+              <div class="space-y-1.5 mt-1 flex-1 overflow-y-auto max-h-[100px]">
+                ${events.map(e => `
+                  <div class="p-1.5 rounded text-[11px] font-medium bg-slate-50 border border-slate-200 space-y-1 hover:shadow-sm">
+                    <div class="flex justify-between items-center gap-1">
+                      <div class="flex items-center gap-1">
+                        ${getUnitBadge(e.unit)}
+                        <span class="font-extrabold text-slate-900">${e.tag}</span>
+                      </div>
+                      ${getVehicleBadge(e.type)}
+                    </div>
+                    
+                    <p class="text-slate-700 font-semibold leading-tight text-[10px] bg-white p-1 rounded border border-slate-100">${e.service}</p>
+                    
+                    <div class="flex justify-between items-center pt-0.5">
+                      <select onchange="toggleStatus(${e.id}, this.value)" class="text-[9px] font-bold p-0.5 rounded outline-none border ${e.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':e.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-slate-100 text-slate-700'}">
+                        <option value="Programado" ${e.status==='Programado'?'selected':''}>Programado</option>
+                        <option value="Realizado" ${e.status==='Realizado'?'selected':''}>Realizado</option>
+                        <option value="Reprogramado" ${e.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+                      </select>
+
+                      <button onclick="deleteMaintenance(${e.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        gridHTML += `</div>`;
+        container.innerHTML = gridHTML;
+      }
+
+      // KPIs VISÃO GERAL
+      const totalMaint = activeMaint.length;
+      const realizedMaint = activeMaint.filter(m => m.status === 'Realizado').length;
+      const adherence = totalMaint > 0 ? Math.round((realizedMaint / totalMaint) * 100) : 0;
+
+      document.getElementById('kpi-month-maint').innerText = totalMaint;
+      document.getElementById('kpi-maint-realized').innerText = realizedMaint;
+      document.getElementById('kpi-adherence-rate').innerText = `${adherence}%`;
+
+      lucide.createIcons();
+    };
+
+    // --- HISTÓRICO CONSOLIDADO ---
+    window.renderHistoryTable = function() {
+      const historyTbody = document.getElementById('consolidated-history-tbody');
+      if(!historyTbody) return;
+      
+      historyTbody.innerHTML = '';
+      const logs = getFilteredHistory();
+
+      if (logs.length === 0) {
+        historyTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-xs text-slate-400 italic">Nenhum evento registrado no histórico.</td></tr>`;
+        return;
+      }
+
+      logs.forEach(h => {
+        let statusBadge = 'bg-slate-100 text-slate-800 border-slate-300';
+        if (h.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        if (h.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+        if (h.status === 'Excluído') statusBadge = 'bg-red-100 text-red-800 border-red-300';
+
+        historyTbody.innerHTML += `
+          <tr class="hover:bg-slate-50 text-xs">
+            <td class="p-3 font-semibold text-slate-500">${h.timestamp}</td>
+            <td class="p-3">${getUnitBadge(h.unit)}</td>
+            <td class="p-3 font-bold ${h.category === 'Preventiva' ? 'text-blue-600' : 'text-purple-600'}">${h.category}</td>
+            <td class="p-3 font-bold text-slate-900">${h.tag}</td>
+            <td class="p-3 text-slate-700 font-medium">${h.details}</td>
+            <td class="p-3 text-slate-600">${formatDateBR(h.targetDate)}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusBadge}">
+                ${h.status}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+    };
+
+    // --- PAINEL EXECUTIVO: TENDÊNCIA E GRÁFICOS SEPARADOS ---
+    window.renderExecutiveCharts = function() {
+      const activeMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
+      const totalProg = activeMaint.length;
+      const totalReal = activeMaint.filter(m => m.status === 'Realizado').length;
+      const totalReprog = activeMaint.filter(m => m.status === 'Reprogramado').length;
+
+      const adhPct = totalProg > 0 ? Math.round((totalReal / totalProg) * 100) : 0;
+      const repPct = totalProg > 0 ? Math.round((totalReprog / totalProg) * 100) : 0;
+
+      document.getElementById('exec-adherence-pct').innerText = `${adhPct}%`;
+      document.getElementById('exec-reprogram-pct').innerText = `${repPct}%`;
+
+      // CÁLCULO SEPARADO CAVALO x CARRETA (PORCENTAGEM E PROPORÇÃO)
+      const cavaloItems = activeMaint.filter(m => m.type === 'Cavalo');
+      const carretaItems = activeMaint.filter(m => m.type === 'Carreta');
+
+      const cavaloProgramado = cavaloItems.length;
+      const cavaloRealizado = cavaloItems.filter(m => m.status === 'Realizado').length;
+      const cavaloPct = cavaloProgramado > 0 ? Math.round((cavaloRealizado / cavaloProgramado) * 100) : 0;
+
+      const carretaProgramado = carretaItems.length;
+      const carretaRealizado = carretaItems.filter(m => m.status === 'Realizado').length;
+      const carretaPct = carretaProgramado > 0 ? Math.round((carretaRealizado / carretaProgramado) * 100) : 0;
+
+      // ATUALIZAR KPIS E BADGES DE PERCENTUAL
+      document.getElementById('exec-cavalo-pct').innerText = `${cavaloPct}%`;
+      document.getElementById('exec-cavalo-ratio').innerText = `${cavaloRealizado}/${cavaloProgramado}`;
+      document.getElementById('chart-cavalo-percent-badge').innerText = `${cavaloPct}% Concluído`;
+
+      document.getElementById('exec-carreta-pct').innerText = `${carretaPct}%`;
+      document.getElementById('exec-carreta-ratio').innerText = `${carretaRealizado}/${carretaProgramado}`;
+      document.getElementById('chart-carreta-percent-badge').innerText = `${carretaPct}% Concluído`;
+
+      const commonBarOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#1e293b',
+            font: { weight: 'bold', size: 12 },
+            formatter: (val) => val
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, grace: '20%', ticks: { precision: 0 } }
+        }
+      };
+
+      // 1. GRÁFICO CAVALO
+      const elCavalo = document.getElementById('chartCavaloProgReal');
+      if (elCavalo) {
+        const ctxCavalo = elCavalo.getContext('2d');
+        if (window.chartCavaloInstance) window.chartCavaloInstance.destroy();
+
+        window.chartCavaloInstance = new Chart(ctxCavalo, {
+          type: 'bar',
+          data: {
+            labels: ['Manutenções de Cavalo'],
+            datasets: [
+              { label: 'Programado (Calendário)', data: [cavaloProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
+              { label: 'Realizado (Concluído)', data: [cavaloRealizado], backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+          },
+          options: commonBarOptions
+        });
+      }
+
+      // 2. GRÁFICO CARRETA
+      const elCarreta = document.getElementById('chartCarretaProgReal');
+      if (elCarreta) {
+        const ctxCarreta = elCarreta.getContext('2d');
+        if (window.chartCarretaInstance) window.chartCarretaInstance.destroy();
+
+        window.chartCarretaInstance = new Chart(ctxCarreta, {
+          type: 'bar',
+          data: {
+            labels: ['Manutenções de Carreta'],
+            datasets: [
+              { label: 'Programado (Calendário)', data: [carretaProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
+              { label: 'Realizado (Concluído)', data: [carretaRealizado], backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+          },
+          options: commonBarOptions
+        });
+      }
+    };
+
+    // --- INICIALIZAÇÃO ---
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
+      
+      // Iniciar Ouvinte do Firebase Realtime Database
+      initFirebaseSync();
+      
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
