@@ -28,58 +28,33 @@
 </head>
 <body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
 
+  <!-- OVERLAY DE LOGIN -->
   <div id="login-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    
     <div class="bg-white border border-emerald-200 rounded-2xl shadow-2xl max-w-md w-full p-8 fade-in text-center">
-
-      <!-- LOGO GNL BRASIL -->
       <div class="flex justify-center mb-5">
         <img src="Img/Logo Gnl Brasil.jpg" alt="Logo" onerror="this.style.display='none'">
       </div>
-
       <h2 class="text-2xl font-black text-slate-900 tracking-tight">
         Gestão de Manutenção GNL Brasil Logística
       </h2>
-
       <p class="text-xs text-slate-500 mt-1 mb-6">
         Acesso restrito ao Sistema de Gestão & Auditoria de Frota
       </p>
 
       <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
-
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
-            Usuário / Matrícula
-          </label>
-
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Usuário / Matrícula</label>
           <div class="relative">
             <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-
-            <input
-              type="text"
-              id="login-user"
-              value="pcm.admin"
-              required
-              class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
+            <input type="text" id="login-user" value="pcm.admin" required class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">
-            Senha de Acesso
-          </label>
-
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Senha de Acesso</label>
           <div class="relative">
             <i data-lucide="key-round" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-
-            <input
-              type="password"
-              id="login-pass"
-              placeholder="Digite a senha..."
-              required
-              class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
+            <input type="password" id="login-pass" placeholder="Digite a senha..." required class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
         </div>
 
@@ -87,23 +62,16 @@
           Senha incorreta! Tente novamente.
         </div>
 
-        <button
-          type="submit"
-          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center gap-2"
-        >
-          <i data-lucide="log-in" class="w-4 h-4"></i>
-          Entrar no Sistema
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Entrar no Sistema
         </button>
-
       </form>
-
     </div>
-
   </div>
 
+  <!-- CABEÇALHO DA APLICAÇÃO -->
   <header class="bg-white border-b border-emerald-100 sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-      
       <div class="flex items-center gap-4 w-full md:w-auto">
         <div id="logo-container" class="w-12 h-12 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
           <img src="Img/Logo Gnl Brasil.jpg" alt="Logo Empresa" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';">
@@ -137,12 +105,13 @@
           </button>
         </div>
       </div>
-
     </div>
   </header>
 
+  <!-- CORPO PRINCIPAL DE ABAS -->
   <div class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
 
+    <!-- MENU DE NAVEGAÇÃO POR ABAS -->
     <nav class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
       <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Visão Geral
@@ -161,6 +130,7 @@
       </button>
     </nav>
 
+    <!-- ABA 1: VISÃO GERAL -->
     <section id="tab-dashboard" class="tab-content active fade-in space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="card-executive p-5 flex items-center justify-between">
@@ -204,32 +174,32 @@
         <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
           <i data-lucide="bell" class="w-5 h-5 text-emerald-600"></i> Documentos em Atenção / Vencendo
         </h2>
-        <div id="dashboard-critical-docs" class="space-y-3">
-        </div>
+        <div id="dashboard-critical-docs" class="space-y-3"></div>
       </div>
     </section>
 
+    <!-- ABA 2: PAINEL DIRETORIA (GRÁFICOS INTEGRADOS) -->
     <section id="tab-executive" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-emerald-900 to-slate-900 text-white border-none">
         <div>
           <span class="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Painel de Controle Executivo</span>
           <h2 class="text-xl font-bold mt-1">Desempenho Operacional - Gestão de Manutenção GNL Brasil Logística</h2>
-          <p class="text-xs text-slate-300">Acompanhamento Real do Calendário de Manutenção Preventiva e Indicadores Porcentuais</p>
+          <p class="text-xs text-slate-300">Acompanhamento Real de Manutenção Preventiva e Indicadores de Documentação Veicular</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="card-executive p-5">
-          <p class="text-xs font-bold text-slate-500 uppercase">Aderência Geral</p>
+          <p class="text-xs font-bold text-slate-500 uppercase">Aderência Preventivas</p>
           <div class="flex items-baseline gap-3 mt-2">
             <span class="text-3xl font-black text-emerald-600" id="exec-adherence-pct">0%</span>
             <span class="text-xs text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded">Meta: &ge; 90%</span>
           </div>
-          <p class="text-xs text-slate-500 mt-2">Cumprimento geral do cronograma.</p>
+          <p class="text-xs text-slate-500 mt-2">Cumprimento geral de manutenção.</p>
         </div>
 
         <div class="card-executive p-5 border-l-4 border-l-blue-500">
-          <p class="text-xs font-bold text-blue-700 uppercase">Aderência Percentual (Cavalo)</p>
+          <p class="text-xs font-bold text-blue-700 uppercase">Aderência (Cavalo)</p>
           <div class="flex items-baseline gap-3 mt-2">
             <span class="text-3xl font-black text-blue-600" id="exec-cavalo-pct">0%</span>
             <span class="text-xs text-blue-800 bg-blue-100 font-bold px-2 py-0.5 rounded" id="exec-cavalo-ratio">0/0</span>
@@ -238,7 +208,7 @@
         </div>
 
         <div class="card-executive p-5 border-l-4 border-l-purple-500">
-          <p class="text-xs font-bold text-purple-700 uppercase">Aderência Percentual (Carreta)</p>
+          <p class="text-xs font-bold text-purple-700 uppercase">Aderência (Carreta)</p>
           <div class="flex items-baseline gap-3 mt-2">
             <span class="text-3xl font-black text-purple-600" id="exec-carreta-pct">0%</span>
             <span class="text-xs text-purple-800 bg-purple-100 font-bold px-2 py-0.5 rounded" id="exec-carreta-ratio">0/0</span>
@@ -246,20 +216,21 @@
           <p class="text-xs text-slate-500 mt-2">Realizado vs Programado (Carretas)</p>
         </div>
 
-        <div class="card-executive p-5">
-          <p class="text-xs font-bold text-slate-500 uppercase">Taxa Reprogramação</p>
+        <div class="card-executive p-5 border-l-4 border-l-teal-500">
+          <p class="text-xs font-bold text-teal-700 uppercase">Aderência Documentação</p>
           <div class="flex items-baseline gap-3 mt-2">
-            <span class="text-3xl font-black text-amber-600" id="exec-reprogram-pct">0%</span>
-            <span class="text-xs text-amber-700 bg-amber-100 font-bold px-2 py-0.5 rounded">Tolerância: &le; 10%</span>
+            <span class="text-3xl font-black text-teal-600" id="exec-doc-pct">0%</span>
+            <span class="text-xs text-teal-800 bg-teal-100 font-bold px-2 py-0.5 rounded" id="exec-doc-ratio">0/0</span>
           </div>
-          <p class="text-xs text-slate-500 mt-2">Serviços reagendados/postergados.</p>
+          <p class="text-xs text-slate-500 mt-2">Renovados vs Programados</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- GRÁFICOS EM 3 COLUNAS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="card-executive p-5">
           <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
-            <span class="flex items-center gap-2"><i data-lucide="truck" class="w-4 h-4 text-blue-600"></i> Cavalos: Programado vs Realizado</span>
+            <span class="flex items-center gap-2"><i data-lucide="truck" class="w-4 h-4 text-blue-600"></i> Cavalos: Prog vs Real</span>
             <span class="text-xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200" id="chart-cavalo-percent-badge">0% Concluído</span>
           </h3>
           <div class="h-64"><canvas id="chartCavaloProgReal"></canvas></div>
@@ -267,14 +238,23 @@
 
         <div class="card-executive p-5">
           <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
-            <span class="flex items-center gap-2"><i data-lucide="container" class="w-4 h-4 text-purple-600"></i> Carretas: Programado vs Realizado</span>
+            <span class="flex items-center gap-2"><i data-lucide="container" class="w-4 h-4 text-purple-600"></i> Carretas: Prog vs Real</span>
             <span class="text-xs bg-purple-50 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200" id="chart-carreta-percent-badge">0% Concluído</span>
           </h3>
           <div class="h-64"><canvas id="chartCarretaProgReal"></canvas></div>
         </div>
+
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2"><i data-lucide="file-check-2" class="w-4 h-4 text-teal-600"></i> Docs: Visão de Gráfico</span>
+            <span class="text-xs bg-teal-50 text-teal-700 font-bold px-2 py-1 rounded border border-teal-200" id="chart-doc-percent-badge">0% Renovados</span>
+          </h3>
+          <div class="h-64"><canvas id="chartDocStatus"></canvas></div>
+        </div>
       </div>
     </section>
 
+    <!-- ABA 3: CALENDÁRIO -->
     <section id="tab-calendar" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -313,15 +293,15 @@
         </div>
       </div>
 
-      <div id="calendar-grid">
-      </div>
+      <div id="calendar-grid"></div>
     </section>
 
+    <!-- ABA 4: DOCUMENTAÇÃO & AUDITORIA (MELHORADA COM CIV + CIPP) -->
     <section id="tab-documents" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Controle e Acompanhamento de Documentação Veicular</h2>
-          <p class="text-xs text-slate-500">Gestão de vigência e status de renovação (CRLV, CIPP, CIV, Tacógrafo)</p>
+          <p class="text-xs text-slate-500">Gestão simplificada e unificada (CRLV, CIV, CIPP e Tacógrafo)</p>
         </div>
         <button onclick="openDocModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
           <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Documento
@@ -362,13 +342,13 @@
                 <th class="p-4 text-center">Ações</th>
               </tr>
             </thead>
-            <tbody id="docs-table-body" class="divide-y divide-slate-100">
-            </tbody>
+            <tbody id="docs-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
     </section>
 
+    <!-- ABA 5: HISTÓRICO CONSOLIDADO -->
     <section id="tab-history" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -396,8 +376,7 @@
                 <th class="p-3">Status Final</th>
               </tr>
             </thead>
-            <tbody id="consolidated-history-tbody" class="divide-y divide-slate-100">
-            </tbody>
+            <tbody id="consolidated-history-tbody" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
@@ -405,6 +384,7 @@
 
   </div>
 
+  <!-- MODAL DOCUMENTO -->
   <div id="modal-doc" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -433,9 +413,10 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Documento</label>
           <select id="doc-name" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <option value="CIV + CIPP">🔗 CIV + CIPP (Atrelados na Mesma Carreta)</option>
             <option value="CRLV Anual">CRLV Anual</option>
-            <option value="CIPP">CIPP</option>
-            <option value="CIV">CIV</option>
+            <option value="CIPP">CIPP (Individual)</option>
+            <option value="CIV">CIV (Individual)</option>
             <option value="Tacógrafo">Tacógrafo</option>
           </select>
         </div>
@@ -459,6 +440,7 @@
     </div>
   </div>
 
+  <!-- MODAL MANUTENÇÃO -->
   <div id="modal-maint" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -500,14 +482,13 @@
     </div>
   </div>
 
-  <!-- SCRIPT FIREBASE NUVEM INTEGRADO -->
+  <!-- SCRIPT ENGINE INTEGRADO -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     Chart.register(ChartDataLabels);
 
-    // CONFIGURAÇÃO DO FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyDM3ZVkh8DKR8B2DSyNy0ZjXNBvOBwjDlU",
       authDomain: "web-system-gnl-br-manut.firebaseapp.com",
@@ -519,27 +500,24 @@
       measurementId: "G-952RZHSQJL"
     };
 
-    // Inicialização do Firebase Realtime Database
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Variáveis de Estado Global
     window.selectedUnit = 'TODAS';
-    window.calendarDate = new Date(2026, 8, 1); // Setembro 2026
+    window.calendarDate = new Date(2026, 8, 1);
     window.currentCalendarView = 'monthly';
     window.chartCavaloInstance = null;
     window.chartCarretaInstance = null;
+    window.chartDocInstance = null;
 
-    // Listas globais na memória local sincronizadas via Nuvem
     window.fleetDocs = [];
     window.maintenanceSchedule = [];
     window.globalAuditHistory = [];
 
-    // Dados Padrão (utilizados apenas na inicialização inicial do banco)
     const initialDocsDefault = [
       { id: 1, unit: 'AM', tag: 'CN002', type: 'Carreta', docName: 'CRLV Anual', expDate: '2026-09-13', status: 'Programado' },
       { id: 2, unit: 'AM', tag: 'CV010', type: 'Cavalo', docName: 'Tacógrafo', expDate: '2026-09-05', status: 'Realizado' },
-      { id: 3, unit: 'MA', tag: 'CNC05', type: 'Carreta', docName: 'CIPP', expDate: '2026-09-15', status: 'Programado' },
+      { id: 3, unit: 'MA', tag: 'CNC05', type: 'Carreta', docName: 'CIV + CIPP', expDate: '2026-09-15', status: 'Programado' },
       { id: 4, unit: 'MA', tag: 'CV008', type: 'Cavalo', docName: 'CRLV Anual', expDate: '2026-09-12', status: 'Reprogramado' }
     ];
 
@@ -550,9 +528,7 @@
       { id: 4, unit: 'MA', tag: 'CNC05', type: 'Carreta', service: 'Inspeção Quinta Roda & Suspensão', date: '2026-09-05', status: 'Programado' }
     ];
 
-    // SINCRONIZAÇÃO EM TEMPO REAL COM O BANCO DE DADOS FIREBASE
     function initFirebaseSync() {
-      // 1. Escutar Documentos
       onValue(ref(db, 'fleetDocs'), (snapshot) => {
         const data = snapshot.val();
         if (data !== null) {
@@ -562,9 +538,9 @@
           set(ref(db, 'fleetDocs'), initialDocsDefault);
         }
         renderDocuments();
+        renderExecutiveCharts();
       });
 
-      // 2. Escutar Preventivas
       onValue(ref(db, 'maintenanceSchedule'), (snapshot) => {
         const data = snapshot.val();
         if (data !== null) {
@@ -577,7 +553,6 @@
         renderExecutiveCharts();
       });
 
-      // 3. Escutar Histórico
       onValue(ref(db, 'globalAuditHistory'), (snapshot) => {
         const data = snapshot.val();
         if (data !== null) {
@@ -590,14 +565,12 @@
       });
     }
 
-    // SALVAR DADOS NO FIREBASE
     window.saveData = function() {
       set(ref(db, 'fleetDocs'), window.fleetDocs || []);
       set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []);
       set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []);
     };
 
-    // --- AUTENTICAÇÃO / LOGIN LOCAL ---
     window.handleLogin = function(e) {
       e.preventDefault();
       const pass = document.getElementById('login-pass').value.trim();
@@ -625,7 +598,6 @@
       checkAuth();
     };
 
-    // --- LOG DE AUDITORIA ---
     window.addAuditLog = function(unit, category, tag, details, targetDate, status) {
       if (!window.globalAuditHistory) window.globalAuditHistory = [];
       window.globalAuditHistory.unshift({
@@ -648,7 +620,6 @@
       }
     };
 
-    // --- FILTRAGENS ---
     window.filterByUnit = function() {
       window.selectedUnit = document.getElementById('global-unit-filter').value;
       renderDocuments();
@@ -676,7 +647,6 @@
       return window.globalAuditHistory.filter(h => h.unit === window.selectedUnit);
     };
 
-    // --- EXPORTAR CSV ---
     window.exportScheduleToCSV = function() {
       const filteredMaint = getFilteredMaint();
       if (filteredMaint.length === 0) {
@@ -702,7 +672,6 @@
       document.body.removeChild(link);
     };
 
-    // --- HELPERS ---
     window.getToday = function() {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -749,7 +718,6 @@
       return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 border border-teal-300">MA</span>`;
     };
 
-    // --- TROCA DE ABAS ---
     window.switchTab = function(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -766,13 +734,12 @@
       if(tabId === 'history') renderHistoryTable();
     };
 
-    // --- MODAIS ---
     window.openDocModal = function() { document.getElementById('modal-doc').classList.replace('hidden', 'flex'); };
     window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
     window.openMaintModal = function() { document.getElementById('modal-maint').classList.replace('hidden', 'flex'); };
     window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
 
-    // --- DOCUMENTAÇÃO ---
+    // SAVE DOCUMENTO ATRELADO
     window.saveDocument = function(e) {
       e.preventDefault();
       const unit = document.getElementById('doc-unit').value;
@@ -805,7 +772,6 @@
         if(item) {
           addAuditLog(item.unit, 'Documentação', item.tag, `${item.docName} removido`, item.expDate, 'Excluído');
         }
-
         window.fleetDocs = window.fleetDocs.filter(d => d.id !== id);
         saveData();
       }
@@ -825,10 +791,19 @@
 
       activeDocs.sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
 
-      const totalDocs = activeDocs.length;
-      const realizedDocs = activeDocs.filter(d => d.status === 'Realizado').length;
-      const pendingDocs = activeDocs.filter(d => d.status === 'Programado').length;
-      const reprogDocs = activeDocs.filter(d => d.status === 'Reprogramado').length;
+      // Contagem Inteligente considerando CIV + CIPP como 2 itens nas métricas
+      let totalDocs = 0;
+      let realizedDocs = 0;
+      let pendingDocs = 0;
+      let reprogDocs = 0;
+
+      activeDocs.forEach(d => {
+        const weight = d.docName === 'CIV + CIPP' ? 2 : 1;
+        totalDocs += weight;
+        if(d.status === 'Realizado') realizedDocs += weight;
+        else if(d.status === 'Programado') pendingDocs += weight;
+        else if(d.status === 'Reprogramado') reprogDocs += weight;
+      });
 
       document.getElementById('doc-metric-total').innerText = totalDocs;
       document.getElementById('doc-metric-realized').innerText = realizedDocs;
@@ -854,7 +829,10 @@
                 <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${item.tag}</span>
                 ${getVehicleBadge(item.type)}
                 <div>
-                  <p class="text-sm font-semibold text-slate-800">${item.docName}</p>
+                  <p class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                    ${item.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[10px] font-black px-1.5 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
+                    ${item.docName}
+                  </p>
                   <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(item.expDate)}</p>
                 </div>
               </div>
@@ -865,12 +843,17 @@
           `;
         }
 
+        const isAtrelado = item.docName === 'CIV + CIPP';
+
         tbody.innerHTML += `
           <tr class="hover:bg-emerald-50/30 transition">
             <td class="p-4">${getUnitBadge(item.unit)}</td>
             <td class="p-4 font-bold text-slate-900">${item.tag}</td>
             <td class="p-4">${getVehicleBadge(item.type)}</td>
-            <td class="p-4 text-slate-700 font-medium">${item.docName}</td>
+            <td class="p-4 text-slate-700 font-medium flex items-center gap-2">
+              ${item.docName}
+              ${isAtrelado ? '<span class="bg-purple-100 text-purple-800 font-black text-[10px] px-2 py-0.5 rounded-full border border-purple-200">CIV + CIPP</span>' : ''}
+            </td>
             <td class="p-4 text-slate-700">${formatDateBR(item.expDate)}</td>
             <td class="p-4 font-bold ${days <= 15 ? 'text-amber-600' : 'text-slate-800'}">${days} dias</td>
             <td class="p-4">
@@ -897,7 +880,6 @@
       lucide.createIcons();
     };
 
-    // --- PREVENTIVAS E CALENDÁRIO ---
     window.saveMaintenance = function(e) {
       e.preventDefault();
       const unit = document.getElementById('maint-unit').value;
@@ -907,7 +889,6 @@
       const date = document.getElementById('maint-date').value;
 
       window.maintenanceSchedule.push({ id: Date.now(), unit, tag, type, service, date, status: 'Programado' });
-
       addAuditLog(unit, 'Preventiva', tag, `${service} (${type})`, date, 'Programado');
 
       saveData();
@@ -967,7 +948,6 @@
 
       if (window.currentCalendarView === 'weekly') {
         container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
-        
         const weekDays = [
           { name: 'Segunda', dateStr: '2026-08-31', displayDate: '31/08' },
           { name: 'Terça', dateStr: '2026-09-01', displayDate: '01/09' },
@@ -1014,7 +994,6 @@
           `;
         });
       } else {
-        // VISÃO MENSAL GRADE
         container.className = 'card-executive p-4';
         const year = window.calendarDate.getFullYear();
         const month = window.calendarDate.getMonth();
@@ -1085,7 +1064,6 @@
         container.innerHTML = gridHTML;
       }
 
-      // KPIs VISÃO GERAL
       const totalMaint = activeMaint.length;
       const realizedMaint = activeMaint.filter(m => m.status === 'Realizado').length;
       const adherence = totalMaint > 0 ? Math.round((realizedMaint / totalMaint) * 100) : 0;
@@ -1097,7 +1075,6 @@
       lucide.createIcons();
     };
 
-    // --- HISTÓRICO CONSOLIDADO ---
     window.renderHistoryTable = function() {
       const historyTbody = document.getElementById('consolidated-history-tbody');
       if(!historyTbody) return;
@@ -1125,29 +1102,25 @@
             <td class="p-3 text-slate-700 font-medium">${h.details}</td>
             <td class="p-3 text-slate-600">${formatDateBR(h.targetDate)}</td>
             <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusBadge}">
-                ${h.status}
-              </span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusBadge}">${h.status}</span>
             </td>
           </tr>
         `;
       });
     };
 
-    // --- PAINEL EXECUTIVO: TENDÊNCIA E GRÁFICOS SEPARADOS ---
+    // --- RENDERIZAR TODOS OS GRÁFICOS INCLUINDO GRÁFICO DE DOCUMENTAÇÃO ---
     window.renderExecutiveCharts = function() {
       const activeMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
+      const activeDocs = getFilteredDocs();
+
+      // MANTENÇÕES
       const totalProg = activeMaint.length;
       const totalReal = activeMaint.filter(m => m.status === 'Realizado').length;
-      const totalReprog = activeMaint.filter(m => m.status === 'Reprogramado').length;
-
       const adhPct = totalProg > 0 ? Math.round((totalReal / totalProg) * 100) : 0;
-      const repPct = totalProg > 0 ? Math.round((totalReprog / totalProg) * 100) : 0;
 
       document.getElementById('exec-adherence-pct').innerText = `${adhPct}%`;
-      document.getElementById('exec-reprogram-pct').innerText = `${repPct}%`;
 
-      // CÁLCULO SEPARADO CAVALO x CARRETA (PORCENTAGEM E PROPORÇÃO)
       const cavaloItems = activeMaint.filter(m => m.type === 'Cavalo');
       const carretaItems = activeMaint.filter(m => m.type === 'Carreta');
 
@@ -1159,7 +1132,6 @@
       const carretaRealizado = carretaItems.filter(m => m.status === 'Realizado').length;
       const carretaPct = carretaProgramado > 0 ? Math.round((carretaRealizado / carretaProgramado) * 100) : 0;
 
-      // ATUALIZAR KPIS E BADGES DE PERCENTUAL
       document.getElementById('exec-cavalo-pct').innerText = `${cavaloPct}%`;
       document.getElementById('exec-cavalo-ratio').innerText = `${cavaloRealizado}/${cavaloProgramado}`;
       document.getElementById('chart-cavalo-percent-badge').innerText = `${cavaloPct}% Concluído`;
@@ -1167,6 +1139,25 @@
       document.getElementById('exec-carreta-pct').innerText = `${carretaPct}%`;
       document.getElementById('exec-carreta-ratio').innerText = `${carretaRealizado}/${carretaProgramado}`;
       document.getElementById('chart-carreta-percent-badge').innerText = `${carretaPct}% Concluído`;
+
+      // CALCULO DE METRICAS DE DOCUMENTAÇÃO PARA O GRÁFICO
+      let docTotalCount = 0;
+      let docRealizedCount = 0;
+      let docPendingCount = 0;
+      let docReprogCount = 0;
+
+      activeDocs.forEach(d => {
+        const weight = d.docName === 'CIV + CIPP' ? 2 : 1;
+        docTotalCount += weight;
+        if(d.status === 'Realizado') docRealizedCount += weight;
+        else if(d.status === 'Programado') docPendingCount += weight;
+        else if(d.status === 'Reprogramado') docReprogCount += weight;
+      });
+
+      const docPct = docTotalCount > 0 ? Math.round((docRealizedCount / docTotalCount) * 100) : 0;
+      document.getElementById('exec-doc-pct').innerText = `${docPct}%`;
+      document.getElementById('exec-doc-ratio').innerText = `${docRealizedCount}/${docTotalCount}`;
+      document.getElementById('chart-doc-percent-badge').innerText = `${docPct}% Renovados`;
 
       const commonBarOptions = {
         responsive: true,
@@ -1191,14 +1182,13 @@
       if (elCavalo) {
         const ctxCavalo = elCavalo.getContext('2d');
         if (window.chartCavaloInstance) window.chartCavaloInstance.destroy();
-
         window.chartCavaloInstance = new Chart(ctxCavalo, {
           type: 'bar',
           data: {
-            labels: ['Manutenções de Cavalo'],
+            labels: ['Cavalos'],
             datasets: [
-              { label: 'Programado (Calendário)', data: [cavaloProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
-              { label: 'Realizado (Concluído)', data: [cavaloRealizado], backgroundColor: '#10b981', borderRadius: 4 }
+              { label: 'Programado', data: [cavaloProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
+              { label: 'Realizado', data: [cavaloRealizado], backgroundColor: '#10b981', borderRadius: 4 }
             ]
           },
           options: commonBarOptions
@@ -1210,14 +1200,32 @@
       if (elCarreta) {
         const ctxCarreta = elCarreta.getContext('2d');
         if (window.chartCarretaInstance) window.chartCarretaInstance.destroy();
-
         window.chartCarretaInstance = new Chart(ctxCarreta, {
           type: 'bar',
           data: {
-            labels: ['Manutenções de Carreta'],
+            labels: ['Carretas'],
             datasets: [
-              { label: 'Programado (Calendário)', data: [carretaProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
-              { label: 'Realizado (Concluído)', data: [carretaRealizado], backgroundColor: '#10b981', borderRadius: 4 }
+              { label: 'Programado', data: [carretaProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
+              { label: 'Realizado', data: [carretaRealizado], backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+          },
+          options: commonBarOptions
+        });
+      }
+
+      // 3. NOVO GRÁFICO DE COLUNA: DOCUMENTAÇÃO (PROGRAMADO / REALIZADO / REPROGRAMADO)
+      const elDoc = document.getElementById('chartDocStatus');
+      if (elDoc) {
+        const ctxDoc = elDoc.getContext('2d');
+        if (window.chartDocInstance) window.chartDocInstance.destroy();
+        window.chartDocInstance = new Chart(ctxDoc, {
+          type: 'bar',
+          data: {
+            labels: ['Acompanhamento de Docs'],
+            datasets: [
+              { label: 'Programado', data: [docPendingCount], backgroundColor: '#3b82f6', borderRadius: 4 },
+              { label: 'Realizado/Renovado', data: [docRealizedCount], backgroundColor: '#10b981', borderRadius: 4 },
+              { label: 'Reprogramado', data: [docReprogCount], backgroundColor: '#f59e0b', borderRadius: 4 }
             ]
           },
           options: commonBarOptions
@@ -1225,14 +1233,10 @@
       }
     };
 
-    // --- INICIALIZAÇÃO ---
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
-      
-      // Iniciar Ouvinte do Firebase Realtime Database
       initFirebaseSync();
-      
       lucide.createIcons();
     });
   </script>
