@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Manutenção GNL Brasil Logística - Sistema Integrado de Auditoria & Frota</title>
+  <title>Gestão Integrada de Ativos, Disponibilidade, Manutenção e Documentos - GNL Brasil Logística</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,6 +24,10 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
       border-radius: 0.75rem;
     }
+    .drag-chip { cursor: grab; }
+    .drag-chip:active { cursor: grabbing; }
+    .drop-target-hover { outline: 2px dashed #10b981; outline-offset: -2px; background-color: #ecfdf5 !important; }
+    .subtab-btn.active { background-color:#0f766e; color:#fff; }
   </style>
 </head>
 <body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
@@ -35,10 +39,10 @@
         <img src="Img/Logo Gnl Brasil.jpg" alt="Logo" onerror="this.style.display='none'">
       </div>
       <h2 class="text-2xl font-black text-slate-900 tracking-tight">
-        Gestão de Manutenção GNL Brasil Logística
+        Gestão Integrada de Ativos - GNL Brasil Logística
       </h2>
       <p class="text-xs text-slate-500 mt-1 mb-6">
-        Acesso restrito ao Sistema de Gestão & Auditoria de Frota
+        Acesso restrito ao Sistema de Ativos, Disponibilidade, Manutenção e Documentos
       </p>
 
       <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
@@ -79,9 +83,9 @@
         </div>
         <div>
           <h1 class="font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
-            Gestão de Manutenção GNL Brasil Logística <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Manaus & Maranhão</span>
+            Gestão Integrada de Ativos <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Manaus & Maranhão</span>
           </h1>
-          <p class="text-xs text-slate-500">Gestão Integrada de Frota, Preventivas e Auditoria</p>
+          <p class="text-xs text-slate-500">Ativos, Disponibilidade, Manutenção Preventiva/Corretiva e Documentação — Base Única</p>
         </div>
       </div>
 
@@ -116,6 +120,15 @@
       <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Visão Geral
       </button>
+      <button onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i> Ativos & Status
+      </button>
+      <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="gauge" class="w-4 h-4"></i> Disponibilidade
+      </button>
+      <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="line-chart" class="w-4 h-4"></i> Evolução
+      </button>
       <button onclick="switchTab('executive')" id="btn-tab-executive" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="trending-up" class="w-4 h-4"></i> Painel Diretoria
       </button>
@@ -132,10 +145,10 @@
 
     <!-- ABA 1: VISÃO GERAL -->
     <section id="tab-dashboard" class="tab-content active fade-in space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div class="card-executive p-5 flex items-center justify-between">
           <div>
-            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Frota na Unidade</p>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Frota Cadastrada</p>
             <h3 class="text-3xl font-black text-slate-900 mt-1" id="kpi-total-fleet">0</h3>
             <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-cavalos-count">0</span> Cavalos | <span id="kpi-carretas-count">0</span> Carretas</p>
           </div>
@@ -144,20 +157,29 @@
 
         <div class="card-executive p-5 flex items-center justify-between">
           <div>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Disponibilidade</p>
+            <h3 class="text-3xl font-black text-emerald-600 mt-1" id="kpi-availability-pct">0%</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-available-count">0</span> disponíveis | <span id="kpi-unavailable-count">0</span> parados</p>
+          </div>
+          <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100"><i data-lucide="gauge"></i></div>
+        </div>
+
+        <div class="card-executive p-5 flex items-center justify-between">
+          <div>
             <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Preventivas Mês</p>
-            <h3 class="text-3xl font-black text-emerald-600 mt-1" id="kpi-month-maint">0</h3>
+            <h3 class="text-3xl font-black text-blue-600 mt-1" id="kpi-month-maint">0</h3>
             <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-maint-realized">0</span> Realizadas</p>
           </div>
-          <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100"><i data-lucide="wrench"></i></div>
+          <div class="p-3 bg-blue-50 rounded-lg text-blue-600 border border-blue-100"><i data-lucide="wrench"></i></div>
         </div>
 
         <div class="card-executive p-5 flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Aderência ao Plano</p>
-            <h3 class="text-3xl font-black text-blue-600 mt-1" id="kpi-adherence-rate">0%</h3>
+            <h3 class="text-3xl font-black text-indigo-600 mt-1" id="kpi-adherence-rate">0%</h3>
             <p class="text-[11px] text-slate-400 mt-0.5">Programado vs Realizado</p>
           </div>
-          <div class="p-3 bg-blue-50 rounded-lg text-blue-600 border border-blue-100"><i data-lucide="target"></i></div>
+          <div class="p-3 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100"><i data-lucide="target"></i></div>
         </div>
 
         <div class="card-executive p-5 flex items-center justify-between">
@@ -170,52 +192,214 @@
         </div>
       </div>
 
-      <div class="card-executive p-6">
-        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <i data-lucide="bell" class="w-5 h-5 text-emerald-600"></i> Documentos em Atenção / Vencendo
-        </h2>
-        <div id="dashboard-critical-docs" class="space-y-3"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card-executive p-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i data-lucide="bell" class="w-5 h-5 text-emerald-600"></i> Documentos em Atenção / Vencendo
+          </h2>
+          <div id="dashboard-critical-docs" class="space-y-3"></div>
+        </div>
+        <div class="card-executive p-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i data-lucide="octagon-alert" class="w-5 h-5 text-red-600"></i> Ativos Indisponíveis Agora
+          </h2>
+          <div id="dashboard-unavailable-assets" class="space-y-3"></div>
+        </div>
       </div>
     </section>
 
-    <!-- ABA 2: PAINEL DIRETORIA (GRÁFICOS INTEGRADOS) -->
+    <!-- ABA 2: ATIVOS & STATUS (CADASTRO + GESTÃO DE ATIVOS) -->
+    <section id="tab-assets" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Cadastro Único de Ativos</h2>
+          <p class="text-xs text-slate-500">Base central de veículos — utilizada por Preventivas, Documentos, Disponibilidade e Histórico</p>
+        </div>
+        <button onclick="openAssetModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+          <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Ativo
+        </button>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="p-3">TAG</th>
+                <th class="p-3">Placa</th>
+                <th class="p-3">Chassi</th>
+                <th class="p-3">RENAVAM</th>
+                <th class="p-3">Marca/Modelo</th>
+                <th class="p-3">Tipo</th>
+                <th class="p-3">Operação</th>
+                <th class="p-3">Unidade</th>
+                <th class="p-3">Proprietário</th>
+                <th class="p-3">Situação</th>
+                <th class="p-3">Cadastro</th>
+                <th class="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="assets-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Status Atual & Gestão de Disponibilidade</h2>
+          <p class="text-xs text-slate-500">Registre paradas (preventiva/corretiva/reforma/outros) e libere quando concluído — tempo parado calculado automaticamente</p>
+        </div>
+        <button onclick="openEventModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+          <i data-lucide="octagon-pause" class="w-4 h-4"></i> Registrar Parada / Evento
+        </button>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
+              <tr>
+                <th class="p-3">TAG</th>
+                <th class="p-3">Operação</th>
+                <th class="p-3">Unidade</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Tipo Parada</th>
+                <th class="p-3">Situação</th>
+                <th class="p-3">Início</th>
+                <th class="p-3">Previsão</th>
+                <th class="p-3">Dias Parado</th>
+                <th class="p-3">Local / Responsável</th>
+                <th class="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="status-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: DISPONIBILIDADE -->
+    <section id="tab-availability" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4">
+        <h2 class="text-lg font-bold text-slate-900 mb-3">Filtros de Disponibilidade</h2>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+          <select id="avail-filter-operacao" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="avail-filter-unidade" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="avail-filter-modelo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
+          <select id="avail-filter-tipo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos Tipos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <select id="avail-filter-status" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos Status</option>
+            <option value="Disponivel">Disponível</option>
+            <option value="Indisponivel">Indisponível</option>
+          </select>
+          <div class="flex gap-1">
+            <input type="date" id="avail-filter-start" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
+            <input type="date" id="avail-filter-end" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">Total</p><h3 class="text-2xl font-black text-slate-900" id="avail-kpi-total">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-emerald-500"><p class="text-xs font-bold text-emerald-700 uppercase">Disponíveis</p><h3 class="text-2xl font-black text-emerald-600" id="avail-kpi-disp">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-red-500"><p class="text-xs font-bold text-red-700 uppercase">Indisponíveis</p><h3 class="text-2xl font-black text-red-600" id="avail-kpi-indisp">0</h3></div>
+        <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">% Disponibilidade</p><h3 class="text-2xl font-black text-emerald-600" id="avail-kpi-pct-disp">0%</h3></div>
+        <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">% Indisponibilidade</p><h3 class="text-2xl font-black text-red-600" id="avail-kpi-pct-indisp">0%</h3></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Operação</h3><div class="h-56"><canvas id="chartAvailByOperacao"></canvas></div></div>
+        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Unidade</h3><div class="h-56"><canvas id="chartAvailByUnidade"></canvas></div></div>
+        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Modelo</h3><div class="h-56"><canvas id="chartAvailByModelo"></canvas></div></div>
+        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Tipo</h3><div class="h-56"><canvas id="chartAvailByTipo"></canvas></div></div>
+      </div>
+
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-sm mb-3">Ativos no Filtro Atual <span id="avail-list-context" class="text-slate-400 font-medium"></span></h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-black text-emerald-700 uppercase mb-2">Disponíveis</p>
+            <div id="avail-list-disponiveis" class="space-y-1 max-h-72 overflow-y-auto"></div>
+          </div>
+          <div>
+            <p class="text-xs font-black text-red-700 uppercase mb-2">Indisponíveis</p>
+            <div id="avail-list-indisponiveis" class="space-y-1 max-h-72 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 4: EVOLUÇÃO -->
+    <section id="tab-evolution" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Evolução Diária de Disponibilidade</h2>
+          <p class="text-xs text-slate-500">Baseado nos snapshots imutáveis de fechamento diário</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="evo-filter-operacao" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <button onclick="runDailySnapshotIfNeeded(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="camera" class="w-4 h-4"></i> Forçar Snapshot de Hoje
+          </button>
+        </div>
+      </div>
+      <div class="card-executive p-5">
+        <div class="h-80"><canvas id="chartEvolution"></canvas></div>
+      </div>
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
+              <tr><th class="p-3">Data</th><th class="p-3">Total</th><th class="p-3">Disponíveis</th><th class="p-3">Indisponíveis</th><th class="p-3">% Disponibilidade</th></tr>
+            </thead>
+            <tbody id="evolution-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 5: PAINEL DIRETORIA (GRÁFICOS INTEGRADOS) -->
     <section id="tab-executive" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-emerald-900 to-slate-900 text-white border-none">
         <div>
           <span class="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Painel de Controle Executivo</span>
-          <h2 class="text-xl font-bold mt-1">Desempenho Operacional - Gestão de Manutenção GNL Brasil Logística</h2>
-          <p class="text-xs text-slate-300">Acompanhamento Real de Manutenção Preventiva e Indicadores de Documentação Veicular</p>
+          <h2 class="text-xl font-bold mt-1">Desempenho Operacional - Gestão Integrada de Ativos GNL Brasil Logística</h2>
+          <p class="text-xs text-slate-300">Disponibilidade, Manutenção Preventiva/Corretiva e Documentação Veicular</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="card-executive p-5">
-          <p class="text-xs font-bold text-slate-500 uppercase">Aderência Preventivas</p>
+          <p class="text-xs font-bold text-slate-500 uppercase">Disponibilidade da Frota</p>
           <div class="flex items-baseline gap-3 mt-2">
-            <span class="text-3xl font-black text-emerald-600" id="exec-adherence-pct">0%</span>
-            <span class="text-xs text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded">Meta: &ge; 90%</span>
+            <span class="text-3xl font-black text-emerald-600" id="exec-availability-pct">0%</span>
+            <span class="text-xs text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded" id="exec-availability-ratio">0/0</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Disponíveis vs Total de Ativos</p>
+        </div>
+        <div class="card-executive p-5 border-l-4 border-l-blue-500">
+          <p class="text-xs font-bold text-blue-700 uppercase">Aderência Preventivas</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-3xl font-black text-blue-600" id="exec-adherence-pct">0%</span>
+            <span class="text-xs text-blue-800 bg-blue-100 font-bold px-2 py-0.5 rounded">Meta: &ge; 90%</span>
           </div>
           <p class="text-xs text-slate-500 mt-2">Cumprimento geral de manutenção.</p>
         </div>
-
-        <div class="card-executive p-5 border-l-4 border-l-blue-500">
-          <p class="text-xs font-bold text-blue-700 uppercase">Aderência (Cavalo)</p>
-          <div class="flex items-baseline gap-3 mt-2">
-            <span class="text-3xl font-black text-blue-600" id="exec-cavalo-pct">0%</span>
-            <span class="text-xs text-blue-800 bg-blue-100 font-bold px-2 py-0.5 rounded" id="exec-cavalo-ratio">0/0</span>
-          </div>
-          <p class="text-xs text-slate-500 mt-2">Realizado vs Programado (Cavalos)</p>
-        </div>
-
         <div class="card-executive p-5 border-l-4 border-l-purple-500">
-          <p class="text-xs font-bold text-purple-700 uppercase">Aderência (Carreta)</p>
+          <p class="text-xs font-bold text-purple-700 uppercase">Tempo Médio Parado</p>
           <div class="flex items-baseline gap-3 mt-2">
-            <span class="text-3xl font-black text-purple-600" id="exec-carreta-pct">0%</span>
-            <span class="text-xs text-purple-800 bg-purple-100 font-bold px-2 py-0.5 rounded" id="exec-carreta-ratio">0/0</span>
+            <span class="text-3xl font-black text-purple-600" id="exec-avg-downtime">0d</span>
           </div>
-          <p class="text-xs text-slate-500 mt-2">Realizado vs Programado (Carretas)</p>
+          <p class="text-xs text-slate-500 mt-2">Média de dias por evento encerrado</p>
         </div>
-
         <div class="card-executive p-5 border-l-4 border-l-teal-500">
           <p class="text-xs font-bold text-teal-700 uppercase">Aderência Documentação</p>
           <div class="flex items-baseline gap-3 mt-2">
@@ -226,7 +410,40 @@
         </div>
       </div>
 
-      <!-- GRÁFICOS EM 3 COLUNAS -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card-executive p-4 text-center">
+          <p class="text-[11px] font-bold text-blue-700 uppercase">Preventivas em andamento</p>
+          <h4 class="text-2xl font-black text-blue-600" id="exec-kpi-preventiva">0</h4>
+        </div>
+        <div class="card-executive p-4 text-center">
+          <p class="text-[11px] font-bold text-red-700 uppercase">Corretivas em andamento</p>
+          <h4 class="text-2xl font-black text-red-600" id="exec-kpi-corretiva">0</h4>
+        </div>
+        <div class="card-executive p-4 text-center">
+          <p class="text-[11px] font-bold text-purple-700 uppercase">Reformas em andamento</p>
+          <h4 class="text-2xl font-black text-purple-600" id="exec-kpi-reforma">0</h4>
+        </div>
+        <div class="card-executive p-4 text-center">
+          <p class="text-[11px] font-bold text-amber-700 uppercase">Aguardando Peça/Serviço</p>
+          <h4 class="text-2xl font-black text-amber-600" id="exec-kpi-aguardando">0</h4>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4">Ativos por Operação (Disp. x Indisp.)</h3>
+          <div class="h-64"><canvas id="chartAssetsByOperacao"></canvas></div>
+        </div>
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4">Evolução Diária (30 dias)</h3>
+          <div class="h-64"><canvas id="chartEvolutionMini"></canvas></div>
+        </div>
+        <div class="card-executive p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-4">Tipo de Parada (Eventos)</h3>
+          <div class="h-64"><canvas id="chartParadaTipo"></canvas></div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="card-executive p-5">
           <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
@@ -246,20 +463,25 @@
 
         <div class="card-executive p-5">
           <h3 class="font-bold text-slate-900 text-sm mb-4 flex items-center justify-between">
-            <span class="flex items-center gap-2"><i data-lucide="file-check-2" class="w-4 h-4 text-teal-600"></i> Docs: Visão de Gráfico</span>
+            <span class="flex items-center gap-2"><i data-lucide="file-check-2" class="w-4 h-4 text-teal-600"></i> Docs: Visão Geral</span>
             <span class="text-xs bg-teal-50 text-teal-700 font-bold px-2 py-1 rounded border border-teal-200" id="chart-doc-percent-badge">0% Renovados</span>
           </h3>
           <div class="h-64"><canvas id="chartDocStatus"></canvas></div>
         </div>
       </div>
+
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-slate-900 text-sm mb-4">Documentos: Programado x Realizado por Tipo</h3>
+        <div class="h-72"><canvas id="chartDocByType"></canvas></div>
+      </div>
     </section>
 
-    <!-- ABA 3: CALENDÁRIO -->
+    <!-- ABA 6: CALENDÁRIO -->
     <section id="tab-calendar" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Planejamento de Manutenção Preventiva</h2>
-          <p class="text-xs text-slate-500">Agende, altere status e filtre as exibições no calendário</p>
+          <p class="text-xs text-slate-500">Agende, altere status, arraste para reprogramar e filtre as exibições no calendário</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3">
@@ -292,20 +514,27 @@
           </div>
         </div>
       </div>
+      <p class="text-[11px] text-slate-400 -mt-3 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Dica: no modo Mensal, arraste um card de manutenção e solte em outro dia para reprogramar automaticamente.</p>
 
       <div id="calendar-grid"></div>
     </section>
 
-    <!-- ABA 4: DOCUMENTAÇÃO & AUDITORIA (MELHORADA COM CIV + CIPP) -->
+    <!-- ABA 7: DOCUMENTAÇÃO & AUDITORIA -->
     <section id="tab-documents" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Controle e Acompanhamento de Documentação Veicular</h2>
-          <p class="text-xs text-slate-500">Gestão simplificada e unificada (CRLV, CIV, CIPP e Tacógrafo)</p>
+          <p class="text-xs text-slate-500">Gestão simplificada e unificada (CRLV, CIV, CIPP e Tacógrafo) — integrada ao cadastro único de ativos</p>
         </div>
-        <button onclick="openDocModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Documento
-        </button>
+        <div class="flex gap-2">
+          <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button onclick="setDocView('table')" id="btn-doc-view-table" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Tabela</button>
+            <button onclick="setDocView('calendar')" id="btn-doc-view-calendar" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Calendário</button>
+          </div>
+          <button onclick="openDocModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Documento
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -327,7 +556,7 @@
         </div>
       </div>
 
-      <div class="card-executive overflow-hidden">
+      <div id="doc-view-table-wrap" class="card-executive overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
@@ -346,20 +575,36 @@
           </table>
         </div>
       </div>
+
+      <div id="doc-view-calendar-wrap" class="hidden space-y-3">
+        <div class="card-executive p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div id="doc-monthly-navigation-controls" class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
+            <button onclick="changeDocMonth(-1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="doc-calendar-month-label" class="text-xs font-bold px-3 text-slate-800">Setembro 2026</span>
+            <button onclick="changeDocMonth(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+          <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button onclick="setDocCalendarMode('weekly')" id="btn-doc-view-weekly" class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">Semanal</button>
+            <button onclick="setDocCalendarMode('monthly')" id="btn-doc-view-monthly" class="px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition">Mensal (Grade)</button>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Arraste um documento e solte em outro dia para atualizar o vencimento automaticamente.</p>
+        <div id="doc-calendar-grid"></div>
+      </div>
     </section>
 
-    <!-- ABA 5: HISTÓRICO CONSOLIDADO -->
+    <!-- ABA 8: HISTÓRICO CONSOLIDADO -->
     <section id="tab-history" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="history" class="w-5 h-5 text-emerald-600"></i> Histórico Consolidado e Trilha de Auditoria
           </h2>
-          <p class="text-xs text-slate-500">Registro histórico completo de manutenções e acompanhamento de documentações</p>
+          <p class="text-xs text-slate-500">Registro permanente — ativos, paradas/manutenções, preventivas e documentações. Nenhum registro é sobrescrito.</p>
         </div>
-        <button onclick="clearHistory()" class="text-xs text-red-600 hover:text-red-800 font-bold border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg transition">
-          Limpar Histórico da Nuvem
-        </button>
+        <div class="flex items-center gap-2">
+          <select id="history-tag-filter" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Ativos</option></select>
+        </div>
       </div>
 
       <div class="card-executive overflow-hidden">
@@ -384,6 +629,171 @@
 
   </div>
 
+  <!-- MODAL ATIVO -->
+  <div id="modal-asset" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg" id="modal-asset-title">Cadastrar Ativo</h3>
+        <button onclick="closeAssetModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-asset" onsubmit="saveAsset(event)" class="space-y-3">
+        <input type="hidden" id="asset-editing-id" value="">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">TAG (identificador único)</label>
+            <input type="text" id="asset-tag" placeholder="Ex: CV010" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none uppercase focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Placa</label>
+            <input type="text" id="asset-placa" placeholder="Ex: QRS1A23" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none uppercase focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Chassi</label>
+            <input type="text" id="asset-chassi" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none uppercase focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">RENAVAM</label>
+            <input type="text" id="asset-renavam" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Marca</label>
+            <input type="text" id="asset-marca" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Modelo</label>
+            <input type="text" id="asset-modelo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Ativo</label>
+            <select id="asset-tipo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Cavalo">Cavalo Mecânico</option>
+              <option value="Carreta">Carreta (Reboque)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Base</label>
+            <select id="asset-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="AM">Rio Preto da Eva / Manaus - AM</option>
+              <option value="MA">Parnaíba - MA</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Proprietário</label>
+            <input type="text" id="asset-proprietario" placeholder="Ex: GNL Brasil Logística" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Operação</label>
+            <input type="text" id="asset-operacao" placeholder="Ex: Transporte GNL" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Situação</label>
+            <select id="asset-status" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Data de Cadastro</label>
+            <input type="date" id="asset-data-cadastro" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeAssetModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Ativo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EVENTO / PARADA -->
+  <div id="modal-event" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg" id="modal-event-title">Registrar Parada / Evento</h3>
+        <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-event" onsubmit="saveEvent(event)" class="space-y-3">
+        <input type="hidden" id="event-editing-id" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ativo</label>
+          <select id="event-asset" required onchange="onEventAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Parada</label>
+            <select id="event-tipo-parada" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Preventiva">Preventiva</option>
+              <option value="Corretiva">Corretiva</option>
+              <option value="Reforma">Reforma</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Situação</label>
+            <select id="event-situacao" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Em Execução">Em Execução</option>
+              <option value="Aguardando Peça">Aguardando Peça</option>
+              <option value="Aguardando Serviço Terceiros">Aguardando Serviço Terceiros</option>
+              <option value="Concluído">Concluído</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Local da Manutenção</label>
+          <input type="text" id="event-local" placeholder="Ex: Oficina Interna, Concessionária X" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Início da Parada</label>
+            <input type="date" id="event-inicio" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Previsão de Liberação</label>
+            <input type="date" id="event-previsao" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Motivo</label>
+          <input type="text" id="event-motivo" placeholder="Ex: Troca de pastilhas de freio" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Responsável</label>
+          <input type="text" id="event-responsavel" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Observações</label>
+          <textarea id="event-observacoes" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeEventModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700">Salvar Parada</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL HISTÓRICO DO ATIVO -->
+  <div id="modal-asset-history" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Histórico do Ativo <span id="asset-history-tag" class="text-emerald-600"></span></h3>
+        <button onclick="closeAssetHistoryModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div id="asset-history-summary" class="grid grid-cols-3 gap-3 text-center"></div>
+      <div id="asset-history-list" class="space-y-2"></div>
+    </div>
+  </div>
+
   <!-- MODAL DOCUMENTO -->
   <div id="modal-doc" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
@@ -393,15 +803,15 @@
       </div>
       <form id="form-doc" onsubmit="saveDocument(event)" class="space-y-3">
         <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ativo (TAG)</label>
+          <select id="doc-tag" required onchange="onDocAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+        </div>
+        <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Operação</label>
           <select id="doc-unit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
             <option value="AM">Rio Preto da Eva / Manaus - AM</option>
             <option value="MA">Parnaíba - MA</option>
           </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">TAG do Veículo</label>
-          <input type="text" id="doc-tag" placeholder="Ex: CNC05, CV010" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none uppercase">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Veículo</label>
@@ -449,15 +859,15 @@
       </div>
       <form id="form-maint" onsubmit="saveMaintenance(event)" class="space-y-3">
         <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ativo (TAG)</label>
+          <select id="maint-tag" required onchange="onMaintAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+        </div>
+        <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Operação</label>
           <select id="maint-unit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
             <option value="AM">Rio Preto da Eva / Manaus - AM</option>
             <option value="MA">Parnaíba - MA</option>
           </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">TAG do Veículo</label>
-          <input type="text" id="maint-tag" placeholder="Ex: CNC05, CV010" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none uppercase">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Especificação do Veículo</label>
@@ -503,32 +913,103 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // ===================== ESTADO GLOBAL =====================
     window.selectedUnit = 'TODAS';
     window.calendarDate = new Date(2026, 8, 1);
+    window.docCalendarDate = new Date(2026, 8, 1);
     window.currentCalendarView = 'monthly';
+    window.currentDocCalendarView = 'monthly';
+    window.currentDocView = 'table';
+
     window.chartCavaloInstance = null;
     window.chartCarretaInstance = null;
     window.chartDocInstance = null;
+    window.chartDocByTypeInstance = null;
+    window.chartAvailOperacaoInstance = null;
+    window.chartAvailUnidadeInstance = null;
+    window.chartAvailModeloInstance = null;
+    window.chartAvailTipoInstance = null;
+    window.chartAssetsByOperacaoInstance = null;
+    window.chartEvolutionInstance = null;
+    window.chartEvolutionMiniInstance = null;
+    window.chartParadaTipoInstance = null;
 
+    // Base central: Ativos, Eventos (paradas/manutenções), Snapshots, Docs, Preventivas, Histórico
+    window.assets = [];
+    window.assetEvents = [];
+    window.dailySnapshots = {};
+    window.snapshotMeta = { lastDate: null };
     window.fleetDocs = [];
     window.maintenanceSchedule = [];
     window.globalAuditHistory = [];
 
+    let assetsLoaded = false, eventsLoaded = false, snapshotsLoaded = false;
+
+    // ===================== DADOS INICIAIS (SEED) =====================
+    const initialAssetsDefault = [
+      { id: 1001, tag: 'CV010', placa: '', chassi: '', renavam: '', marca: 'Volvo', modelo: 'FH540', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1002, tag: 'CN002', placa: '', chassi: '', renavam: '', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1003, tag: 'CV008', placa: '', chassi: '', renavam: '', marca: 'Scania', modelo: 'R450', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1004, tag: 'CNC05', placa: '', chassi: '', renavam: '', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' }
+    ];
+
     const initialDocsDefault = [
-      { id: 1, unit: 'AM', tag: 'CN002', type: 'Carreta', docName: 'CRLV Anual', expDate: '2026-09-13', status: 'Programado' },
-      { id: 2, unit: 'AM', tag: 'CV010', type: 'Cavalo', docName: 'Tacógrafo', expDate: '2026-09-05', status: 'Realizado' },
-      { id: 3, unit: 'MA', tag: 'CNC05', type: 'Carreta', docName: 'CIV + CIPP', expDate: '2026-09-15', status: 'Programado' },
-      { id: 4, unit: 'MA', tag: 'CV008', type: 'Cavalo', docName: 'CRLV Anual', expDate: '2026-09-12', status: 'Reprogramado' }
+      { id: 1, unit: 'AM', tag: 'CN002', assetId: 1002, type: 'Carreta', docName: 'CRLV Anual', expDate: '2026-09-13', status: 'Programado' },
+      { id: 2, unit: 'AM', tag: 'CV010', assetId: 1001, type: 'Cavalo', docName: 'Tacógrafo', expDate: '2026-09-05', status: 'Realizado' },
+      { id: 3, unit: 'MA', tag: 'CNC05', assetId: 1004, type: 'Carreta', docName: 'CIV + CIPP', expDate: '2026-09-15', status: 'Programado' },
+      { id: 4, unit: 'MA', tag: 'CV008', assetId: 1003, type: 'Cavalo', docName: 'CRLV Anual', expDate: '2026-09-12', status: 'Reprogramado' }
     ];
 
     const initialMaintDefault = [
-      { id: 1, unit: 'AM', tag: 'CV010', type: 'Cavalo', service: 'Troca de Óleo e Filtros', date: '2026-08-31', status: 'Realizado' },
-      { id: 2, unit: 'AM', tag: 'CN002', type: 'Carreta', service: 'Revisão Sistema Freios', date: '2026-09-01', status: 'Programado' },
-      { id: 3, unit: 'MA', tag: 'CV008', type: 'Cavalo', service: 'Regulagem Válvulas', date: '2026-09-02', status: 'Programado' },
-      { id: 4, unit: 'MA', tag: 'CNC05', type: 'Carreta', service: 'Inspeção Quinta Roda & Suspensão', date: '2026-09-05', status: 'Programado' }
+      { id: 1, unit: 'AM', tag: 'CV010', assetId: 1001, type: 'Cavalo', service: 'Troca de Óleo e Filtros', date: '2026-08-31', status: 'Realizado' },
+      { id: 2, unit: 'AM', tag: 'CN002', assetId: 1002, type: 'Carreta', service: 'Revisão Sistema Freios', date: '2026-09-01', status: 'Programado' },
+      { id: 3, unit: 'MA', tag: 'CV008', assetId: 1003, type: 'Cavalo', service: 'Regulagem Válvulas', date: '2026-09-02', status: 'Programado' },
+      { id: 4, unit: 'MA', tag: 'CNC05', assetId: 1004, type: 'Carreta', service: 'Inspeção Quinta Roda & Suspensão', date: '2026-09-05', status: 'Programado' }
     ];
 
+    // ===================== SINCRONIZAÇÃO FIREBASE =====================
     function initFirebaseSync() {
+      onValue(ref(db, 'assets'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.assets = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.assets = initialAssetsDefault;
+          set(ref(db, 'assets'), initialAssetsDefault);
+        }
+        assetsLoaded = true;
+        refreshAllAssetSelects();
+        renderAll();
+        maybeRunSnapshot();
+      });
+
+      onValue(ref(db, 'assetEvents'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.assetEvents = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.assetEvents = [];
+          set(ref(db, 'assetEvents'), []);
+        }
+        eventsLoaded = true;
+        renderAll();
+        maybeRunSnapshot();
+      });
+
+      onValue(ref(db, 'dailySnapshots'), (snapshot) => {
+        const data = snapshot.val();
+        window.dailySnapshots = data !== null ? data : {};
+        snapshotsLoaded = true;
+        renderEvolutionChart();
+        renderExecutiveCharts();
+      });
+
+      onValue(ref(db, 'snapshotMeta'), (snapshot) => {
+        const data = snapshot.val();
+        window.snapshotMeta = data !== null ? data : { lastDate: null };
+        maybeRunSnapshot();
+      });
+
       onValue(ref(db, 'fleetDocs'), (snapshot) => {
         const data = snapshot.val();
         if (data !== null) {
@@ -538,6 +1019,7 @@
           set(ref(db, 'fleetDocs'), initialDocsDefault);
         }
         renderDocuments();
+        renderDocCalendar();
         renderExecutiveCharts();
       });
 
@@ -562,15 +1044,21 @@
           set(ref(db, 'globalAuditHistory'), []);
         }
         renderHistoryTable();
+        refreshHistoryTagFilter();
       });
     }
 
     window.saveData = function() {
+      set(ref(db, 'assets'), window.assets || []);
+      set(ref(db, 'assetEvents'), window.assetEvents || []);
+      set(ref(db, 'dailySnapshots'), window.dailySnapshots || {});
+      set(ref(db, 'snapshotMeta'), window.snapshotMeta || { lastDate: null });
       set(ref(db, 'fleetDocs'), window.fleetDocs || []);
       set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []);
       set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []);
     };
 
+    // ===================== LOGIN =====================
     window.handleLogin = function(e) {
       e.preventDefault();
       const pass = document.getElementById('login-pass').value.trim();
@@ -598,10 +1086,11 @@
       checkAuth();
     };
 
+    // ===================== HISTÓRICO (PERMANENTE, NUNCA SOBRESCRITO) =====================
     window.addAuditLog = function(unit, category, tag, details, targetDate, status) {
       if (!window.globalAuditHistory) window.globalAuditHistory = [];
       window.globalAuditHistory.unshift({
-        id: Date.now(),
+        id: Date.now() + Math.floor(Math.random() * 1000),
         timestamp: getNowFormatted(),
         unit,
         category,
@@ -614,62 +1103,26 @@
     };
 
     window.clearHistory = function() {
-      if (confirm("Deseja realmente limpar todo o histórico de auditoria na nuvem?")) {
+      if (confirm("Deseja realmente limpar todo o histórico de auditoria na nuvem? Esta ação é apenas para manutenção do sistema — o histórico é considerado permanente em condições normais.")) {
         window.globalAuditHistory = [];
         saveData();
       }
     };
 
+    // ===================== UTILITÁRIOS GERAIS =====================
     window.filterByUnit = function() {
       window.selectedUnit = document.getElementById('global-unit-filter').value;
-      renderDocuments();
-      renderCalendar();
+      renderAll();
+    };
+
+    window.renderAll = function() {
+      if (!assetsLoaded) return;
+      renderAssets();
+      renderStatusTable();
+      renderDashboardKPIs();
+      renderAvailability();
       renderExecutiveCharts();
-      renderHistoryTable();
-    };
-
-    window.getFilteredDocs = function() {
-      if (window.selectedUnit === 'TODAS') return window.fleetDocs;
-      return window.fleetDocs.filter(d => d.unit === window.selectedUnit);
-    };
-
-    window.getFilteredMaint = function() {
-      let data = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
-      const typeFilter = document.getElementById('calendar-type-filter')?.value || 'TODOS';
-      if (typeFilter !== 'TODOS') {
-        data = data.filter(m => m.type === typeFilter);
-      }
-      return data;
-    };
-
-    window.getFilteredHistory = function() {
-      if (window.selectedUnit === 'TODAS') return window.globalAuditHistory;
-      return window.globalAuditHistory.filter(h => h.unit === window.selectedUnit);
-    };
-
-    window.exportScheduleToCSV = function() {
-      const filteredMaint = getFilteredMaint();
-      if (filteredMaint.length === 0) {
-        alert("Nenhuma programação disponível para exportar com os filtros atuais.");
-        return;
-      }
-
-      let csvContent = "\uFEFF";
-      csvContent += "Unidade;TAG Veiculo;Tipo;Servico Programado;Data Programada;Status\n";
-
-      filteredMaint.forEach(m => {
-        const unitName = m.unit === 'AM' ? 'Rio Preto/Manaus (AM)' : 'Parnaiba (MA)';
-        csvContent += `"${unitName}";"${m.tag}";"${m.type}";"${m.service}";"${formatDateBR(m.date)}";"${m.status}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Programacao_GNL_${window.selectedUnit}_${getToday().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      renderEvolutionChart();
     };
 
     window.getToday = function() {
@@ -678,19 +1131,41 @@
       return now;
     };
 
+    window.getTodayStr = function() {
+      const d = getToday();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
     window.calculateDaysRemaining = function(targetDateStr) {
       if (!targetDateStr) return 0;
       const today = getToday();
       const parts = targetDateStr.split('-');
       const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
       targetDate.setHours(0, 0, 0, 0);
-
       const diffTime = targetDate - today;
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
+    window.calcDiasParado = function(inicioStr, fimStr) {
+      if (!inicioStr) return 0;
+      const p1 = inicioStr.split('-');
+      const inicio = new Date(p1[0], p1[1] - 1, p1[2]);
+      let fim;
+      if (fimStr) {
+        const p2 = fimStr.split('-');
+        fim = new Date(p2[0], p2[1] - 1, p2[2]);
+      } else {
+        fim = getToday();
+      }
+      const diff = Math.round((fim - inicio) / (1000 * 60 * 60 * 24));
+      return diff < 0 ? 0 : diff;
+    };
+
     window.formatDateBR = function(dateStr) {
-      if(!dateStr) return '';
+      if (!dateStr) return '-';
       const parts = dateStr.split('-');
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     };
@@ -718,6 +1193,99 @@
       return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 border border-teal-300">MA</span>`;
     };
 
+    // ===================== BASE ÚNICA DE ATIVOS: HELPERS =====================
+    window.getAssetById = function(id) {
+      return (window.assets || []).find(a => String(a.id) === String(id));
+    };
+    window.getAssetByTag = function(tag) {
+      return (window.assets || []).find(a => a.tag === tag);
+    };
+    window.getActiveAssets = function() {
+      return (window.assets || []).filter(a => a.status === 'Ativo');
+    };
+    window.getFilteredAssetsByUnit = function() {
+      if (window.selectedUnit === 'TODAS') return window.assets || [];
+      return (window.assets || []).filter(a => a.unidade === window.selectedUnit);
+    };
+    // Evento aberto (parada em andamento) para um ativo
+    window.getOpenEventForAsset = function(assetId) {
+      return (window.assetEvents || []).find(e => String(e.assetId) === String(assetId) && e.status === 'Aberto');
+    };
+    // Status derivado (nunca duplicado — sempre calculado a partir dos eventos)
+    window.getAssetCurrentStatus = function(assetId) {
+      const openEvent = getOpenEventForAsset(assetId);
+      if (openEvent) return { status: 'Indisponivel', event: openEvent };
+      return { status: 'Disponivel', event: null };
+    };
+
+    function refreshAllAssetSelects() {
+      populateAssetSelect('event-asset', true);
+      populateAssetSelect('doc-tag', true);
+      populateAssetSelect('maint-tag', true);
+      populateOperacaoFilters();
+      populateModeloFilters();
+    }
+
+    function populateAssetSelect(selectId, activeOnly) {
+      const el = document.getElementById(selectId);
+      if (!el) return;
+      const currentVal = el.value;
+      const list = activeOnly ? getActiveAssets() : (window.assets || []);
+      el.innerHTML = list.map(a => `<option value="${a.id}">${a.tag} — ${a.modelo || a.tipo} (${a.unidade})</option>`).join('');
+      if (currentVal && list.some(a => String(a.id) === String(currentVal))) el.value = currentVal;
+    }
+
+    function populateOperacaoFilters() {
+      const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
+      ['avail-filter-operacao', 'evo-filter-operacao'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        const allLabel = id === 'avail-filter-operacao' ? 'Todas Operações' : 'Todas Operações';
+        el.innerHTML = `<option value="TODAS">${allLabel}</option>` + ops.map(o => `<option value="${o}">${o}</option>`).join('');
+        if (ops.includes(current)) el.value = current;
+      });
+    }
+
+    function populateModeloFilters() {
+      const modelos = Array.from(new Set((window.assets || []).map(a => a.modelo).filter(Boolean))).sort();
+      const el = document.getElementById('avail-filter-modelo');
+      if (!el) return;
+      const current = el.value;
+      el.innerHTML = `<option value="TODOS">Todos Modelos</option>` + modelos.map(m => `<option value="${m}">${m}</option>`).join('');
+      if (modelos.includes(current)) el.value = current;
+    }
+
+    function refreshHistoryTagFilter() {
+      const tags = Array.from(new Set((window.globalAuditHistory || []).map(h => h.tag).filter(Boolean))).sort();
+      const el = document.getElementById('history-tag-filter');
+      if (!el) return;
+      const current = el.value;
+      el.innerHTML = `<option value="TODOS">Todos os Ativos</option>` + tags.map(t => `<option value="${t}">${t}</option>`).join('');
+      if (tags.includes(current)) el.value = current;
+    }
+
+    window.onEventAssetChange = function() {
+      // apenas referência visual; unidade/tipo são obtidos do ativo no momento de salvar
+    };
+    window.onDocAssetChange = function() {
+      const assetId = document.getElementById('doc-tag').value;
+      const asset = getAssetById(assetId);
+      if (asset) {
+        document.getElementById('doc-unit').value = asset.unidade;
+        document.getElementById('doc-type').value = asset.tipo;
+      }
+    };
+    window.onMaintAssetChange = function() {
+      const assetId = document.getElementById('maint-tag').value;
+      const asset = getAssetById(assetId);
+      if (asset) {
+        document.getElementById('maint-unit').value = asset.unidade;
+        document.getElementById('maint-type').value = asset.tipo;
+      }
+    };
+
+    // ===================== ABAS =====================
     window.switchTab = function(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -730,27 +1298,598 @@
       activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
       activeBtn.classList.remove('text-slate-600');
 
-      if(tabId === 'executive') renderExecutiveCharts();
-      if(tabId === 'history') renderHistoryTable();
+      if (tabId === 'executive') renderExecutiveCharts();
+      if (tabId === 'history') { renderHistoryTable(); refreshHistoryTagFilter(); }
+      if (tabId === 'availability') renderAvailability();
+      if (tabId === 'evolution') renderEvolutionChart();
+      if (tabId === 'assets') { renderAssets(); renderStatusTable(); }
+      if (tabId === 'documents') renderDocCalendar();
     };
 
-    window.openDocModal = function() { document.getElementById('modal-doc').classList.replace('hidden', 'flex'); };
-    window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
-    window.openMaintModal = function() { document.getElementById('modal-maint').classList.replace('hidden', 'flex'); };
-    window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
+    // ===================== MODAIS =====================
+    window.openAssetModal = function() {
+      document.getElementById('form-asset').reset();
+      document.getElementById('asset-editing-id').value = '';
+      document.getElementById('modal-asset-title').innerText = 'Cadastrar Ativo';
+      document.getElementById('asset-data-cadastro').value = getTodayStr();
+      document.getElementById('modal-asset').classList.replace('hidden', 'flex');
+    };
+    window.closeAssetModal = function() { document.getElementById('modal-asset').classList.replace('flex', 'hidden'); };
 
-    // SAVE DOCUMENTO ATRELADO
+    window.editAsset = function(id) {
+      const asset = getAssetById(id);
+      if (!asset) return;
+      document.getElementById('asset-editing-id').value = asset.id;
+      document.getElementById('modal-asset-title').innerText = `Editar Ativo — ${asset.tag}`;
+      document.getElementById('asset-tag').value = asset.tag || '';
+      document.getElementById('asset-placa').value = asset.placa || '';
+      document.getElementById('asset-chassi').value = asset.chassi || '';
+      document.getElementById('asset-renavam').value = asset.renavam || '';
+      document.getElementById('asset-marca').value = asset.marca || '';
+      document.getElementById('asset-modelo').value = asset.modelo || '';
+      document.getElementById('asset-tipo').value = asset.tipo || 'Cavalo';
+      document.getElementById('asset-unidade').value = asset.unidade || 'AM';
+      document.getElementById('asset-proprietario').value = asset.proprietario || '';
+      document.getElementById('asset-operacao').value = asset.operacao || '';
+      document.getElementById('asset-status').value = asset.status || 'Ativo';
+      document.getElementById('asset-data-cadastro').value = asset.dataCadastro || getTodayStr();
+      document.getElementById('modal-asset').classList.replace('hidden', 'flex');
+    };
+
+    window.openEventModal = function() {
+      document.getElementById('form-event').reset();
+      document.getElementById('event-editing-id').value = '';
+      document.getElementById('modal-event-title').innerText = 'Registrar Parada / Evento';
+      populateAssetSelect('event-asset', true);
+      document.getElementById('event-inicio').value = getTodayStr();
+      document.getElementById('modal-event').classList.replace('hidden', 'flex');
+    };
+    window.closeEventModal = function() { document.getElementById('modal-event').classList.replace('flex', 'hidden'); };
+
+    window.openDocModal = function() {
+      populateAssetSelect('doc-tag', true);
+      document.getElementById('modal-doc').classList.replace('hidden', 'flex');
+    };
+    window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
+    window.openMaintModal = function() {
+      populateAssetSelect('maint-tag', true);
+      document.getElementById('modal-maint').classList.replace('hidden', 'flex');
+    };
+    window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
+    window.closeAssetHistoryModal = function() { document.getElementById('modal-asset-history').classList.replace('flex', 'hidden'); };
+
+    // ===================== CRUD: ATIVOS =====================
+    window.saveAsset = function(e) {
+      e.preventDefault();
+      const editingId = document.getElementById('asset-editing-id').value;
+      const tag = document.getElementById('asset-tag').value.toUpperCase().trim();
+
+      const payload = {
+        tag,
+        placa: document.getElementById('asset-placa').value.toUpperCase().trim(),
+        chassi: document.getElementById('asset-chassi').value.toUpperCase().trim(),
+        renavam: document.getElementById('asset-renavam').value.trim(),
+        marca: document.getElementById('asset-marca').value.trim(),
+        modelo: document.getElementById('asset-modelo').value.trim(),
+        tipo: document.getElementById('asset-tipo').value,
+        unidade: document.getElementById('asset-unidade').value,
+        proprietario: document.getElementById('asset-proprietario').value.trim(),
+        operacao: document.getElementById('asset-operacao').value.trim(),
+        status: document.getElementById('asset-status').value,
+        dataCadastro: document.getElementById('asset-data-cadastro').value || getTodayStr()
+      };
+
+      // Evita duplicidade de TAG (base única)
+      const duplicate = (window.assets || []).find(a => a.tag === tag && String(a.id) !== String(editingId));
+      if (duplicate) {
+        alert('Já existe um ativo cadastrado com essa TAG. Utilize uma TAG única para evitar duplicidade na base.');
+        return;
+      }
+
+      if (editingId) {
+        const idx = window.assets.findIndex(a => String(a.id) === String(editingId));
+        if (idx > -1) {
+          window.assets[idx] = { ...window.assets[idx], ...payload };
+          addAuditLog(payload.unidade, 'Ativo', tag, 'Cadastro do ativo atualizado', getTodayStr(), payload.status);
+        }
+      } else {
+        const newAsset = { id: Date.now(), ...payload };
+        window.assets.push(newAsset);
+        addAuditLog(payload.unidade, 'Ativo', tag, 'Ativo cadastrado na base única', getTodayStr(), payload.status);
+      }
+
+      saveData();
+      refreshAllAssetSelects();
+      closeAssetModal();
+    };
+
+    window.toggleAssetActive = function(id) {
+      const asset = getAssetById(id);
+      if (!asset) return;
+      asset.status = asset.status === 'Ativo' ? 'Inativo' : 'Ativo';
+      addAuditLog(asset.unidade, 'Ativo', asset.tag, `Situação do ativo alterada para ${asset.status}`, getTodayStr(), asset.status);
+      saveData();
+      refreshAllAssetSelects();
+    };
+
+    window.deleteAsset = function(id) {
+      const asset = getAssetById(id);
+      if (!asset) return;
+      if (getOpenEventForAsset(id)) {
+        alert('Não é possível excluir um ativo com parada/manutenção em aberto. Libere o evento antes de excluir.');
+        return;
+      }
+      if (confirm(`Tem certeza que deseja excluir o ativo ${asset.tag} do cadastro? Documentos, preventivas e histórico permanecerão registrados.`)) {
+        addAuditLog(asset.unidade, 'Ativo', asset.tag, 'Ativo removido do cadastro', getTodayStr(), 'Excluído');
+        window.assets = window.assets.filter(a => String(a.id) !== String(id));
+        saveData();
+        refreshAllAssetSelects();
+      }
+    };
+
+    window.renderAssets = function() {
+      const tbody = document.getElementById('assets-table-body');
+      if (!tbody) return;
+      const list = getFilteredAssetsByUnit().slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+      tbody.innerHTML = list.map(a => `
+        <tr class="hover:bg-emerald-50/30 transition">
+          <td class="p-3 font-black text-slate-900">${a.tag}</td>
+          <td class="p-3 text-slate-600">${a.placa || '-'}</td>
+          <td class="p-3 text-slate-600 text-xs">${a.chassi || '-'}</td>
+          <td class="p-3 text-slate-600 text-xs">${a.renavam || '-'}</td>
+          <td class="p-3 text-slate-700">${a.marca || ''} ${a.modelo || ''}</td>
+          <td class="p-3">${getVehicleBadge(a.tipo)}</td>
+          <td class="p-3 text-slate-700 text-xs">${a.operacao || '-'}</td>
+          <td class="p-3">${getUnitBadge(a.unidade)}</td>
+          <td class="p-3 text-slate-600 text-xs">${a.proprietario || '-'}</td>
+          <td class="p-3">
+            <button onclick="toggleAssetActive(${a.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${a.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${a.status}</button>
+          </td>
+          <td class="p-3 text-xs text-slate-500">${formatDateBR(a.dataCadastro)}</td>
+          <td class="p-3 text-center flex items-center justify-center gap-2">
+            <button onclick="openAssetHistory(${a.id})" class="text-slate-400 hover:text-blue-600 transition" title="Histórico do Ativo"><i data-lucide="history" class="w-4 h-4"></i></button>
+            <button onclick="editAsset(${a.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+            <button onclick="deleteAsset(${a.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    };
+
+    // ===================== CRUD: EVENTOS / PARADAS (GESTÃO DE ATIVOS) =====================
+    window.saveEvent = function(e) {
+      e.preventDefault();
+      const assetId = document.getElementById('event-asset').value;
+      const asset = getAssetById(assetId);
+      if (!asset) { alert('Selecione um ativo válido.'); return; }
+
+      if (getOpenEventForAsset(assetId)) {
+        alert('Este ativo já possui uma parada em aberto. Libere o evento atual antes de registrar um novo.');
+        return;
+      }
+
+      const newEvent = {
+        id: Date.now(),
+        assetId: asset.id,
+        tag: asset.tag,
+        unit: asset.unidade,
+        operacao: asset.operacao,
+        tipo: asset.tipo,
+        tipoParada: document.getElementById('event-tipo-parada').value,
+        situacao: document.getElementById('event-situacao').value,
+        local: document.getElementById('event-local').value,
+        inicio: document.getElementById('event-inicio').value,
+        previsao: document.getElementById('event-previsao').value,
+        motivo: document.getElementById('event-motivo').value,
+        responsavel: document.getElementById('event-responsavel').value,
+        observacoes: document.getElementById('event-observacoes').value,
+        status: 'Aberto',
+        fim: null,
+        diasParado: 0
+      };
+
+      window.assetEvents.push(newEvent);
+      addAuditLog(asset.unidade, 'Parada/Manutenção', asset.tag, `${newEvent.tipoParada} iniciada — ${newEvent.motivo}`, newEvent.inicio, 'Aberto');
+      saveData();
+      closeEventModal();
+    };
+
+    window.liberarEvento = function(eventId) {
+      const evt = (window.assetEvents || []).find(ev => String(ev.id) === String(eventId));
+      if (!evt) return;
+      if (!confirm(`Confirmar liberação do ativo ${evt.tag}? O evento será encerrado automaticamente.`)) return;
+      evt.fim = getTodayStr();
+      evt.status = 'Encerrado';
+      evt.situacao = 'Concluído';
+      evt.diasParado = calcDiasParado(evt.inicio, evt.fim);
+      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado`, evt.fim, 'Encerrado');
+      saveData();
+    };
+
+    window.editOpenEvent = function(eventId) {
+      const evt = (window.assetEvents || []).find(ev => String(ev.id) === String(eventId));
+      if (!evt) return;
+      document.getElementById('event-editing-id').value = evt.id;
+      document.getElementById('modal-event-title').innerText = `Atualizar Parada — ${evt.tag}`;
+      populateAssetSelect('event-asset', true);
+      document.getElementById('event-asset').value = evt.assetId;
+      document.getElementById('event-asset').disabled = true;
+      document.getElementById('event-tipo-parada').value = evt.tipoParada;
+      document.getElementById('event-situacao').value = evt.situacao || 'Em Execução';
+      document.getElementById('event-local').value = evt.local || '';
+      document.getElementById('event-inicio').value = evt.inicio;
+      document.getElementById('event-previsao').value = evt.previsao || '';
+      document.getElementById('event-motivo').value = evt.motivo || '';
+      document.getElementById('event-responsavel').value = evt.responsavel || '';
+      document.getElementById('event-observacoes').value = evt.observacoes || '';
+      document.getElementById('modal-event').classList.replace('hidden', 'flex');
+
+      // sobrescreve o submit temporariamente para atualização
+      const form = document.getElementById('form-event');
+      form.onsubmit = function(ev) {
+        ev.preventDefault();
+        evt.tipoParada = document.getElementById('event-tipo-parada').value;
+        evt.situacao = document.getElementById('event-situacao').value;
+        evt.local = document.getElementById('event-local').value;
+        evt.previsao = document.getElementById('event-previsao').value;
+        evt.motivo = document.getElementById('event-motivo').value;
+        evt.responsavel = document.getElementById('event-responsavel').value;
+        evt.observacoes = document.getElementById('event-observacoes').value;
+        addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `Atualização de dados da parada — ${evt.motivo}`, evt.inicio, evt.situacao);
+        saveData();
+        closeEventModal();
+        document.getElementById('event-asset').disabled = false;
+        form.onsubmit = window.saveEvent;
+      };
+    };
+
+    window.openAssetHistory = function(assetId) {
+      const asset = getAssetById(assetId);
+      if (!asset) return;
+      document.getElementById('asset-history-tag').innerText = `— ${asset.tag}`;
+      const events = (window.assetEvents || []).filter(e => String(e.assetId) === String(assetId)).sort((a, b) => new Date(b.inicio) - new Date(a.inicio));
+      const totalEventos = events.length;
+      const totalDiasParado = events.reduce((sum, e) => sum + (e.status === 'Encerrado' ? (e.diasParado || 0) : calcDiasParado(e.inicio, null)), 0);
+      const abertos = events.filter(e => e.status === 'Aberto').length;
+
+      document.getElementById('asset-history-summary').innerHTML = `
+        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200"><p class="text-[10px] uppercase font-bold text-slate-500">Total de Paradas</p><p class="text-xl font-black text-slate-800">${totalEventos}</p></div>
+        <div class="bg-red-50 rounded-lg p-3 border border-red-200"><p class="text-[10px] uppercase font-bold text-red-600">Dias Parado (acumulado)</p><p class="text-xl font-black text-red-700">${totalDiasParado}</p></div>
+        <div class="bg-amber-50 rounded-lg p-3 border border-amber-200"><p class="text-[10px] uppercase font-bold text-amber-600">Em Aberto</p><p class="text-xl font-black text-amber-700">${abertos}</p></div>
+      `;
+
+      document.getElementById('asset-history-list').innerHTML = events.length === 0
+        ? '<p class="text-xs text-slate-400 italic text-center py-4">Nenhum evento registrado para este ativo.</p>'
+        : events.map(e => `
+          <div class="border border-slate-200 rounded-lg p-3 text-xs space-y-1 ${e.status === 'Aberto' ? 'bg-red-50/50' : 'bg-white'}">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800">${e.tipoParada} — ${e.motivo}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${e.status === 'Aberto' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">${e.status}</span>
+            </div>
+            <p class="text-slate-500">Início: ${formatDateBR(e.inicio)} • Fim: ${e.fim ? formatDateBR(e.fim) : '—'} • Dias parado: ${e.status === 'Encerrado' ? e.diasParado : calcDiasParado(e.inicio, null)}</p>
+            <p class="text-slate-500">Local: ${e.local || '-'} • Responsável: ${e.responsavel || '-'}</p>
+            ${e.observacoes ? `<p class="text-slate-400 italic">${e.observacoes}</p>` : ''}
+          </div>
+        `).join('');
+
+      document.getElementById('modal-asset-history').classList.replace('hidden', 'flex');
+    };
+
+    window.renderStatusTable = function() {
+      const tbody = document.getElementById('status-table-body');
+      if (!tbody) return;
+      const list = getFilteredAssetsByUnit().slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+
+      tbody.innerHTML = list.map(a => {
+        const current = getAssetCurrentStatus(a.id);
+        const evt = current.event;
+        const isIndisp = current.status === 'Indisponivel';
+        const dias = isIndisp ? calcDiasParado(evt.inicio, null) : 0;
+
+        return `
+          <tr class="hover:bg-slate-50 transition ${isIndisp ? 'bg-red-50/30' : ''}">
+            <td class="p-3 font-black text-slate-900">${a.tag}</td>
+            <td class="p-3 text-slate-700 text-xs">${a.operacao || '-'}</td>
+            <td class="p-3">${getUnitBadge(a.unidade)}</td>
+            <td class="p-3">
+              <span class="px-2 py-1 rounded-full text-[10px] font-black border ${isIndisp ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">
+                ${isIndisp ? 'Indisponível' : 'Disponível'}
+              </span>
+            </td>
+            <td class="p-3 text-xs">${isIndisp ? evt.tipoParada : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? (evt.situacao || '-') : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? formatDateBR(evt.inicio) : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? formatDateBR(evt.previsao) : '-'}</td>
+            <td class="p-3 text-xs font-bold ${dias > 3 ? 'text-red-600' : 'text-slate-700'}">${isIndisp ? dias + ' dias' : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? `${evt.local || '-'} / ${evt.responsavel || '-'}` : '-'}</td>
+            <td class="p-3 text-center flex items-center justify-center gap-2">
+              ${isIndisp
+                ? `<button onclick="editOpenEvent(${evt.id})" class="text-slate-400 hover:text-blue-600 transition" title="Atualizar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                   <button onclick="liberarEvento(${evt.id})" class="text-[10px] font-black px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition" title="Liberar">Liberar</button>`
+                : `<span class="text-[10px] text-slate-400 italic">Operacional</span>`}
+              <button onclick="openAssetHistory(${a.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Histórico"><i data-lucide="history" class="w-4 h-4"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    };
+
+    // ===================== DISPONIBILIDADE =====================
+    window.renderAvailability = function() {
+      if (!assetsLoaded) return;
+      const opFilter = document.getElementById('avail-filter-operacao')?.value || 'TODAS';
+      const unitFilter = document.getElementById('avail-filter-unidade')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('avail-filter-modelo')?.value || 'TODOS';
+      const tipoFilter = document.getElementById('avail-filter-tipo')?.value || 'TODOS';
+      const statusFilter = document.getElementById('avail-filter-status')?.value || 'TODOS';
+
+      let list = getActiveAssets();
+      if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
+      if (opFilter !== 'TODAS') list = list.filter(a => a.operacao === opFilter);
+      if (unitFilter !== 'TODAS') list = list.filter(a => a.unidade === unitFilter);
+      if (modeloFilter !== 'TODOS') list = list.filter(a => a.modelo === modeloFilter);
+      if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
+
+      const withStatus = list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      let filteredWithStatus = withStatus;
+      if (statusFilter !== 'TODOS') filteredWithStatus = withStatus.filter(x => x.current.status === statusFilter);
+
+      const total = filteredWithStatus.length;
+      const disp = filteredWithStatus.filter(x => x.current.status === 'Disponivel').length;
+      const indisp = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').length;
+      const pctDisp = total > 0 ? Math.round((disp / total) * 100) : 0;
+      const pctIndisp = total > 0 ? 100 - pctDisp : 0;
+
+      document.getElementById('avail-kpi-total').innerText = total;
+      document.getElementById('avail-kpi-disp').innerText = disp;
+      document.getElementById('avail-kpi-indisp').innerText = indisp;
+      document.getElementById('avail-kpi-pct-disp').innerText = `${pctDisp}%`;
+      document.getElementById('avail-kpi-pct-indisp').innerText = `${pctIndisp}%`;
+
+      // listas
+      document.getElementById('avail-list-context').innerText = opFilter !== 'TODAS' ? `(Operação: ${opFilter})` : '';
+      document.getElementById('avail-list-disponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Disponivel').map(x => `
+        <div class="flex items-center gap-2 text-xs p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.asset.modelo || ''}</span>
+        </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo disponível no filtro.</p>';
+
+      document.getElementById('avail-list-indisponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').map(x => `
+        <div class="flex items-center gap-2 text-xs p-2 bg-red-50 border border-red-200 rounded-lg">
+          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.current.event.tipoParada}</span>
+        </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo indisponível no filtro.</p>';
+
+      renderAvailabilityCharts(list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) })));
+      renderDashboardKPIs();
+    };
+
+    function groupCountAvailability(withStatus, keyFn) {
+      const groups = {};
+      withStatus.forEach(x => {
+        const key = keyFn(x.asset) || 'N/D';
+        if (!groups[key]) groups[key] = { disp: 0, indisp: 0 };
+        if (x.current.status === 'Disponivel') groups[key].disp++; else groups[key].indisp++;
+      });
+      return groups;
+    }
+
+    function renderStackedBar(canvasId, groups, instanceKey) {
+      const el = document.getElementById(canvasId);
+      if (!el) return;
+      const labels = Object.keys(groups);
+      const dispData = labels.map(l => groups[l].disp);
+      const indispData = labels.map(l => groups[l].indisp);
+      if (window[instanceKey]) window[instanceKey].destroy();
+      window[instanceKey] = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Disponível', data: dispData, backgroundColor: '#10b981', borderRadius: 4, stack: 's' },
+            { label: 'Indisponível', data: indispData, backgroundColor: '#ef4444', borderRadius: 4, stack: 's' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { display: false } },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+
+    window.renderAvailabilityCharts = function(withStatus) {
+      renderStackedBar('chartAvailByOperacao', groupCountAvailability(withStatus, a => a.operacao), 'chartAvailOperacaoInstance');
+      renderStackedBar('chartAvailByUnidade', groupCountAvailability(withStatus, a => a.unidade), 'chartAvailUnidadeInstance');
+      renderStackedBar('chartAvailByModelo', groupCountAvailability(withStatus, a => a.modelo), 'chartAvailModeloInstance');
+      renderStackedBar('chartAvailByTipo', groupCountAvailability(withStatus, a => a.tipo), 'chartAvailTipoInstance');
+    };
+
+    // ===================== FECHAMENTO DIÁRIO (SNAPSHOT IMUTÁVEL) =====================
+    function maybeRunSnapshot() {
+      if (!assetsLoaded || !eventsLoaded) return;
+      runDailySnapshotIfNeeded(false);
+    }
+
+    window.runDailySnapshotIfNeeded = function(force) {
+      const today = getTodayStr();
+      if (!force && window.snapshotMeta && window.snapshotMeta.lastDate === today) return;
+      if (!force && window.dailySnapshots && window.dailySnapshots[today]) return;
+
+      // Snapshot é IMUTÁVEL: uma vez criado para uma data, nunca é sobrescrito (exceto forçado manualmente pelo operador)
+      if (window.dailySnapshots && window.dailySnapshots[today] && !force) return;
+
+      const entries = getActiveAssets().map(a => {
+        const current = getAssetCurrentStatus(a.id);
+        return {
+          assetId: a.id,
+          tag: a.tag,
+          operacao: a.operacao,
+          unidade: a.unidade,
+          modelo: a.modelo,
+          tipo: a.tipo,
+          status: current.status,
+          tipoParada: current.event ? current.event.tipoParada : null,
+          motivo: current.event ? current.event.motivo : null,
+          tempoParado: current.event ? calcDiasParado(current.event.inicio, null) : 0
+        };
+      });
+
+      if (!window.dailySnapshots) window.dailySnapshots = {};
+      window.dailySnapshots[today] = entries;
+      window.snapshotMeta = { lastDate: today };
+      saveData();
+      renderEvolutionChart();
+      renderExecutiveCharts();
+    };
+
+    window.renderEvolutionChart = function() {
+      const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
+      const dates = Object.keys(window.dailySnapshots || {}).sort();
+      const labels = [];
+      const pctData = [];
+      const tableRows = [];
+
+      dates.forEach(date => {
+        let entries = window.dailySnapshots[date] || [];
+        if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        const total = entries.length;
+        const disp = entries.filter(e => e.status === 'Disponivel').length;
+        const pct = total > 0 ? Math.round((disp / total) * 100) : 0;
+        labels.push(formatDateBR(date));
+        pctData.push(pct);
+        tableRows.push({ date, total, disp, indisp: total - disp, pct });
+      });
+
+      const el = document.getElementById('chartEvolution');
+      if (el) {
+        if (window.chartEvolutionInstance) window.chartEvolutionInstance.destroy();
+        window.chartEvolutionInstance = new Chart(el.getContext('2d'), {
+          type: 'line',
+          data: { labels, datasets: [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } } }
+        });
+      }
+
+      const tbody = document.getElementById('evolution-table-body');
+      if (tbody) {
+        tbody.innerHTML = tableRows.slice().reverse().map(r => `
+          <tr><td class="p-3">${formatDateBR(r.date)}</td><td class="p-3">${r.total}</td><td class="p-3 text-emerald-600 font-bold">${r.disp}</td><td class="p-3 text-red-600 font-bold">${r.indisp}</td><td class="p-3 font-black">${r.pct}%</td></tr>
+        `).join('') || '<tr><td colspan="5" class="p-4 text-center text-xs text-slate-400 italic">Nenhum snapshot registrado ainda.</td></tr>';
+      }
+
+      renderEvolutionMini(labels.slice(-30), pctData.slice(-30));
+    };
+
+    function renderEvolutionMini(labels, data) {
+      const el = document.getElementById('chartEvolutionMini');
+      if (!el) return;
+      if (window.chartEvolutionMiniInstance) window.chartEvolutionMiniInstance.destroy();
+      window.chartEvolutionMiniInstance = new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets: [{ label: '% Disponibilidade', data, borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.15)', fill: true, tension: 0.3, pointRadius: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } } }
+      });
+    }
+
+    // ===================== DASHBOARD (VISÃO GERAL) =====================
+    window.renderDashboardKPIs = function() {
+      const assetsInUnit = getFilteredAssetsByUnit().filter(a => a.status === 'Ativo');
+      const withStatus = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      const total = withStatus.length;
+      const disp = withStatus.filter(x => x.current.status === 'Disponivel').length;
+      const indisp = total - disp;
+      const pct = total > 0 ? Math.round((disp / total) * 100) : 0;
+
+      document.getElementById('kpi-total-fleet').innerText = total;
+      document.getElementById('kpi-cavalos-count').innerText = assetsInUnit.filter(a => a.tipo === 'Cavalo').length;
+      document.getElementById('kpi-carretas-count').innerText = assetsInUnit.filter(a => a.tipo === 'Carreta').length;
+      document.getElementById('kpi-availability-pct').innerText = `${pct}%`;
+      document.getElementById('kpi-available-count').innerText = disp;
+      document.getElementById('kpi-unavailable-count').innerText = indisp;
+
+      const unavailContainer = document.getElementById('dashboard-unavailable-assets');
+      if (unavailContainer) {
+        const unavailList = withStatus.filter(x => x.current.status === 'Indisponivel');
+        unavailContainer.innerHTML = unavailList.length === 0
+          ? '<p class="text-xs text-slate-400 italic text-center py-4">Nenhum ativo indisponível no momento. 🎉</p>'
+          : unavailList.map(x => `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-red-200/80 shadow-sm">
+              <div class="flex items-center gap-3">
+                ${getUnitBadge(x.asset.unidade)}
+                <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${x.asset.tag}</span>
+                ${getVehicleBadge(x.asset.tipo)}
+                <div>
+                  <p class="text-sm font-semibold text-slate-800">${x.current.event.tipoParada} — ${x.current.event.motivo}</p>
+                  <p class="text-xs text-slate-500">Desde ${formatDateBR(x.current.event.inicio)}</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full border bg-red-100 text-red-800 border-red-300">${calcDiasParado(x.current.event.inicio, null)} dias parado</span>
+            </div>
+          `).join('');
+      }
+      lucide.createIcons();
+    };
+
+    // ===================== DOCUMENTOS =====================
+    window.exportScheduleToCSV = function() {
+      const filteredMaint = getFilteredMaint();
+      if (filteredMaint.length === 0) {
+        alert("Nenhuma programação disponível para exportar com os filtros atuais.");
+        return;
+      }
+
+      let csvContent = "\uFEFF";
+      csvContent += "Unidade;TAG Veiculo;Tipo;Servico Programado;Data Programada;Status\n";
+
+      filteredMaint.forEach(m => {
+        const unitName = m.unit === 'AM' ? 'Rio Preto/Manaus (AM)' : 'Parnaiba (MA)';
+        csvContent += `"${unitName}";"${m.tag}";"${m.type}";"${m.service}";"${formatDateBR(m.date)}";"${m.status}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Programacao_GNL_${window.selectedUnit}_${getTodayStr()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    window.getFilteredMaint = function() {
+      let data = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
+      const typeFilter = document.getElementById('calendar-type-filter')?.value || 'TODOS';
+      if (typeFilter !== 'TODOS') {
+        data = data.filter(m => m.type === typeFilter);
+      }
+      return data;
+    };
+
+    window.getFilteredDocs = function() {
+      if (window.selectedUnit === 'TODAS') return window.fleetDocs;
+      return window.fleetDocs.filter(d => d.unit === window.selectedUnit);
+    };
+
+    window.getFilteredHistory = function() {
+      const tagFilter = document.getElementById('history-tag-filter')?.value || 'TODOS';
+      let data = window.selectedUnit === 'TODAS' ? window.globalAuditHistory : window.globalAuditHistory.filter(h => h.unit === window.selectedUnit);
+      if (tagFilter !== 'TODOS') data = data.filter(h => h.tag === tagFilter);
+      return data;
+    };
+
     window.saveDocument = function(e) {
       e.preventDefault();
+      const assetId = document.getElementById('doc-tag').value;
+      const asset = getAssetById(assetId);
+      if (!asset) { alert('Selecione um ativo válido.'); return; }
       const unit = document.getElementById('doc-unit').value;
-      const tag = document.getElementById('doc-tag').value.toUpperCase();
       const type = document.getElementById('doc-type').value;
       const docName = document.getElementById('doc-name').value;
       const expDate = document.getElementById('doc-exp').value;
       const status = document.getElementById('doc-status').value;
 
-      window.fleetDocs.push({ id: Date.now(), unit, tag, type, docName, expDate, status });
-      addAuditLog(unit, 'Documentação', tag, `${docName} (${type}) cadastrado/atualizado`, expDate, status);
+      window.fleetDocs.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, docName, expDate, status });
+      addAuditLog(unit, 'Documentação', asset.tag, `${docName} (${type}) cadastrado/atualizado`, expDate, status);
 
       saveData();
       closeDocModal();
@@ -759,7 +1898,7 @@
 
     window.toggleDocStatus = function(id, newStatus) {
       const doc = window.fleetDocs.find(d => d.id === id);
-      if(doc) {
+      if (doc) {
         doc.status = newStatus;
         addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado`, doc.expDate, newStatus);
         saveData();
@@ -769,7 +1908,7 @@
     window.deleteDocument = function(id) {
       if (confirm("Tem certeza que deseja excluir este documento?")) {
         const item = window.fleetDocs.find(d => d.id === id);
-        if(item) {
+        if (item) {
           addAuditLog(item.unit, 'Documentação', item.tag, `${item.docName} removido`, item.expDate, 'Excluído');
         }
         window.fleetDocs = window.fleetDocs.filter(d => d.id !== id);
@@ -777,11 +1916,19 @@
       }
     };
 
+    window.setDocView = function(view) {
+      window.currentDocView = view;
+      document.getElementById('doc-view-table-wrap').classList.toggle('hidden', view !== 'table');
+      document.getElementById('doc-view-calendar-wrap').classList.toggle('hidden', view !== 'calendar');
+      document.getElementById('btn-doc-view-table').classList.toggle('active', view === 'table');
+      document.getElementById('btn-doc-view-calendar').classList.toggle('active', view === 'calendar');
+      if (view === 'calendar') renderDocCalendar();
+    };
+
     window.renderDocuments = function() {
       const tbody = document.getElementById('docs-table-body');
       const criticalContainer = document.getElementById('dashboard-critical-docs');
-      
-      if(!tbody || !criticalContainer) return;
+      if (!tbody || !criticalContainer) return;
 
       tbody.innerHTML = '';
       criticalContainer.innerHTML = '';
@@ -791,18 +1938,14 @@
 
       activeDocs.sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
 
-      // Contagem Inteligente considerando CIV + CIPP como 2 itens nas métricas
-      let totalDocs = 0;
-      let realizedDocs = 0;
-      let pendingDocs = 0;
-      let reprogDocs = 0;
+      let totalDocs = 0, realizedDocs = 0, pendingDocs = 0, reprogDocs = 0;
 
       activeDocs.forEach(d => {
         const weight = d.docName === 'CIV + CIPP' ? 2 : 1;
         totalDocs += weight;
-        if(d.status === 'Realizado') realizedDocs += weight;
-        else if(d.status === 'Programado') pendingDocs += weight;
-        else if(d.status === 'Reprogramado') reprogDocs += weight;
+        if (d.status === 'Realizado') realizedDocs += weight;
+        else if (d.status === 'Programado') pendingDocs += weight;
+        else if (d.status === 'Reprogramado') reprogDocs += weight;
       });
 
       document.getElementById('doc-metric-total').innerText = totalDocs;
@@ -813,12 +1956,8 @@
       activeDocs.forEach(item => {
         const days = calculateDaysRemaining(item.expDate);
         let alertBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-
-        if (days <= 7) {
-          alertBadge = 'bg-red-100 text-red-800 border-red-300';
-        } else if (days <= 15) {
-          alertBadge = 'bg-amber-100 text-amber-800 border-amber-300';
-        }
+        if (days <= 7) alertBadge = 'bg-red-100 text-red-800 border-red-300';
+        else if (days <= 15) alertBadge = 'bg-amber-100 text-amber-800 border-amber-300';
 
         if (days <= 15 && item.status !== 'Realizado') {
           expiringCount++;
@@ -857,10 +1996,10 @@
             <td class="p-4 text-slate-700">${formatDateBR(item.expDate)}</td>
             <td class="p-4 font-bold ${days <= 15 ? 'text-amber-600' : 'text-slate-800'}">${days} dias</td>
             <td class="p-4">
-              <select onchange="toggleDocStatus(${item.id}, this.value)" class="text-xs font-bold p-1.5 rounded border outline-none ${item.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':item.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-blue-100 text-blue-800 border-blue-300'}">
-                <option value="Programado" ${item.status==='Programado'?'selected':''}>Programado / Em Andamento</option>
-                <option value="Realizado" ${item.status==='Realizado'?'selected':''}>Realizado / Renovado</option>
-                <option value="Reprogramado" ${item.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+              <select onchange="toggleDocStatus(${item.id}, this.value)" class="text-xs font-bold p-1.5 rounded border outline-none ${item.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : item.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">
+                <option value="Programado" ${item.status === 'Programado' ? 'selected' : ''}>Programado / Em Andamento</option>
+                <option value="Realizado" ${item.status === 'Realizado' ? 'selected' : ''}>Realizado / Renovado</option>
+                <option value="Reprogramado" ${item.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
               </select>
             </td>
             <td class="p-4 text-center">
@@ -871,25 +2010,175 @@
       });
 
       document.getElementById('kpi-expiring-docs').innerText = expiringCount;
-      const rawMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
-      const uniqueFleet = new Set([...activeDocs.map(d => d.tag), ...rawMaint.map(m => m.tag)]).size;
-      document.getElementById('kpi-total-fleet').innerText = uniqueFleet;
-      document.getElementById('kpi-cavalos-count').innerText = new Set(activeDocs.filter(d => d.type==='Cavalo').map(d=>d.tag)).size;
-      document.getElementById('kpi-carretas-count').innerText = new Set(activeDocs.filter(d => d.type==='Carreta').map(d=>d.tag)).size;
-
       lucide.createIcons();
     };
 
+    // --- Calendário de Documentos (Semanal + Mensal, com Drag & Drop) ---
+    window.changeDocMonth = function(delta) {
+      window.docCalendarDate.setMonth(window.docCalendarDate.getMonth() + delta);
+      renderDocCalendar();
+    };
+
+    window.setDocCalendarMode = function(mode) {
+      window.currentDocCalendarView = mode;
+      const btnWeekly = document.getElementById('btn-doc-view-weekly');
+      const btnMonthly = document.getElementById('btn-doc-view-monthly');
+      const navControls = document.getElementById('doc-monthly-navigation-controls');
+
+      if (mode === 'weekly') {
+        btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
+        btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+        navControls.classList.add('hidden');
+      } else {
+        btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
+        btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+        navControls.classList.remove('hidden');
+      }
+      renderDocCalendar();
+    };
+
+    window.allowDrop = function(ev) {
+      ev.preventDefault();
+      ev.currentTarget.classList.add('drop-target-hover');
+    };
+
+    window.renderDocCalendar = function() {
+      const container = document.getElementById('doc-calendar-grid');
+      if (!container) return;
+      const activeDocs = getFilteredDocs();
+
+      if (window.currentDocCalendarView === 'weekly') {
+        container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
+        const weekDays = [
+          { name: 'Segunda', dateStr: '2026-08-31', displayDate: '31/08' },
+          { name: 'Terça', dateStr: '2026-09-01', displayDate: '01/09' },
+          { name: 'Quarta', dateStr: '2026-09-02', displayDate: '02/09' },
+          { name: 'Quinta', dateStr: '2026-09-03', displayDate: '03/09' },
+          { name: 'Sexta', dateStr: '2026-09-04', displayDate: '04/09' }
+        ];
+
+        container.innerHTML = weekDays.map(day => {
+          const docsOfDay = activeDocs.filter(d => d.expDate === day.dateStr);
+          return `
+            <div class="card-executive p-4 min-h-[220px] flex flex-col"
+                 ondragover="allowDrop(event)"
+                 ondragleave="event.currentTarget.classList.remove('drop-target-hover')"
+                 ondrop="dropDoc(event, '${day.dateStr}')">
+              <h3 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2 mb-3 flex justify-between items-center">
+                <span>${day.name}</span>
+                <span class="text-xs bg-teal-100 text-teal-800 font-extrabold px-2 py-0.5 rounded">${day.displayDate}</span>
+              </h3>
+              <div class="space-y-2 flex-1">
+                ${docsOfDay.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-4">Sem vencimento</p>' : ''}
+                ${docsOfDay.map(d => `
+                  <div class="drag-chip bg-teal-50 p-2.5 rounded-lg border border-teal-200 text-xs space-y-1 hover:border-teal-400 transition"
+                       draggable="true" ondragstart="dragDocStart(event, ${d.id})">
+                    <div class="flex justify-between items-center">
+                      <div class="flex items-center gap-1">${getUnitBadge(d.unit)}<span class="font-extrabold text-slate-900">${d.tag}</span></div>
+                      ${getVehicleBadge(d.type)}
+                    </div>
+                    <p class="text-slate-700 font-medium flex items-center gap-1">
+                      ${d.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[9px] font-black px-1 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
+                      ${d.docName}
+                    </p>
+                    <select onchange="toggleDocStatus(${d.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none w-full ${d.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : d.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">
+                      <option value="Programado" ${d.status === 'Programado' ? 'selected' : ''}>Programado</option>
+                      <option value="Realizado" ${d.status === 'Realizado' ? 'selected' : ''}>Realizado</option>
+                      <option value="Reprogramado" ${d.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
+                    </select>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+        return;
+      }
+
+      container.className = 'card-executive p-4';
+      const year = window.docCalendarDate.getFullYear();
+      const month = window.docCalendarDate.getMonth();
+      const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      document.getElementById('doc-calendar-month-label').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let gridHTML = `
+        <div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-extrabold text-slate-500 uppercase">
+          <div class="text-red-400">Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+        </div>
+        <div class="grid grid-cols-7 gap-2">
+      `;
+
+      for (let x = 0; x < firstDayIndex; x++) {
+        gridHTML += `<div class="bg-slate-100/40 border border-slate-100 rounded-lg p-2 min-h-[110px]"></div>`;
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const formattedDay = day < 10 ? '0' + day : day;
+        const formattedMonth = (month + 1) < 10 ? '0' + (month + 1) : (month + 1);
+        const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+        const docsOfDay = activeDocs.filter(d => d.expDate === dateStr);
+
+        gridHTML += `
+          <div class="border border-slate-200 bg-white rounded-lg p-2 min-h-[110px] flex flex-col justify-between transition shadow-sm"
+               ondragover="allowDrop(event)"
+               ondragleave="event.currentTarget.classList.remove('drop-target-hover')"
+               ondrop="dropDoc(event, '${dateStr}')">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-black text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${day}</span>
+              ${docsOfDay.length > 0 ? `<span class="text-[10px] font-bold text-teal-700 bg-teal-50 px-1 rounded">${docsOfDay.length} doc</span>` : ''}
+            </div>
+            <div class="space-y-1.5 mt-1 flex-1 overflow-y-auto max-h-[100px]">
+              ${docsOfDay.map(d => `
+                <div class="drag-chip p-1.5 rounded text-[10px] font-medium bg-teal-50 border border-teal-200"
+                     draggable="true" ondragstart="dragDocStart(event, ${d.id})">
+                  <div class="flex items-center gap-1 justify-between">
+                    ${getUnitBadge(d.unit)}<span class="font-extrabold text-slate-900">${d.tag}</span>
+                  </div>
+                  <p class="text-slate-700 font-semibold leading-tight">${d.docName}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      gridHTML += `</div>`;
+      container.innerHTML = gridHTML;
+      lucide.createIcons();
+    };
+
+    window.dragDocStart = function(ev, id) {
+      ev.dataTransfer.setData('text/plain', String(id));
+    };
+
+    window.dropDoc = function(ev, dateStr) {
+      ev.preventDefault();
+      ev.currentTarget.classList.remove('drop-target-hover');
+      const id = Number(ev.dataTransfer.getData('text/plain'));
+      const doc = window.fleetDocs.find(d => d.id === id);
+      if (!doc) return;
+      const oldDate = doc.expDate;
+      doc.expDate = dateStr;
+      addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} reprogramado (drag & drop) de ${formatDateBR(oldDate)} para ${formatDateBR(dateStr)}`, dateStr, doc.status);
+      saveData();
+    };
+
+    // ===================== PREVENTIVAS =====================
     window.saveMaintenance = function(e) {
       e.preventDefault();
+      const assetId = document.getElementById('maint-tag').value;
+      const asset = getAssetById(assetId);
+      if (!asset) { alert('Selecione um ativo válido.'); return; }
       const unit = document.getElementById('maint-unit').value;
-      const tag = document.getElementById('maint-tag').value.toUpperCase();
       const type = document.getElementById('maint-type').value;
       const service = document.getElementById('maint-service').value;
       const date = document.getElementById('maint-date').value;
 
-      window.maintenanceSchedule.push({ id: Date.now(), unit, tag, type, service, date, status: 'Programado' });
-      addAuditLog(unit, 'Preventiva', tag, `${service} (${type})`, date, 'Programado');
+      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, status: 'Programado' });
+      addAuditLog(unit, 'Preventiva', asset.tag, `${service} (${type})`, date, 'Programado');
 
       saveData();
       closeMaintModal();
@@ -898,7 +2187,7 @@
 
     window.toggleStatus = function(id, newStatus) {
       const item = window.maintenanceSchedule.find(m => m.id === id);
-      if(item) {
+      if (item) {
         item.status = newStatus;
         addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status`, item.date, newStatus);
         saveData();
@@ -937,6 +2226,22 @@
     window.changeMonth = function(delta) {
       window.calendarDate.setMonth(window.calendarDate.getMonth() + delta);
       renderCalendar();
+    };
+
+    window.dragMaintStart = function(ev, id) {
+      ev.dataTransfer.setData('text/plain', String(id));
+    };
+
+    window.dropMaint = function(ev, dateStr) {
+      ev.preventDefault();
+      ev.currentTarget.classList.remove('drop-target-hover');
+      const id = Number(ev.dataTransfer.getData('text/plain'));
+      const item = window.maintenanceSchedule.find(m => m.id === id);
+      if (!item) return;
+      const oldDate = item.date;
+      item.date = dateStr;
+      addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} reprogramado (drag & drop) de ${formatDateBR(oldDate)} para ${formatDateBR(dateStr)}`, dateStr, item.status);
+      saveData();
     };
 
     window.renderCalendar = function() {
@@ -978,10 +2283,10 @@
                     </div>
                     <p class="text-slate-600 font-medium">${s.service}</p>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-2 gap-1">
-                      <select onchange="toggleStatus(${s.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none ${s.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':s.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-slate-200 text-slate-700'}">
-                        <option value="Programado" ${s.status==='Programado'?'selected':''}>Programado</option>
-                        <option value="Realizado" ${s.status==='Realizado'?'selected':''}>Realizado</option>
-                        <option value="Reprogramado" ${s.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+                      <select onchange="toggleStatus(${s.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none ${s.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : s.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-200 text-slate-700'}">
+                        <option value="Programado" ${s.status === 'Programado' ? 'selected' : ''}>Programado</option>
+                        <option value="Realizado" ${s.status === 'Realizado' ? 'selected' : ''}>Realizado</option>
+                        <option value="Reprogramado" ${s.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
                       </select>
                       <button onclick="deleteMaintenance(${s.id})" class="text-slate-400 hover:text-red-600 transition p-1" title="Excluir Programação">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -997,13 +2302,13 @@
         container.className = 'card-executive p-4';
         const year = window.calendarDate.getFullYear();
         const month = window.calendarDate.getMonth();
-        
+
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         document.getElementById('calendar-month-year-label').innerText = `${monthNames[month]} ${year}`;
 
         const firstDayIndex = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         let gridHTML = `
           <div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-extrabold text-slate-500 uppercase">
             <div class="text-red-400">Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
@@ -1023,15 +2328,19 @@
           const events = activeMaint.filter(m => m.date === dateStr);
 
           gridHTML += `
-            <div class="border border-slate-200 bg-white rounded-lg p-2 min-h-[110px] flex flex-col justify-between hover:border-emerald-500 transition shadow-sm">
+            <div class="border border-slate-200 bg-white rounded-lg p-2 min-h-[110px] flex flex-col justify-between hover:border-emerald-500 transition shadow-sm"
+                 ondragover="allowDrop(event)"
+                 ondragleave="event.currentTarget.classList.remove('drop-target-hover')"
+                 ondrop="dropMaint(event, '${dateStr}')">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-black text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${day}</span>
                 ${events.length > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">${events.length} prog</span>` : ''}
               </div>
-              
+
               <div class="space-y-1.5 mt-1 flex-1 overflow-y-auto max-h-[100px]">
                 ${events.map(e => `
-                  <div class="p-1.5 rounded text-[11px] font-medium bg-slate-50 border border-slate-200 space-y-1 hover:shadow-sm">
+                  <div class="drag-chip p-1.5 rounded text-[11px] font-medium bg-slate-50 border border-slate-200 space-y-1 hover:shadow-sm"
+                       draggable="true" ondragstart="dragMaintStart(event, ${e.id})">
                     <div class="flex justify-between items-center gap-1">
                       <div class="flex items-center gap-1">
                         ${getUnitBadge(e.unit)}
@@ -1039,14 +2348,14 @@
                       </div>
                       ${getVehicleBadge(e.type)}
                     </div>
-                    
+
                     <p class="text-slate-700 font-semibold leading-tight text-[10px] bg-white p-1 rounded border border-slate-100">${e.service}</p>
-                    
+
                     <div class="flex justify-between items-center pt-0.5">
-                      <select onchange="toggleStatus(${e.id}, this.value)" class="text-[9px] font-bold p-0.5 rounded outline-none border ${e.status==='Realizado'?'bg-emerald-100 text-emerald-800 border-emerald-300':e.status==='Reprogramado'?'bg-amber-100 text-amber-800 border-amber-300':'bg-slate-100 text-slate-700'}">
-                        <option value="Programado" ${e.status==='Programado'?'selected':''}>Programado</option>
-                        <option value="Realizado" ${e.status==='Realizado'?'selected':''}>Realizado</option>
-                        <option value="Reprogramado" ${e.status==='Reprogramado'?'selected':''}>Reprogramado</option>
+                      <select onchange="toggleStatus(${e.id}, this.value)" class="text-[9px] font-bold p-0.5 rounded outline-none border ${e.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : e.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-700'}">
+                        <option value="Programado" ${e.status === 'Programado' ? 'selected' : ''}>Programado</option>
+                        <option value="Realizado" ${e.status === 'Realizado' ? 'selected' : ''}>Realizado</option>
+                        <option value="Reprogramado" ${e.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
                       </select>
 
                       <button onclick="deleteMaintenance(${e.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir">
@@ -1075,10 +2384,11 @@
       lucide.createIcons();
     };
 
+    // ===================== HISTÓRICO CONSOLIDADO =====================
     window.renderHistoryTable = function() {
       const historyTbody = document.getElementById('consolidated-history-tbody');
-      if(!historyTbody) return;
-      
+      if (!historyTbody) return;
+
       historyTbody.innerHTML = '';
       const logs = getFilteredHistory();
 
@@ -1089,15 +2399,21 @@
 
       logs.forEach(h => {
         let statusBadge = 'bg-slate-100 text-slate-800 border-slate-300';
-        if (h.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-        if (h.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+        if (h.status === 'Realizado' || h.status === 'Encerrado' || h.status === 'Concluído') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        if (h.status === 'Reprogramado' || h.status === 'Aberto') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
         if (h.status === 'Excluído') statusBadge = 'bg-red-100 text-red-800 border-red-300';
+
+        let categoryColor = 'text-slate-600';
+        if (h.category === 'Preventiva') categoryColor = 'text-blue-600';
+        else if (h.category === 'Documentação') categoryColor = 'text-purple-600';
+        else if (h.category === 'Parada/Manutenção') categoryColor = 'text-red-600';
+        else if (h.category === 'Ativo') categoryColor = 'text-emerald-600';
 
         historyTbody.innerHTML += `
           <tr class="hover:bg-slate-50 text-xs">
             <td class="p-3 font-semibold text-slate-500">${h.timestamp}</td>
             <td class="p-3">${getUnitBadge(h.unit)}</td>
-            <td class="p-3 font-bold ${h.category === 'Preventiva' ? 'text-blue-600' : 'text-purple-600'}">${h.category}</td>
+            <td class="p-3 font-bold ${categoryColor}">${h.category}</td>
             <td class="p-3 font-bold text-slate-900">${h.tag}</td>
             <td class="p-3 text-slate-700 font-medium">${h.details}</td>
             <td class="p-3 text-slate-600">${formatDateBR(h.targetDate)}</td>
@@ -1109,49 +2425,64 @@
       });
     };
 
-    // --- RENDERIZAR TODOS OS GRÁFICOS INCLUINDO GRÁFICO DE DOCUMENTAÇÃO ---
+    // ===================== PAINEL DIRETORIA / GRÁFICOS =====================
     window.renderExecutiveCharts = function() {
+      if (!assetsLoaded) return;
       const activeMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
       const activeDocs = getFilteredDocs();
+      const assetsInUnit = getFilteredAssetsByUnit().filter(a => a.status === 'Ativo');
+      const withStatus = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
 
-      // MANTENÇÕES
+      // Disponibilidade geral
+      const totalAtivos = withStatus.length;
+      const dispAtivos = withStatus.filter(x => x.current.status === 'Disponivel').length;
+      const availPct = totalAtivos > 0 ? Math.round((dispAtivos / totalAtivos) * 100) : 0;
+      document.getElementById('exec-availability-pct').innerText = `${availPct}%`;
+      document.getElementById('exec-availability-ratio').innerText = `${dispAtivos}/${totalAtivos}`;
+
+      // Eventos relacionados aos ativos filtrados
+      const assetIdsInUnit = new Set(assetsInUnit.map(a => a.id));
+      const relevantEvents = (window.assetEvents || []).filter(e => assetIdsInUnit.has(e.assetId));
+      const openEvents = relevantEvents.filter(e => e.status === 'Aberto');
+      document.getElementById('exec-kpi-preventiva').innerText = openEvents.filter(e => e.tipoParada === 'Preventiva').length;
+      document.getElementById('exec-kpi-corretiva').innerText = openEvents.filter(e => e.tipoParada === 'Corretiva').length;
+      document.getElementById('exec-kpi-reforma').innerText = openEvents.filter(e => e.tipoParada === 'Reforma').length;
+      document.getElementById('exec-kpi-aguardando').innerText = openEvents.filter(e => e.situacao === 'Aguardando Peça' || e.situacao === 'Aguardando Serviço Terceiros').length;
+
+      const closedEvents = relevantEvents.filter(e => e.status === 'Encerrado');
+      const avgDowntime = closedEvents.length > 0 ? (closedEvents.reduce((s, e) => s + (e.diasParado || 0), 0) / closedEvents.length) : 0;
+      document.getElementById('exec-avg-downtime').innerText = `${avgDowntime.toFixed(1)}d`;
+
+      // MANTENÇÕES (preventivas)
       const totalProg = activeMaint.length;
       const totalReal = activeMaint.filter(m => m.status === 'Realizado').length;
       const adhPct = totalProg > 0 ? Math.round((totalReal / totalProg) * 100) : 0;
-
       document.getElementById('exec-adherence-pct').innerText = `${adhPct}%`;
 
       const cavaloItems = activeMaint.filter(m => m.type === 'Cavalo');
       const carretaItems = activeMaint.filter(m => m.type === 'Carreta');
-
       const cavaloProgramado = cavaloItems.length;
       const cavaloRealizado = cavaloItems.filter(m => m.status === 'Realizado').length;
       const cavaloPct = cavaloProgramado > 0 ? Math.round((cavaloRealizado / cavaloProgramado) * 100) : 0;
-
       const carretaProgramado = carretaItems.length;
       const carretaRealizado = carretaItems.filter(m => m.status === 'Realizado').length;
       const carretaPct = carretaProgramado > 0 ? Math.round((carretaRealizado / carretaProgramado) * 100) : 0;
 
-      document.getElementById('exec-cavalo-pct').innerText = `${cavaloPct}%`;
-      document.getElementById('exec-cavalo-ratio').innerText = `${cavaloRealizado}/${cavaloProgramado}`;
       document.getElementById('chart-cavalo-percent-badge').innerText = `${cavaloPct}% Concluído`;
-
-      document.getElementById('exec-carreta-pct').innerText = `${carretaPct}%`;
-      document.getElementById('exec-carreta-ratio').innerText = `${carretaRealizado}/${carretaProgramado}`;
       document.getElementById('chart-carreta-percent-badge').innerText = `${carretaPct}% Concluído`;
 
-      // CALCULO DE METRICAS DE DOCUMENTAÇÃO PARA O GRÁFICO
-      let docTotalCount = 0;
-      let docRealizedCount = 0;
-      let docPendingCount = 0;
-      let docReprogCount = 0;
-
+      // DOCUMENTAÇÃO
+      let docTotalCount = 0, docRealizedCount = 0, docPendingCount = 0, docReprogCount = 0;
+      const docByTypeMap = {};
       activeDocs.forEach(d => {
         const weight = d.docName === 'CIV + CIPP' ? 2 : 1;
         docTotalCount += weight;
-        if(d.status === 'Realizado') docRealizedCount += weight;
-        else if(d.status === 'Programado') docPendingCount += weight;
-        else if(d.status === 'Reprogramado') docReprogCount += weight;
+        if (d.status === 'Realizado') docRealizedCount += weight;
+        else if (d.status === 'Programado') docPendingCount += weight;
+        else if (d.status === 'Reprogramado') docReprogCount += weight;
+
+        if (!docByTypeMap[d.docName]) docByTypeMap[d.docName] = { programado: 0, realizado: 0 };
+        if (d.status === 'Realizado') docByTypeMap[d.docName].realizado += 1; else docByTypeMap[d.docName].programado += 1;
       });
 
       const docPct = docTotalCount > 0 ? Math.round((docRealizedCount / docTotalCount) * 100) : 0;
@@ -1160,65 +2491,37 @@
       document.getElementById('chart-doc-percent-badge').innerText = `${docPct}% Renovados`;
 
       const commonBarOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
-          datalabels: {
-            anchor: 'end',
-            align: 'top',
-            color: '#1e293b',
-            font: { weight: 'bold', size: 12 },
-            formatter: (val) => val
-          }
+          datalabels: { anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 12 }, formatter: (val) => val }
         },
-        scales: {
-          y: { beginAtZero: true, grace: '20%', ticks: { precision: 0 } }
-        }
+        scales: { y: { beginAtZero: true, grace: '20%', ticks: { precision: 0 } } }
       };
 
-      // 1. GRÁFICO CAVALO
+      // Cavalo
       const elCavalo = document.getElementById('chartCavaloProgReal');
       if (elCavalo) {
-        const ctxCavalo = elCavalo.getContext('2d');
         if (window.chartCavaloInstance) window.chartCavaloInstance.destroy();
-        window.chartCavaloInstance = new Chart(ctxCavalo, {
-          type: 'bar',
-          data: {
-            labels: ['Cavalos'],
-            datasets: [
-              { label: 'Programado', data: [cavaloProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
-              { label: 'Realizado', data: [cavaloRealizado], backgroundColor: '#10b981', borderRadius: 4 }
-            ]
-          },
-          options: commonBarOptions
+        window.chartCavaloInstance = new Chart(elCavalo.getContext('2d'), {
+          type: 'bar', data: { labels: ['Cavalos'], datasets: [{ label: 'Programado', data: [cavaloProgramado], backgroundColor: '#f59e0b', borderRadius: 4 }, { label: 'Realizado', data: [cavaloRealizado], backgroundColor: '#10b981', borderRadius: 4 }] }, options: commonBarOptions
         });
       }
 
-      // 2. GRÁFICO CARRETA
+      // Carreta
       const elCarreta = document.getElementById('chartCarretaProgReal');
       if (elCarreta) {
-        const ctxCarreta = elCarreta.getContext('2d');
         if (window.chartCarretaInstance) window.chartCarretaInstance.destroy();
-        window.chartCarretaInstance = new Chart(ctxCarreta, {
-          type: 'bar',
-          data: {
-            labels: ['Carretas'],
-            datasets: [
-              { label: 'Programado', data: [carretaProgramado], backgroundColor: '#f59e0b', borderRadius: 4 },
-              { label: 'Realizado', data: [carretaRealizado], backgroundColor: '#10b981', borderRadius: 4 }
-            ]
-          },
-          options: commonBarOptions
+        window.chartCarretaInstance = new Chart(elCarreta.getContext('2d'), {
+          type: 'bar', data: { labels: ['Carretas'], datasets: [{ label: 'Programado', data: [carretaProgramado], backgroundColor: '#f59e0b', borderRadius: 4 }, { label: 'Realizado', data: [carretaRealizado], backgroundColor: '#10b981', borderRadius: 4 }] }, options: commonBarOptions
         });
       }
 
-      // 3. NOVO GRÁFICO DE COLUNA: DOCUMENTAÇÃO (PROGRAMADO / REALIZADO / REPROGRAMADO)
+      // Docs status
       const elDoc = document.getElementById('chartDocStatus');
       if (elDoc) {
-        const ctxDoc = elDoc.getContext('2d');
         if (window.chartDocInstance) window.chartDocInstance.destroy();
-        window.chartDocInstance = new Chart(ctxDoc, {
+        window.chartDocInstance = new Chart(elDoc.getContext('2d'), {
           type: 'bar',
           data: {
             labels: ['Acompanhamento de Docs'],
@@ -1231,13 +2534,52 @@
           options: commonBarOptions
         });
       }
+
+      // Docs por tipo (Programado x Realizado)
+      const elDocType = document.getElementById('chartDocByType');
+      if (elDocType) {
+        const typeLabels = Object.keys(docByTypeMap);
+        if (window.chartDocByTypeInstance) window.chartDocByTypeInstance.destroy();
+        window.chartDocByTypeInstance = new Chart(elDocType.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: typeLabels,
+            datasets: [
+              { label: 'Programado', data: typeLabels.map(t => docByTypeMap[t].programado), backgroundColor: '#3b82f6', borderRadius: 4 },
+              { label: 'Realizado', data: typeLabels.map(t => docByTypeMap[t].realizado), backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+          },
+          options: commonBarOptions
+        });
+      }
+
+      // Ativos por Operação (Disponível x Indisponível)
+      const groupsOp = groupCountAvailability(withStatus, a => a.operacao);
+      renderStackedBar('chartAssetsByOperacao', groupsOp, 'chartAssetsByOperacaoInstance');
+
+      // Tipo de parada (todos os eventos relevantes)
+      const elParada = document.getElementById('chartParadaTipo');
+      if (elParada) {
+        const tipos = ['Preventiva', 'Corretiva', 'Reforma', 'Outros'];
+        const counts = tipos.map(t => relevantEvents.filter(e => e.tipoParada === t).length);
+        if (window.chartParadaTipoInstance) window.chartParadaTipoInstance.destroy();
+        window.chartParadaTipoInstance = new Chart(elParada.getContext('2d'), {
+          type: 'doughnut',
+          data: { labels: tipos, datasets: [{ data: counts, backgroundColor: ['#3b82f6', '#ef4444', '#a855f7', '#94a3b8'] }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: v => v > 0 ? v : '' } } }
+        });
+      }
     };
 
+    // ===================== INICIALIZAÇÃO =====================
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       lucide.createIcons();
+
+      // Reforça o snapshot diário periodicamente (cliente aberto durante virada de dia)
+      setInterval(() => { maybeRunSnapshot(); }, 5 * 60 * 1000);
     });
   </script>
 </body>
