@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web System GNL Brasil Logística</title>
+  <title>Gestão Integrada de Ativos, Disponibilidade, Manutenção e Documentos - GNL Brasil Logística</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -47,10 +47,10 @@
 
       <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Usuário / Matrícula</label>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Usuário (login)</label>
           <div class="relative">
             <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="login-user" value="pcm.admin" required class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <input type="text" id="login-user" placeholder="Digite seu usuário..." required class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
         </div>
 
@@ -63,7 +63,7 @@
         </div>
 
         <div id="login-error" class="hidden text-xs font-bold text-red-600 bg-red-50 border border-red-200 p-2 rounded text-center">
-          Senha incorreta! Tente novamente.
+          Usuário ou senha incorretos! Tente novamente.
         </div>
 
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center gap-2">
@@ -101,6 +101,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+          <div id="logged-user-badge" class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+            <i data-lucide="user-circle" class="w-4 h-4 text-slate-500"></i>
+            <div class="leading-tight">
+              <p class="text-xs font-bold text-slate-800" id="logged-user-name">-</p>
+              <p class="text-[10px] text-emerald-700 font-bold" id="logged-user-role">-</p>
+            </div>
+          </div>
           <div class="text-right text-xs text-slate-500 hidden sm:block">
             Hoje: <span id="current-date-display" class="font-bold text-emerald-700"></span>
           </div>
@@ -126,6 +133,9 @@
       <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="gauge" class="w-4 h-4"></i> Disponibilidade
       </button>
+      <button onclick="switchTab('paradasdetalhado')" id="btn-tab-paradasdetalhado" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="octagon-pause" class="w-4 h-4"></i> Paradas Detalhado
+      </button>
       <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="line-chart" class="w-4 h-4"></i> Evolução
       </button>
@@ -140,6 +150,9 @@
       </button>
       <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="history" class="w-4 h-4"></i> Histórico Consolidado
+      </button>
+      <button onclick="switchTab('users')" id="btn-tab-users" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="users" class="w-4 h-4"></i> Usuários & Permissões
       </button>
     </nav>
 
@@ -268,6 +281,7 @@
                 <th class="p-3">Início</th>
                 <th class="p-3">Previsão</th>
                 <th class="p-3">Dias Parado</th>
+                <th class="p-3">Data de Saída (Última Liberação)</th>
                 <th class="p-3">Local / Responsável</th>
                 <th class="p-3 text-center">Ações</th>
               </tr>
@@ -333,6 +347,73 @@
             <p class="text-xs font-black text-red-700 uppercase mb-2">Indisponíveis</p>
             <div id="avail-list-indisponiveis" class="space-y-1 max-h-72 overflow-y-auto"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3B: PARADAS DETALHADO -->
+    <section id="tab-paradasdetalhado" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4">
+        <h2 class="text-lg font-bold text-slate-900">Painel Detalhado de Paradas por Ativo</h2>
+        <p class="text-xs text-slate-500 mb-3">Status, motivo, dia e semana da parada, local e previsão de saída — direto do cadastro único de ativos</p>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+          <select id="pd-filter-unidade" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM - Rio Preto/Manaus</option>
+            <option value="MA">MA - Parnaíba</option>
+          </select>
+          <select id="pd-filter-tipo" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Tipos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <select id="pd-filter-status" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos Status</option>
+            <option value="Disponivel">Disponível</option>
+            <option value="Indisponivel">Indisponível</option>
+          </select>
+          <select id="pd-filter-local" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Locais</option>
+          </select>
+          <select id="pd-filter-tipo-parada" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos Tipos de Parada</option>
+            <option value="Preventiva">Preventiva</option>
+            <option value="Corretiva">Corretiva</option>
+            <option value="Reforma">Reforma</option>
+            <option value="Outros">Outros</option>
+          </select>
+          <input id="pd-filter-tag" oninput="renderParadasDetalhado()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs w-full outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="card-executive p-4"><p class="text-[11px] font-bold text-slate-500 uppercase">Total no Filtro</p><h3 class="text-2xl font-black text-slate-900" id="pd-kpi-total">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-emerald-500"><p class="text-[11px] font-bold text-emerald-700 uppercase">Disponíveis</p><h3 class="text-2xl font-black text-emerald-600" id="pd-kpi-disp">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-red-500"><p class="text-[11px] font-bold text-red-700 uppercase">Indisponíveis</p><h3 class="text-2xl font-black text-red-600" id="pd-kpi-indisp">0</h3></div>
+        <div class="card-executive p-4"><p class="text-[11px] font-bold text-slate-500 uppercase">% Disponibilidade</p><h3 class="text-2xl font-black text-emerald-600" id="pd-kpi-pct">0%</h3></div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+              <tr>
+                <th class="p-3">TAG</th>
+                <th class="p-3">Tipo</th>
+                <th class="p-3">Unidade</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Motivo da Parada</th>
+                <th class="p-3">Dia da Parada</th>
+                <th class="p-3">Semana da Parada</th>
+                <th class="p-3">Dias Parado</th>
+                <th class="p-3">Local do Ativo</th>
+                <th class="p-3">Responsável</th>
+                <th class="p-3">Previsão de Saída</th>
+                <th class="p-3">Data de Saída (Última Liberação)</th>
+              </tr>
+            </thead>
+            <tbody id="pd-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -504,6 +585,13 @@
             <button onclick="changeMonth(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
           </div>
 
+          <div id="weekly-navigation-controls" class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
+            <button onclick="changeWeek(-1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="calendar-week-label" class="text-xs font-bold px-3 text-slate-800">Semana</span>
+            <button onclick="changeWeek(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            <button onclick="goToCurrentWeek()" class="px-2 py-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-900 ml-1 border-l border-slate-300" title="Ir para a semana atual">Hoje</button>
+          </div>
+
           <button onclick="openMaintModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
             <i data-lucide="plus" class="w-4 h-4"></i> Agendar Preventiva
           </button>
@@ -583,6 +671,12 @@
             <span id="doc-calendar-month-label" class="text-xs font-bold px-3 text-slate-800">Setembro 2026</span>
             <button onclick="changeDocMonth(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
           </div>
+          <div id="doc-weekly-navigation-controls" class="hidden items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
+            <button onclick="changeDocWeek(-1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="doc-calendar-week-label" class="text-xs font-bold px-3 text-slate-800">Semana</span>
+            <button onclick="changeDocWeek(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            <button onclick="goToCurrentDocWeek()" class="px-2 py-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-900 ml-1 border-l border-slate-300" title="Ir para a semana atual">Hoje</button>
+          </div>
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button onclick="setDocCalendarMode('weekly')" id="btn-doc-view-weekly" class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">Semanal</button>
             <button onclick="setDocCalendarMode('monthly')" id="btn-doc-view-monthly" class="px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition">Mensal (Grade)</button>
@@ -613,15 +707,101 @@
             <thead class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
               <tr>
                 <th class="p-3">Data/Hora Registro</th>
+                <th class="p-3">Usuário</th>
                 <th class="p-3">Unidade</th>
                 <th class="p-3">Categoria</th>
                 <th class="p-3">Veículo / TAG</th>
                 <th class="p-3">Descrição do Evento / Serviço</th>
                 <th class="p-3">Data Alvo / Programada</th>
+                <th class="p-3">Data de Saída</th>
                 <th class="p-3">Status Final</th>
               </tr>
             </thead>
             <tbody id="consolidated-history-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 9: USUÁRIOS & PERMISSÕES -->
+    <section id="tab-users" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-5">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i> O que cada função pode acessar</h2>
+        <p class="text-xs text-slate-500 mb-3">Aba exclusiva do perfil Diretor — controla o cadastro de usuários e define as permissões de cada função no sistema</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">Função</th><th class="p-2">Abas Liberadas</th></tr>
+            </thead>
+            <tbody id="permissions-overview" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive p-5">
+        <h2 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4 text-emerald-600"></i> Cadastrar / Editar Usuário</h2>
+        <form id="form-user" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input type="hidden" id="user-editing-id" value="">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Nome Completo</label>
+            <input type="text" id="user-nome" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Usuário (login)</label>
+            <input type="text" id="user-login" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Senha</label>
+            <input type="text" id="user-senha" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Função</label>
+            <select id="user-funcao" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option>Assistente Administrativo</option>
+              <option>Analista Planejamento</option>
+              <option>Controlador de Manutenção</option>
+              <option>Supervisor</option>
+              <option>Gerente</option>
+              <option>Diretor</option>
+              <option>Desenvolvedor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Unidade</label>
+            <select id="user-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="TODAS">Todas as Unidades</option>
+              <option value="AM">AM - Rio Preto/Manaus</option>
+              <option value="MA">MA - Parnaíba</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Status</label>
+            <select id="user-status" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+          <div class="md:col-span-3 flex justify-end gap-2 pt-2">
+            <button type="button" onclick="resetUserForm()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Limpar</button>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Usuário</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+              <tr>
+                <th class="p-3">Nome</th>
+                <th class="p-3">Login</th>
+                <th class="p-3">Função</th>
+                <th class="p-3">Unidade</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
@@ -917,9 +1097,44 @@
     window.selectedUnit = 'TODAS';
     window.calendarDate = new Date(2026, 8, 1);
     window.docCalendarDate = new Date(2026, 8, 1);
-    window.currentCalendarView = 'monthly';
+    window.currentCalendarView = 'weekly';
     window.currentDocCalendarView = 'monthly';
     window.currentDocView = 'table';
+
+    // Semana de referência (segunda-feira) dos calendários semanais — dinâmica, avança/retrocede e acompanha a data atual
+    function getMondayOfWeek(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+    function formatDateISO(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    function buildWeekDays(monday) {
+      const names = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+      const days = [];
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(monday);
+        d.setDate(d.getDate() + i);
+        days.push({ name: names[i], dateStr: formatDateISO(d), displayDate: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` });
+      }
+      return days;
+    }
+    function weekRangeLabel(monday) {
+      const friday = new Date(monday);
+      friday.setDate(friday.getDate() + 4);
+      const fmt = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return `${fmt(monday)} — ${fmt(friday)}/${friday.getFullYear()}`;
+    }
+
+    window.maintWeekMonday = getMondayOfWeek(new Date());
+    window.docWeekMonday = getMondayOfWeek(new Date());
 
     window.chartCavaloInstance = null;
     window.chartCarretaInstance = null;
@@ -1058,15 +1273,301 @@
       set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []);
     };
 
+    // ===================== USUÁRIOS & PERMISSÕES (RBAC) =====================
+    // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
+    const ROLE_PERMISSIONS = {
+      'Assistente Administrativo': ['dashboard', 'documents', 'history'],
+      'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'evolution', 'history'],
+      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'history'],
+      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'history'],
+      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history'],
+      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users'],
+      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users']
+    };
+    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users'];
+
+    window.users = [];
+    let usersLoaded = false;
+
+    // Usuário "plus" com acesso irrestrito, equivalente ao Diretor — uso interno da equipe de desenvolvimento
+    const initialUsersDefault = [
+      { id: 1, nome: 'Administrador do Sistema', login: 'admin', senha: 'admin123', funcao: 'Diretor', unidade: 'TODAS', status: 'Ativo' },
+      { id: 2, nome: 'Desenvolvedor do Sistema', login: 'dev', senha: 'dev@gnl2026', funcao: 'Desenvolvedor', unidade: 'TODAS', status: 'Ativo' }
+    ];
+
+    function syncUsers() {
+      onValue(ref(db, 'users'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.users = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          window.users = initialUsersDefault;
+          set(ref(db, 'users'), initialUsersDefault);
+        }
+        usersLoaded = true;
+        renderUsersTable();
+      });
+    }
+
+    function saveUsersToDb() {
+      set(ref(db, 'users'), window.users || []);
+    }
+
+    window.applyRolePermissions = function(funcao) {
+      const allowed = ROLE_PERMISSIONS[funcao] || ['dashboard'];
+      ALL_TABS.forEach(tabId => {
+        const btn = document.getElementById(`btn-tab-${tabId}`);
+        if (!btn) return;
+        btn.classList.toggle('hidden', !allowed.includes(tabId));
+      });
+
+      const activeTabBtn = document.querySelector('.tab-btn.bg-emerald-600');
+      const activeTabId = activeTabBtn ? activeTabBtn.id.replace('btn-tab-', '') : 'dashboard';
+      if (!allowed.includes(activeTabId)) {
+        switchTab(allowed[0] || 'dashboard');
+      }
+    };
+
+    window.renderPermissionsOverview = function() {
+      const tbody = document.getElementById('permissions-overview');
+      if (!tbody) return;
+      const tabLabels = {
+        dashboard: 'Visão Geral', assets: 'Ativos & Status', availability: 'Disponibilidade',
+        paradasdetalhado: 'Paradas Detalhado', evolution: 'Evolução', executive: 'Painel Diretoria',
+        calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria',
+        history: 'Histórico Consolidado', users: 'Usuários & Permissões'
+      };
+      tbody.innerHTML = Object.keys(ROLE_PERMISSIONS).map(role => `
+        <tr>
+          <td class="p-2 font-bold text-slate-800">${role}</td>
+          <td class="p-2 text-slate-600">${ROLE_PERMISSIONS[role].map(t => tabLabels[t] || t).join(' • ')}</td>
+        </tr>
+      `).join('');
+    };
+
+    window.resetUserForm = function() {
+      document.getElementById('form-user').reset();
+      document.getElementById('user-editing-id').value = '';
+    };
+
+    window.saveUser = function(e) {
+      e.preventDefault();
+      const editingId = document.getElementById('user-editing-id').value;
+      const login = document.getElementById('user-login').value.trim();
+
+      const payload = {
+        nome: document.getElementById('user-nome').value.trim(),
+        login,
+        senha: document.getElementById('user-senha').value,
+        funcao: document.getElementById('user-funcao').value,
+        unidade: document.getElementById('user-unidade').value,
+        status: document.getElementById('user-status').value
+      };
+
+      const duplicate = (window.users || []).find(u => (u.login || '').toLowerCase() === login.toLowerCase() && String(u.id) !== String(editingId));
+      if (duplicate) {
+        alert('Já existe um usuário com esse login. Escolha outro.');
+        return;
+      }
+
+      if (editingId) {
+        const idx = window.users.findIndex(u => String(u.id) === String(editingId));
+        if (idx > -1) window.users[idx] = { ...window.users[idx], ...payload };
+      } else {
+        window.users.push({ id: Date.now(), ...payload });
+      }
+
+      saveUsersToDb();
+      resetUserForm();
+      renderUsersTable();
+    };
+
+    window.editUser = function(id) {
+      const u = (window.users || []).find(x => String(x.id) === String(id));
+      if (!u) return;
+      document.getElementById('user-editing-id').value = u.id;
+      document.getElementById('user-nome').value = u.nome || '';
+      document.getElementById('user-login').value = u.login || '';
+      document.getElementById('user-senha').value = u.senha || '';
+      document.getElementById('user-funcao').value = u.funcao || 'Assistente Administrativo';
+      document.getElementById('user-unidade').value = u.unidade || 'TODAS';
+      document.getElementById('user-status').value = u.status || 'Ativo';
+    };
+
+    window.toggleUserStatus = function(id) {
+      const u = (window.users || []).find(x => String(x.id) === String(id));
+      if (!u) return;
+      u.status = u.status === 'Ativo' ? 'Inativo' : 'Ativo';
+      saveUsersToDb();
+      renderUsersTable();
+    };
+
+    window.deleteUser = function(id) {
+      const u = (window.users || []).find(x => String(x.id) === String(id));
+      if (!u) return;
+      if (u.login === 'admin') { alert('O usuário administrador padrão não pode ser excluído.'); return; }
+      if (confirm(`Excluir o usuário ${u.nome}?`)) {
+        window.users = window.users.filter(x => String(x.id) !== String(id));
+        saveUsersToDb();
+        renderUsersTable();
+      }
+    };
+
+    window.renderUsersTable = function() {
+      const tbody = document.getElementById('users-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = (window.users || []).slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).map(u => `
+        <tr class="hover:bg-emerald-50/30 transition">
+          <td class="p-3 font-bold text-slate-900">${u.nome}</td>
+          <td class="p-3 text-slate-600">${u.login}</td>
+          <td class="p-3"><span class="text-[10px] font-black px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">${u.funcao}</span></td>
+          <td class="p-3 text-slate-600">${u.unidade === 'TODAS' ? 'Todas' : u.unidade}</td>
+          <td class="p-3">
+            <button onclick="toggleUserStatus(${u.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${u.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${u.status}</button>
+          </td>
+          <td class="p-3 text-center flex items-center justify-center gap-2">
+            <button onclick="editUser(${u.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+            <button onclick="deleteUser(${u.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    };
+
+    // ===================== PARADAS DETALHADO (SEMANA DA PARADA) =====================
+    function getISOWeekInfo(dateStr) {
+      if (!dateStr) return { label: '-' };
+      const parts = dateStr.split('-');
+      const date = new Date(parts[0], parts[1] - 1, parts[2]);
+      const target = new Date(date.valueOf());
+      const dayNr = (date.getDay() + 6) % 7;
+      target.setDate(target.getDate() - dayNr + 3);
+      const firstThursday = target.valueOf();
+      target.setMonth(0, 1);
+      if (target.getDay() !== 4) {
+        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+      }
+      const weekNumber = 1 + Math.ceil((firstThursday - target.valueOf()) / (7 * 24 * 3600 * 1000));
+
+      const day = date.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(date);
+      monday.setDate(monday.getDate() + diffToMonday);
+      const friday = new Date(monday);
+      friday.setDate(friday.getDate() + 4);
+      const fmt = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+      return { label: `Semana ${weekNumber} (${fmt(monday)} - ${fmt(friday)})` };
+    }
+
+    function populateParadasLocalFilter() {
+      const locais = Array.from(new Set((window.assetEvents || []).filter(e => e.status === 'Aberto').map(e => e.local).filter(Boolean))).sort();
+      const el = document.getElementById('pd-filter-local');
+      if (!el) return;
+      const current = el.value;
+      el.innerHTML = `<option value="TODOS">Todos os Locais</option>` + locais.map(l => `<option value="${l}">${l}</option>`).join('');
+      if (locais.includes(current)) el.value = current;
+    }
+
+    window.renderParadasDetalhado = function() {
+      if (!assetsLoaded) return;
+      populateParadasLocalFilter();
+
+      const unidadeFilter = document.getElementById('pd-filter-unidade')?.value || 'TODAS';
+      const tipoFilter = document.getElementById('pd-filter-tipo')?.value || 'TODOS';
+      const statusFilter = document.getElementById('pd-filter-status')?.value || 'TODOS';
+      const localFilter = document.getElementById('pd-filter-local')?.value || 'TODOS';
+      const tipoParadaFilter = document.getElementById('pd-filter-tipo-parada')?.value || 'TODOS';
+      const tagBusca = (document.getElementById('pd-filter-tag')?.value || '').trim().toUpperCase();
+
+      let list = getActiveAssets();
+      if (unidadeFilter !== 'TODAS') list = list.filter(a => a.unidade === unidadeFilter);
+      if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
+      if (tagBusca) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagBusca));
+
+      let withStatus = list.map(a => {
+        const current = getAssetCurrentStatus(a.id);
+        return { asset: a, status: current.status, event: current.event };
+      });
+
+      if (statusFilter !== 'TODOS') withStatus = withStatus.filter(x => x.status === statusFilter);
+      if (localFilter !== 'TODOS') withStatus = withStatus.filter(x => x.event && x.event.local === localFilter);
+      if (tipoParadaFilter !== 'TODOS') withStatus = withStatus.filter(x => x.event && x.event.tipoParada === tipoParadaFilter);
+
+      withStatus.sort((a, b) => {
+        if (a.status !== b.status) return a.status === 'Indisponivel' ? -1 : 1;
+        return (a.asset.tag || '').localeCompare(b.asset.tag || '');
+      });
+
+      const total = withStatus.length;
+      const disp = withStatus.filter(x => x.status === 'Disponivel').length;
+      const indisp = total - disp;
+      const pct = total > 0 ? Math.round((disp / total) * 100) : 0;
+
+      document.getElementById('pd-kpi-total').innerText = total;
+      document.getElementById('pd-kpi-disp').innerText = disp;
+      document.getElementById('pd-kpi-indisp').innerText = indisp;
+      document.getElementById('pd-kpi-pct').innerText = `${pct}%`;
+
+      document.getElementById('pd-tbody').innerHTML = withStatus.map(x => {
+        const isIndisp = x.status === 'Indisponivel';
+        const e = x.event;
+        const dias = isIndisp ? calcDiasParado(e.inicio, null) : 0;
+        const semanaInfo = isIndisp ? getISOWeekInfo(e.inicio) : { label: '-' };
+        const lastClosed = getLastClosedEventForAsset(x.asset.id);
+        return `
+          <tr class="hover:bg-slate-50 transition ${isIndisp ? 'bg-red-50/40' : ''}">
+            <td class="p-3 font-black text-slate-900">${x.asset.tag}</td>
+            <td class="p-3 text-xs">${x.asset.tipo || '-'}</td>
+            <td class="p-3">${getUnitBadge(x.asset.unidade)}</td>
+            <td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-black border ${isIndisp ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">${isIndisp ? 'Indisponível' : 'Disponível'}</span></td>
+            <td class="p-3 text-xs">${isIndisp ? (e.motivo || '-') : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? formatDateBR(e.inicio) : '-'}</td>
+            <td class="p-3 text-xs">${semanaInfo.label}</td>
+            <td class="p-3 text-xs font-bold ${dias > 3 ? 'text-red-600' : 'text-slate-700'}">${isIndisp ? dias + ' dias' : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? (e.local || '-') : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? (e.responsavel || '-') : '-'}</td>
+            <td class="p-3 text-xs">${isIndisp ? formatDateBR(e.previsao) : '-'}</td>
+            <td class="p-3 text-xs ${lastClosed ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${lastClosed ? formatDateBR(lastClosed.fim) : '-'}</td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="12" class="p-4 text-center text-xs text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
+
+      lucide.createIcons();
+    };
+
+    window.updateUserBadge = function(userObj) {
+      const badge = document.getElementById('logged-user-badge');
+      if (!userObj) { badge.classList.add('hidden'); return; }
+      document.getElementById('logged-user-name').innerText = userObj.nome || userObj.login;
+      document.getElementById('logged-user-role').innerText = userObj.funcao || '';
+      badge.classList.remove('hidden');
+    };
+
     // ===================== LOGIN =====================
     window.handleLogin = function(e) {
       e.preventDefault();
-      const pass = document.getElementById('login-pass').value.trim();
-      if (pass === '0000' || pass === '000') {
+      const loginInput = document.getElementById('login-user').value.trim().toLowerCase();
+      const passInput = document.getElementById('login-pass').value;
+
+      if (!usersLoaded) {
+        document.getElementById('login-error').innerText = 'Carregando usuários... aguarde um instante e tente novamente.';
+        document.getElementById('login-error').classList.remove('hidden');
+        return;
+      }
+
+      const user = (window.users || []).find(u => (u.login || '').toLowerCase() === loginInput && u.senha === passInput && u.status === 'Ativo');
+
+      if (user) {
         sessionStorage.setItem('pcm_auth', 'true');
+        sessionStorage.setItem('pcm_user', JSON.stringify({ login: user.login, nome: user.nome, funcao: user.funcao }));
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('login-error').classList.add('hidden');
+        window.currentLoggedUser = { login: user.login, nome: user.nome, funcao: user.funcao };
+        applyRolePermissions(user.funcao);
+        updateUserBadge(user);
       } else {
+        document.getElementById('login-error').innerText = 'Usuário ou senha incorretos! Tente novamente.';
         document.getElementById('login-error').classList.remove('hidden');
       }
     };
@@ -1075,6 +1576,11 @@
       const isAuth = sessionStorage.getItem('pcm_auth');
       if (isAuth === 'true') {
         document.getElementById('login-overlay').classList.add('hidden');
+        const stored = sessionStorage.getItem('pcm_user');
+        const userObj = stored ? JSON.parse(stored) : null;
+        window.currentLoggedUser = userObj;
+        applyRolePermissions(userObj ? userObj.funcao : 'Diretor');
+        updateUserBadge(userObj);
       } else {
         document.getElementById('login-overlay').classList.remove('hidden');
       }
@@ -1082,12 +1588,17 @@
 
     window.handleLogout = function() {
       sessionStorage.removeItem('pcm_auth');
+      sessionStorage.removeItem('pcm_user');
+      window.currentLoggedUser = null;
       document.getElementById('login-pass').value = '';
+      document.getElementById('logged-user-badge').classList.add('hidden');
       checkAuth();
     };
 
     // ===================== HISTÓRICO (PERMANENTE, NUNCA SOBRESCRITO) =====================
-    window.addAuditLog = function(unit, category, tag, details, targetDate, status) {
+    window.currentLoggedUser = null;
+
+    window.addAuditLog = function(unit, category, tag, details, targetDate, status, dataSaida) {
       if (!window.globalAuditHistory) window.globalAuditHistory = [];
       window.globalAuditHistory.unshift({
         id: Date.now() + Math.floor(Math.random() * 1000),
@@ -1097,7 +1608,9 @@
         tag,
         details,
         targetDate,
-        status
+        status,
+        dataSaida: dataSaida || null,
+        usuario: window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema'
       });
       saveData();
     };
@@ -1121,6 +1634,7 @@
       renderStatusTable();
       renderDashboardKPIs();
       renderAvailability();
+      renderParadasDetalhado();
       renderExecutiveCharts();
       renderEvolutionChart();
     };
@@ -1217,6 +1731,12 @@
       if (openEvent) return { status: 'Indisponivel', event: openEvent };
       return { status: 'Disponivel', event: null };
     };
+    // Último evento encerrado (última liberação) — mantém histórico visível da data de saída mesmo após o ativo voltar a operar
+    window.getLastClosedEventForAsset = function(assetId) {
+      const closed = (window.assetEvents || []).filter(e => String(e.assetId) === String(assetId) && e.status === 'Encerrado' && e.fim);
+      if (closed.length === 0) return null;
+      return closed.slice().sort((a, b) => new Date(b.fim) - new Date(a.fim))[0];
+    };
 
     function refreshAllAssetSelects() {
       populateAssetSelect('event-asset', true);
@@ -1304,6 +1824,8 @@
       if (tabId === 'evolution') renderEvolutionChart();
       if (tabId === 'assets') { renderAssets(); renderStatusTable(); }
       if (tabId === 'documents') renderDocCalendar();
+      if (tabId === 'paradasdetalhado') renderParadasDetalhado();
+      if (tabId === 'users') { renderPermissionsOverview(); renderUsersTable(); }
     };
 
     // ===================== MODAIS =====================
@@ -1502,7 +2024,7 @@
       evt.status = 'Encerrado';
       evt.situacao = 'Concluído';
       evt.diasParado = calcDiasParado(evt.inicio, evt.fim);
-      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado`, evt.fim, 'Encerrado');
+      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado`, evt.fim, 'Encerrado', evt.fim);
       saveData();
     };
 
@@ -1585,6 +2107,7 @@
         const evt = current.event;
         const isIndisp = current.status === 'Indisponivel';
         const dias = isIndisp ? calcDiasParado(evt.inicio, null) : 0;
+        const lastClosed = getLastClosedEventForAsset(a.id);
 
         return `
           <tr class="hover:bg-slate-50 transition ${isIndisp ? 'bg-red-50/30' : ''}">
@@ -1601,6 +2124,7 @@
             <td class="p-3 text-xs">${isIndisp ? formatDateBR(evt.inicio) : '-'}</td>
             <td class="p-3 text-xs">${isIndisp ? formatDateBR(evt.previsao) : '-'}</td>
             <td class="p-3 text-xs font-bold ${dias > 3 ? 'text-red-600' : 'text-slate-700'}">${isIndisp ? dias + ' dias' : '-'}</td>
+            <td class="p-3 text-xs ${lastClosed ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${lastClosed ? formatDateBR(lastClosed.fim) : '-'}</td>
             <td class="p-3 text-xs">${isIndisp ? `${evt.local || '-'} / ${evt.responsavel || '-'}` : '-'}</td>
             <td class="p-3 text-center flex items-center justify-center gap-2">
               ${isIndisp
@@ -2019,20 +2543,36 @@
       renderDocCalendar();
     };
 
+    window.changeDocWeek = function(delta) {
+      window.docWeekMonday.setDate(window.docWeekMonday.getDate() + delta * 7);
+      renderDocCalendar();
+    };
+    window.goToCurrentDocWeek = function() {
+      window.docWeekMonday = getMondayOfWeek(new Date());
+      renderDocCalendar();
+    };
+
     window.setDocCalendarMode = function(mode) {
       window.currentDocCalendarView = mode;
       const btnWeekly = document.getElementById('btn-doc-view-weekly');
       const btnMonthly = document.getElementById('btn-doc-view-monthly');
-      const navControls = document.getElementById('doc-monthly-navigation-controls');
+      const monthNav = document.getElementById('doc-monthly-navigation-controls');
+      const weekNav = document.getElementById('doc-weekly-navigation-controls');
 
       if (mode === 'weekly') {
         btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
         btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-        navControls.classList.add('hidden');
+        monthNav.classList.remove('flex');
+        monthNav.classList.add('hidden');
+        weekNav.classList.remove('hidden');
+        weekNav.classList.add('flex');
       } else {
         btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
         btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-        navControls.classList.remove('hidden');
+        weekNav.classList.remove('flex');
+        weekNav.classList.add('hidden');
+        monthNav.classList.remove('hidden');
+        monthNav.classList.add('flex');
       }
       renderDocCalendar();
     };
@@ -2049,13 +2589,8 @@
 
       if (window.currentDocCalendarView === 'weekly') {
         container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
-        const weekDays = [
-          { name: 'Segunda', dateStr: '2026-08-31', displayDate: '31/08' },
-          { name: 'Terça', dateStr: '2026-09-01', displayDate: '01/09' },
-          { name: 'Quarta', dateStr: '2026-09-02', displayDate: '02/09' },
-          { name: 'Quinta', dateStr: '2026-09-03', displayDate: '03/09' },
-          { name: 'Sexta', dateStr: '2026-09-04', displayDate: '04/09' }
-        ];
+        document.getElementById('doc-calendar-week-label').innerText = weekRangeLabel(window.docWeekMonday);
+        const weekDays = buildWeekDays(window.docWeekMonday);
 
         container.innerHTML = weekDays.map(day => {
           const docsOfDay = activeDocs.filter(d => d.expDate === day.dateStr);
@@ -2209,17 +2744,33 @@
       window.currentCalendarView = mode;
       const btnWeekly = document.getElementById('btn-view-weekly');
       const btnMonthly = document.getElementById('btn-view-monthly');
-      const navControls = document.getElementById('monthly-navigation-controls');
+      const monthNav = document.getElementById('monthly-navigation-controls');
+      const weekNav = document.getElementById('weekly-navigation-controls');
 
       if (mode === 'weekly') {
         btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
         btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-        navControls.classList.replace('flex', 'hidden');
+        monthNav.classList.remove('flex');
+        monthNav.classList.add('hidden');
+        weekNav.classList.remove('hidden');
+        weekNav.classList.add('flex');
       } else {
         btnMonthly.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white transition';
         btnWeekly.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-        navControls.classList.replace('hidden', 'flex');
+        weekNav.classList.remove('flex');
+        weekNav.classList.add('hidden');
+        monthNav.classList.remove('hidden');
+        monthNav.classList.add('flex');
       }
+      renderCalendar();
+    };
+
+    window.changeWeek = function(delta) {
+      window.maintWeekMonday.setDate(window.maintWeekMonday.getDate() + delta * 7);
+      renderCalendar();
+    };
+    window.goToCurrentWeek = function() {
+      window.maintWeekMonday = getMondayOfWeek(new Date());
       renderCalendar();
     };
 
@@ -2253,19 +2804,17 @@
 
       if (window.currentCalendarView === 'weekly') {
         container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
-        const weekDays = [
-          { name: 'Segunda', dateStr: '2026-08-31', displayDate: '31/08' },
-          { name: 'Terça', dateStr: '2026-09-01', displayDate: '01/09' },
-          { name: 'Quarta', dateStr: '2026-09-02', displayDate: '02/09' },
-          { name: 'Quinta', dateStr: '2026-09-03', displayDate: '03/09' },
-          { name: 'Sexta', dateStr: '2026-09-04', displayDate: '04/09' }
-        ];
+        document.getElementById('calendar-week-label').innerText = weekRangeLabel(window.maintWeekMonday);
+        const weekDays = buildWeekDays(window.maintWeekMonday);
 
         weekDays.forEach((day) => {
           const events = activeMaint.filter(m => m.date === day.dateStr);
 
           container.innerHTML += `
-            <div class="card-executive p-4 min-h-[220px] flex flex-col">
+            <div class="card-executive p-4 min-h-[220px] flex flex-col"
+                 ondragover="allowDrop(event)"
+                 ondragleave="event.currentTarget.classList.remove('drop-target-hover')"
+                 ondrop="dropMaint(event, '${day.dateStr}')">
               <h3 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2 mb-3 flex justify-between items-center">
                 <span>${day.name}</span>
                 <span class="text-xs bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded">${day.displayDate}</span>
@@ -2273,7 +2822,8 @@
               <div class="space-y-2 flex-1">
                 ${events.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-4">Sem programação</p>' : ''}
                 ${events.map(s => `
-                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs space-y-2 hover:border-emerald-400 transition">
+                  <div class="drag-chip bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs space-y-2 hover:border-emerald-400 transition"
+                       draggable="true" ondragstart="dragMaintStart(event, ${s.id})">
                     <div class="flex justify-between items-center">
                       <div class="flex items-center gap-1">
                         ${getUnitBadge(s.unit)}
@@ -2393,7 +2943,7 @@
       const logs = getFilteredHistory();
 
       if (logs.length === 0) {
-        historyTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-xs text-slate-400 italic">Nenhum evento registrado no histórico.</td></tr>`;
+        historyTbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-xs text-slate-400 italic">Nenhum evento registrado no histórico.</td></tr>`;
         return;
       }
 
@@ -2412,11 +2962,13 @@
         historyTbody.innerHTML += `
           <tr class="hover:bg-slate-50 text-xs">
             <td class="p-3 font-semibold text-slate-500">${h.timestamp}</td>
+            <td class="p-3 font-bold text-slate-700">${h.usuario || 'Sistema'}</td>
             <td class="p-3">${getUnitBadge(h.unit)}</td>
             <td class="p-3 font-bold ${categoryColor}">${h.category}</td>
             <td class="p-3 font-bold text-slate-900">${h.tag}</td>
             <td class="p-3 text-slate-700 font-medium">${h.details}</td>
             <td class="p-3 text-slate-600">${formatDateBR(h.targetDate)}</td>
+            <td class="p-3 ${h.dataSaida ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${h.dataSaida ? formatDateBR(h.dataSaida) : '-'}</td>
             <td class="p-3">
               <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${statusBadge}">${h.status}</span>
             </td>
@@ -2574,6 +3126,7 @@
     // ===================== INICIALIZAÇÃO =====================
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
+      syncUsers();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       lucide.createIcons();
