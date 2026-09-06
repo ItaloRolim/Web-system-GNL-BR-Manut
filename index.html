@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web System  GNL Brasil Manut</title>
+  <title>Gestão Integrada de Ativos, Disponibilidade, Manutenção e Documentos - GNL Brasil Logística</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,6 +28,25 @@
     .drag-chip:active { cursor: grabbing; }
     .drop-target-hover { outline: 2px dashed #10b981; outline-offset: -2px; background-color: #ecfdf5 !important; }
     .subtab-btn.active { background-color:#0f766e; color:#fff; }
+
+    /* ===== RESPONSIVIDADE: celular pequeno (até ~5"), tablet, notebook, monitor e TV/projetor ===== */
+    @media (max-width: 380px) {
+      .card-executive { border-radius: 0.5rem; }
+      h1 { font-size: 1.05rem !important; }
+    }
+    /* Modo TV / Projeção: aumenta fontes e espaçamentos para leitura à distância em telas grandes */
+    body.tv-mode { font-size: 1.25rem; }
+    body.tv-mode .card-executive { padding: 1.35em !important; }
+    body.tv-mode table { font-size: 1.05em; }
+    body.tv-mode th, body.tv-mode td { padding: 0.9em !important; }
+    body.tv-mode h1 { font-size: 1.6em !important; }
+    body.tv-mode h2 { font-size: 1.3em !important; }
+    body.tv-mode .tab-btn { font-size: 1.05em; padding: 0.9em 1.3em !important; }
+    body.tv-mode .text-3xl { font-size: 3rem !important; }
+    body.tv-mode .text-2xl { font-size: 2.1rem !important; }
+    @media (min-width: 1600px) {
+      body.tv-mode .max-w-7xl { max-width: 1800px; }
+    }
   </style>
 </head>
 <body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
@@ -111,6 +130,9 @@
           <div class="text-right text-xs text-slate-500 hidden sm:block">
             Hoje: <span id="current-date-display" class="font-bold text-emerald-700"></span>
           </div>
+          <button onclick="toggleTvMode()" id="btn-tv-mode" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg border border-slate-200 transition" title="Modo TV / Projeção (aumenta fontes para tela grande)">
+            <i data-lucide="monitor" class="w-4 h-4"></i>
+          </button>
           <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition" title="Sair do Sistema">
             <i data-lucide="log-out" class="w-4 h-4"></i>
           </button>
@@ -125,34 +147,37 @@
     <!-- MENU DE NAVEGAÇÃO POR ABAS -->
     <nav class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
       <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
-        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Visão Geral
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="hidden sm:inline">Visão Geral</span>
       </button>
       <button onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="clipboard-list" class="w-4 h-4"></i> Ativos & Status
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span class="hidden sm:inline">Ativos & Status</span>
       </button>
       <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="gauge" class="w-4 h-4"></i> Disponibilidade
+        <i data-lucide="gauge" class="w-4 h-4"></i> <span class="hidden sm:inline">Disponibilidade</span>
       </button>
       <button onclick="switchTab('paradasdetalhado')" id="btn-tab-paradasdetalhado" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="octagon-pause" class="w-4 h-4"></i> Paradas Detalhado
+        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span class="hidden sm:inline">Paradas Detalhado</span>
       </button>
       <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="line-chart" class="w-4 h-4"></i> Evolução
+        <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="hidden sm:inline">Evolução</span>
       </button>
       <button onclick="switchTab('executive')" id="btn-tab-executive" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="trending-up" class="w-4 h-4"></i> Painel Diretoria
+        <i data-lucide="trending-up" class="w-4 h-4"></i> <span class="hidden sm:inline">Painel Diretoria</span>
       </button>
       <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="calendar" class="w-4 h-4"></i> Calendário de Preventivas
+        <i data-lucide="calendar" class="w-4 h-4"></i> <span class="hidden sm:inline">Calendário de Preventivas</span>
       </button>
       <button onclick="switchTab('documents')" id="btn-tab-documents" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="file-text" class="w-4 h-4"></i> Documentação & Auditoria
+        <i data-lucide="file-text" class="w-4 h-4"></i> <span class="hidden sm:inline">Documentação & Auditoria</span>
+      </button>
+      <button onclick="switchTab('planning')" id="btn-tab-planning" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="calendar-check-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Planejamento</span>
       </button>
       <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="history" class="w-4 h-4"></i> Histórico Consolidado
+        <i data-lucide="history" class="w-4 h-4"></i> <span class="hidden sm:inline">Histórico Consolidado</span>
       </button>
       <button onclick="switchTab('users')" id="btn-tab-users" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="users" class="w-4 h-4"></i> Usuários & Permissões
+        <i data-lucide="users" class="w-4 h-4"></i> <span class="hidden sm:inline">Usuários & Permissões</span>
       </button>
     </nav>
 
@@ -283,6 +308,7 @@
                 <th class="p-3">Dias Parado</th>
                 <th class="p-3">Data de Saída (Última Liberação)</th>
                 <th class="p-3">Local / Responsável</th>
+                <th class="p-3">Ações Realizadas</th>
                 <th class="p-3 text-center">Ações</th>
               </tr>
             </thead>
@@ -410,6 +436,7 @@
                 <th class="p-3">Responsável</th>
                 <th class="p-3">Previsão de Saída</th>
                 <th class="p-3">Data de Saída (Última Liberação)</th>
+                <th class="p-3">Ações Realizadas</th>
               </tr>
             </thead>
             <tbody id="pd-tbody" class="divide-y divide-slate-100"></tbody>
@@ -420,17 +447,40 @@
 
     <!-- ABA 4: EVOLUÇÃO -->
     <section id="tab-evolution" class="tab-content fade-in space-y-6">
-      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">Evolução Diária de Disponibilidade</h2>
-          <p class="text-xs text-slate-500">Baseado nos snapshots imutáveis de fechamento diário</p>
-        </div>
-        <div class="flex gap-2">
-          <select id="evo-filter-operacao" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
-          <button onclick="runDailySnapshotIfNeeded(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+      <div class="card-executive p-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Evolução Diária de Disponibilidade</h2>
+            <p class="text-xs text-slate-500">Baseado nos snapshots imutáveis de fechamento diário — rastreabilidade completa por dia, mês e ano</p>
+          </div>
+          <button onclick="runDailySnapshotIfNeeded(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
             <i data-lucide="camera" class="w-4 h-4"></i> Forçar Snapshot de Hoje
           </button>
         </div>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <select id="evo-filter-agrupamento" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="dia">Agrupar por Dia</option>
+            <option value="semana">Agrupar por Semana</option>
+            <option value="mes">Agrupar por Mês</option>
+            <option value="ano">Agrupar por Ano</option>
+          </select>
+          <select id="evo-filter-semana-num" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas as Semanas</option>
+          </select>
+          <select id="evo-filter-operacao" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="evo-filter-unidade" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="evo-filter-tipo" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Tipos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <input id="evo-filter-tag" oninput="renderEvolutionChart()" placeholder="Filtrar por TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em um ponto do gráfico ou em uma linha da tabela para ver quais ativos estavam indisponíveis naquele período.</p>
       </div>
       <div class="card-executive p-5">
         <div class="h-80"><canvas id="chartEvolution"></canvas></div>
@@ -439,7 +489,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
-              <tr><th class="p-3">Data</th><th class="p-3">Total</th><th class="p-3">Disponíveis</th><th class="p-3">Indisponíveis</th><th class="p-3">% Disponibilidade</th></tr>
+              <tr><th class="p-3">Período</th><th class="p-3">Total</th><th class="p-3">Disponíveis</th><th class="p-3">Indisponíveis</th><th class="p-3">% Disponibilidade</th></tr>
             </thead>
             <tbody id="evolution-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -555,6 +605,91 @@
         <h3 class="font-bold text-slate-900 text-sm mb-4">Documentos: Programado x Realizado por Tipo</h3>
         <div class="h-72"><canvas id="chartDocByType"></canvas></div>
       </div>
+
+      <!-- MÉDIA DE TEMPO PARADO POR OPERAÇÃO / TIPO / MODELO / EQUIPAMENTO -->
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2"><i data-lucide="timer" class="w-4 h-4 text-red-600"></i> Média de Tempo Parado</h3>
+        <p class="text-xs text-slate-500 mb-4">Baseado nos eventos de parada já encerrados (liberados), em dias</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div><p class="text-xs font-bold text-slate-600 mb-2 text-center">Por Operação</p><div class="h-56"><canvas id="chartAvgDowntimeOperacao"></canvas></div></div>
+          <div><p class="text-xs font-bold text-slate-600 mb-2 text-center">Por Tipo</p><div class="h-56"><canvas id="chartAvgDowntimeTipo"></canvas></div></div>
+          <div><p class="text-xs font-bold text-slate-600 mb-2 text-center">Por Modelo</p><div class="h-56"><canvas id="chartAvgDowntimeModelo"></canvas></div></div>
+        </div>
+        <div class="mt-5 overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">TAG</th><th class="p-2">Operação</th><th class="p-2">Tipo</th><th class="p-2">Modelo</th><th class="p-2">Qtd. Paradas</th><th class="p-2">Média de Dias Parado</th></tr>
+            </thead>
+            <tbody id="avg-downtime-by-asset-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CONTROLE DE PROGRAMAÇÃO E REPROGRAMAÇÃO -->
+      <div class="card-executive p-5 space-y-4">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-amber-600"></i> Controle de Programação e Reprogramação (Preventivas & Documentos)</h3>
+          <p class="text-xs text-slate-500">Toda alteração de data exige motivo e fica registrada no histórico permanentemente</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+          <select id="repro-filter-periodo" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
+            <option value="TODOS">Período: Tudo</option>
+            <option value="dia">Hoje</option>
+            <option value="semana">Esta Semana</option>
+            <option value="mes">Este Mês</option>
+          </select>
+          <input id="repro-filter-tag" oninput="renderReprogramacaoPanel()" placeholder="TAG..." class="border border-slate-300 rounded-lg p-2 text-[11px] outline-none">
+          <select id="repro-filter-operacao" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none"><option value="TODAS">Operação: Todas</option></select>
+          <select id="repro-filter-unidade" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
+            <option value="TODAS">Unidade: Todas</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="repro-filter-tipo" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
+            <option value="TODOS">Tipo: Todos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <select id="repro-filter-modelo" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none"><option value="TODOS">Modelo: Todos</option></select>
+          <select id="repro-filter-status" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
+            <option value="TODOS">Status: Todos</option>
+            <option value="Programado">Programado</option>
+            <option value="Realizado">Realizado</option>
+            <option value="Reprogramado">Reprogramado</option>
+          </select>
+          <select id="repro-filter-origem" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
+            <option value="TODOS">Origem: Todas</option>
+            <option value="Preventiva">Preventivas</option>
+            <option value="Documento">Documentos</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center"><p class="text-[10px] uppercase font-bold text-slate-500">Programado</p><p class="text-xl font-black text-blue-600" id="repro-kpi-programado">0</p></div>
+          <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center"><p class="text-[10px] uppercase font-bold text-slate-500">Reprogramado</p><p class="text-xl font-black text-amber-600" id="repro-kpi-reprogramado">0</p></div>
+          <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center"><p class="text-[10px] uppercase font-bold text-slate-500">Realizado</p><p class="text-xl font-black text-emerald-600" id="repro-kpi-realizado">0</p></div>
+          <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center"><p class="text-[10px] uppercase font-bold text-slate-500">Taxa de Cumprimento</p><p class="text-xl font-black text-slate-800" id="repro-kpi-cumprimento">0%</p></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div><p class="text-xs font-bold text-slate-600 mb-2 text-center">Programado x Reprogramado x Realizado</p><div class="h-56"><canvas id="chartReproStatus"></canvas></div></div>
+          <div><p class="text-xs font-bold text-slate-600 mb-2 text-center">Motivos de Reprogramação</p><div class="h-56"><canvas id="chartReproMotivos"></canvas></div></div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-2">Origem</th><th class="p-2">TAG</th><th class="p-2">Atividade</th>
+                <th class="p-2">Data Original</th><th class="p-2">Data Reprogramada</th>
+                <th class="p-2">Motivo</th><th class="p-2">Responsável</th><th class="p-2">Quando</th>
+              </tr>
+            </thead>
+            <tbody id="repro-history-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ABA 6: CALENDÁRIO -->
@@ -590,6 +725,7 @@
             <span id="calendar-week-label" class="text-xs font-bold px-3 text-slate-800">Semana</span>
             <button onclick="changeWeek(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             <button onclick="goToCurrentWeek()" class="px-2 py-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-900 ml-1 border-l border-slate-300" title="Ir para a semana atual">Hoje</button>
+            <input type="number" id="jump-week-maint" min="1" max="53" placeholder="Nº" class="w-12 text-[11px] p-1 ml-1 border border-slate-300 rounded outline-none" title="Digite o número da semana e pressione Enter" onkeydown="if(event.key==='Enter'){jumpToWeekNumber('maint', this.value);}">
           </div>
 
           <button onclick="openMaintModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
@@ -676,6 +812,7 @@
             <span id="doc-calendar-week-label" class="text-xs font-bold px-3 text-slate-800">Semana</span>
             <button onclick="changeDocWeek(1)" class="px-2 py-1 text-xs font-bold text-slate-600 hover:text-emerald-700"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             <button onclick="goToCurrentDocWeek()" class="px-2 py-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-900 ml-1 border-l border-slate-300" title="Ir para a semana atual">Hoje</button>
+            <input type="number" id="jump-week-doc" min="1" max="53" placeholder="Nº" class="w-12 text-[11px] p-1 ml-1 border border-slate-300 rounded outline-none" title="Digite o número da semana e pressione Enter" onkeydown="if(event.key==='Enter'){jumpToWeekNumber('doc', this.value);}">
           </div>
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button onclick="setDocCalendarMode('weekly')" id="btn-doc-view-weekly" class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">Semanal</button>
@@ -684,6 +821,72 @@
         </div>
         <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Arraste um documento e solte em outro dia para atualizar o vencimento automaticamente.</p>
         <div id="doc-calendar-grid"></div>
+      </div>
+    </section>
+
+    <!-- ABA 7B: CONTROLE DE PLANEJAMENTO -->
+    <section id="tab-planning" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-check-2" class="w-5 h-5 text-emerald-600"></i> Controle de Planejamento — Preventivas & Documentação</h2>
+        <p class="text-xs text-slate-500 mb-3">Visão consolidada do que está planejado, agrupada por semana (nº ISO) — inclui atrasados</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <select id="plan-filter-unidade" onchange="renderPlanejamento()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="plan-filter-origem" onchange="renderPlanejamento()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Preventivas + Documentos</option>
+            <option value="Preventiva">Só Preventivas</option>
+            <option value="Documento">Só Documentos</option>
+          </select>
+          <select id="plan-filter-semana-num" onchange="renderPlanejamento()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas as Semanas</option>
+          </select>
+          <select id="plan-filter-horizonte" onchange="renderPlanejamento()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="8">Próximas 8 semanas</option>
+            <option value="4">Próximas 4 semanas</option>
+            <option value="12">Próximas 12 semanas</option>
+            <option value="999">Tudo (inclui passado)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="card-executive p-4 border-l-4 border-l-red-500 text-center"><p class="text-[11px] font-bold text-red-700 uppercase">Atrasados</p><h3 class="text-2xl font-black text-red-600" id="plan-kpi-atrasados">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-amber-500 text-center"><p class="text-[11px] font-bold text-amber-700 uppercase">Esta Semana</p><h3 class="text-2xl font-black text-amber-600" id="plan-kpi-esta-semana">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-blue-500 text-center"><p class="text-[11px] font-bold text-blue-700 uppercase">Próxima Semana</p><h3 class="text-2xl font-black text-blue-600" id="plan-kpi-proxima-semana">0</h3></div>
+        <div class="card-executive p-4 text-center"><p class="text-[11px] font-bold text-slate-500 uppercase">Total Planejado (futuro)</p><h3 class="text-2xl font-black text-slate-800" id="plan-kpi-total">0</h3></div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-2">Semana</th><th class="p-2">Período</th>
+                <th class="p-2">Preventivas Prog.</th><th class="p-2">Preventivas Reprog.</th><th class="p-2">Preventivas Realiz.</th>
+                <th class="p-2">Docs Prog.</th><th class="p-2">Docs Reprog.</th><th class="p-2">Docs Realiz.</th>
+                <th class="p-2">Total</th>
+              </tr>
+            </thead>
+            <tbody id="plan-week-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+          <h3 class="text-sm font-bold text-slate-700">Itens do Planejamento (detalhe)</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">Origem</th><th class="p-2">TAG</th><th class="p-2">Atividade</th><th class="p-2">Unidade</th><th class="p-2">Semana</th><th class="p-2">Data</th><th class="p-2">Status</th></tr>
+            </thead>
+            <tbody id="plan-items-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -951,6 +1154,10 @@
           <input type="text" id="event-responsavel" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
         </div>
         <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ações Realizadas</label>
+          <textarea id="event-acoes" rows="2" placeholder="Ex: Substituição de pastilhas e discos, sangria do sistema de freios" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+        </div>
+        <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Observações</label>
           <textarea id="event-observacoes" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
         </div>
@@ -1072,6 +1279,76 @@
     </div>
   </div>
 
+  <!-- MODAL DETALHAMENTO DE INDISPONIBILIDADE (CLIQUE NA EVOLUÇÃO) -->
+  <div id="modal-evo-drilldown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="octagon-alert" class="w-5 h-5 text-red-600"></i> Indisponibilidade em <span id="evo-drilldown-label" class="text-red-600"></span></h3>
+        <button onclick="closeEvoDrillDown()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-600 uppercase mb-2">Ativos Indisponíveis (base: Gestão de Ativos / Snapshots)</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">TAG</th><th class="p-2">Operação</th><th class="p-2">Unidade</th><th class="p-2">Tipo de Parada</th><th class="p-2">Motivo</th><th class="p-2">Dias no Período</th></tr>
+            </thead>
+            <tbody id="evo-drilldown-assets-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-600 uppercase mb-2">Eventos no Histórico (Trilha de Auditoria) neste período</h4>
+        <div id="evo-drilldown-history-list" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERMISSÕES INDIVIDUAIS (SOMENTE DESENVOLVEDOR) -->
+  <div id="modal-user-permissions" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Permissões Individuais — <span id="perm-modal-username" class="text-emerald-600"></span></h3>
+        <button onclick="closeUserPermissionsModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p class="text-xs text-slate-500">Marcando alguma aba abaixo, esse usuário passa a usar essa lista específica em vez das permissões padrão da função dele. Desmarque tudo (ou clique em "Restaurar padrão da função") para voltar ao comportamento por função.</p>
+      <input type="hidden" id="perm-modal-user-id" value="">
+      <div id="perm-modal-checkboxes" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm"></div>
+      <div class="flex justify-between items-center gap-2 pt-2 border-t">
+        <button type="button" onclick="restoreDefaultPermissions()" class="text-xs font-bold text-slate-500 hover:text-slate-700 underline">Restaurar padrão da função</button>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeUserPermissionsModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="button" onclick="saveUserPermissions()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Permissões</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MOTIVO DA REPROGRAMAÇÃO -->
+  <div id="modal-repro" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-amber-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="calendar-clock" class="w-5 h-5 text-amber-600"></i> Motivo da Reprogramação</h3>
+        <button onclick="cancelReprogramacaoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800" id="repro-modal-summary"></div>
+      <form id="form-repro" onsubmit="confirmReprogramacao(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Motivo da Reprogramação</label>
+          <input type="text" id="repro-motivo" required placeholder="Ex: Falta de peça, prioridade operacional..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Responsável pela Alteração</label>
+          <input type="text" id="repro-responsavel" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="cancelReprogramacaoModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar (não mover)</button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700">Confirmar Reprogramação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- SCRIPT ENGINE INTEGRADO -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1110,6 +1387,24 @@
       d.setDate(d.getDate() + diff);
       return d;
     }
+    // Retorna a segunda-feira de um número de semana ISO específico, em um dado ano
+    function getMondayOfISOWeek(week, year) {
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay();
+      const isoWeekStart = new Date(simple);
+      if (dow <= 4) isoWeekStart.setDate(simple.getDate() - dow + 1);
+      else isoWeekStart.setDate(simple.getDate() + 8 - dow);
+      isoWeekStart.setHours(0, 0, 0, 0);
+      return isoWeekStart;
+    }
+    window.jumpToWeekNumber = function(kind, value) {
+      const week = parseInt(value, 10);
+      if (!week || week < 1 || week > 53) { alert('Informe um número de semana válido (1 a 53).'); return; }
+      const year = getToday().getFullYear();
+      const monday = getMondayOfISOWeek(week, year);
+      if (kind === 'maint') { window.maintWeekMonday = monday; renderCalendar(); }
+      else { window.docWeekMonday = monday; renderDocCalendar(); }
+    };
     function formatDateISO(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1130,7 +1425,9 @@
       const friday = new Date(monday);
       friday.setDate(friday.getDate() + 4);
       const fmt = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return `${fmt(monday)} — ${fmt(friday)}/${friday.getFullYear()}`;
+      const info = window.getISOWeekInfo(formatDateISO(monday));
+      const weekTag = info && info.weekNumber ? `Semana ${info.weekNumber} · ` : '';
+      return `${weekTag}${fmt(monday)} — ${fmt(friday)}/${friday.getFullYear()}`;
     }
 
     window.maintWeekMonday = getMondayOfWeek(new Date());
@@ -1236,6 +1533,7 @@
         renderDocuments();
         renderDocCalendar();
         renderExecutiveCharts();
+        renderPlanejamento();
       });
 
       onValue(ref(db, 'maintenanceSchedule'), (snapshot) => {
@@ -1248,6 +1546,7 @@
         }
         renderCalendar();
         renderExecutiveCharts();
+        renderPlanejamento();
       });
 
       onValue(ref(db, 'globalAuditHistory'), (snapshot) => {
@@ -1277,14 +1576,14 @@
     // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'documents', 'history'],
-      'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'evolution', 'history'],
-      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'history'],
-      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'history'],
-      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history'],
-      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users'],
-      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users']
+      'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'planning', 'evolution', 'history'],
+      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'planning', 'history'],
+      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'planning', 'history'],
+      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history'],
+      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users'],
+      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users']
     };
-    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'history', 'users'];
+    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -1313,8 +1612,9 @@
       set(ref(db, 'users'), window.users || []);
     }
 
-    window.applyRolePermissions = function(funcao) {
-      const allowed = ROLE_PERMISSIONS[funcao] || ['dashboard'];
+    window.applyRolePermissions = function(funcao, userObj) {
+      const custom = userObj && Array.isArray(userObj.permissoesCustom) && userObj.permissoesCustom.length > 0 ? userObj.permissoesCustom : null;
+      const allowed = custom || ROLE_PERMISSIONS[funcao] || ['dashboard'];
       ALL_TABS.forEach(tabId => {
         const btn = document.getElementById(`btn-tab-${tabId}`);
         if (!btn) return;
@@ -1420,12 +1720,16 @@
         <tr class="hover:bg-emerald-50/30 transition">
           <td class="p-3 font-bold text-slate-900">${u.nome}</td>
           <td class="p-3 text-slate-600">${u.login}</td>
-          <td class="p-3"><span class="text-[10px] font-black px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">${u.funcao}</span></td>
+          <td class="p-3">
+            <span class="text-[10px] font-black px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">${u.funcao}</span>
+            ${u.permissoesCustom && u.permissoesCustom.length ? '<span class="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200" title="Permissões personalizadas, diferentes do padrão da função">Personalizado</span>' : ''}
+          </td>
           <td class="p-3 text-slate-600">${u.unidade === 'TODAS' ? 'Todas' : u.unidade}</td>
           <td class="p-3">
             <button onclick="toggleUserStatus(${u.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${u.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${u.status}</button>
           </td>
           <td class="p-3 text-center flex items-center justify-center gap-2">
+            ${window.currentLoggedUser && window.currentLoggedUser.funcao === 'Desenvolvedor' ? `<button onclick="openUserPermissionsModal(${u.id})" class="text-slate-400 hover:text-purple-600 transition" title="Permissões Individuais"><i data-lucide="shield" class="w-4 h-4"></i></button>` : ''}
             <button onclick="editUser(${u.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
             <button onclick="deleteUser(${u.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </td>
@@ -1434,15 +1738,70 @@
       lucide.createIcons();
     };
 
+    // ===================== PERMISSÕES INDIVIDUAIS (SOMENTE CONTA DESENVOLVEDOR) =====================
+    const TAB_LABELS_MAP = {
+      dashboard: 'Visão Geral', assets: 'Ativos & Status', availability: 'Disponibilidade',
+      paradasdetalhado: 'Paradas Detalhado', evolution: 'Evolução', executive: 'Painel Diretoria',
+      calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento',
+      history: 'Histórico Consolidado', users: 'Usuários & Permissões'
+    };
+
+    window.openUserPermissionsModal = function(userId) {
+      if (!window.currentLoggedUser || window.currentLoggedUser.funcao !== 'Desenvolvedor') {
+        alert('Somente a conta Desenvolvedor pode editar permissões individuais.');
+        return;
+      }
+      const u = (window.users || []).find(x => String(x.id) === String(userId));
+      if (!u) return;
+      document.getElementById('perm-modal-user-id').value = u.id;
+      document.getElementById('perm-modal-username').innerText = `${u.nome} (${u.funcao})`;
+
+      const active = (u.permissoesCustom && u.permissoesCustom.length) ? u.permissoesCustom : (ROLE_PERMISSIONS[u.funcao] || []);
+      document.getElementById('perm-modal-checkboxes').innerHTML = ALL_TABS.map(tabId => `
+        <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+          <input type="checkbox" class="perm-checkbox" value="${tabId}" ${active.includes(tabId) ? 'checked' : ''}>
+          <span class="text-xs font-bold text-slate-700">${TAB_LABELS_MAP[tabId] || tabId}</span>
+        </label>
+      `).join('');
+
+      document.getElementById('modal-user-permissions').classList.replace('hidden', 'flex');
+    };
+
+    window.closeUserPermissionsModal = function() {
+      document.getElementById('modal-user-permissions').classList.replace('flex', 'hidden');
+    };
+
+    window.restoreDefaultPermissions = function() {
+      document.querySelectorAll('.perm-checkbox').forEach(cb => cb.checked = false);
+    };
+
+    window.saveUserPermissions = function() {
+      const userId = document.getElementById('perm-modal-user-id').value;
+      const u = (window.users || []).find(x => String(x.id) === String(userId));
+      if (!u) return;
+      const selected = Array.from(document.querySelectorAll('.perm-checkbox:checked')).map(cb => cb.value);
+      u.permissoesCustom = selected.length > 0 ? selected : null;
+      saveUsersToDb();
+      renderUsersTable();
+      closeUserPermissionsModal();
+      // Se o próprio usuário logado teve as permissões alteradas, aplica na hora
+      if (window.currentLoggedUser && window.currentLoggedUser.login === u.login) {
+        window.currentLoggedUser.permissoesCustom = u.permissoesCustom;
+        sessionStorage.setItem('pcm_user', JSON.stringify(window.currentLoggedUser));
+        applyRolePermissions(u.funcao, u);
+      }
+    };
+
     // ===================== PARADAS DETALHADO (SEMANA DA PARADA) =====================
-    function getISOWeekInfo(dateStr) {
-      if (!dateStr) return { label: '-' };
+    window.getISOWeekInfo = function(dateStr) {
+      if (!dateStr) return { label: '-', weekNumber: null, isoYear: null, weekKey: null, mondayStr: null, fridayStr: null };
       const parts = dateStr.split('-');
       const date = new Date(parts[0], parts[1] - 1, parts[2]);
       const target = new Date(date.valueOf());
       const dayNr = (date.getDay() + 6) % 7;
       target.setDate(target.getDate() - dayNr + 3);
       const firstThursday = target.valueOf();
+      const isoYear = target.getFullYear();
       target.setMonth(0, 1);
       if (target.getDay() !== 4) {
         target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
@@ -1456,9 +1815,16 @@
       const friday = new Date(monday);
       friday.setDate(friday.getDate() + 4);
       const fmt = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const isoStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-      return { label: `Semana ${weekNumber} (${fmt(monday)} - ${fmt(friday)})` };
-    }
+      return {
+        label: `Semana ${weekNumber} (${fmt(monday)} - ${fmt(friday)})`,
+        weekNumber, isoYear,
+        weekKey: `${isoYear}-S${String(weekNumber).padStart(2, '0')}`,
+        mondayStr: isoStr(monday), fridayStr: isoStr(friday)
+      };
+    };
+    function getISOWeekInfo(dateStr) { return window.getISOWeekInfo(dateStr); }
 
     function populateParadasLocalFilter() {
       const locais = Array.from(new Set((window.assetEvents || []).filter(e => e.status === 'Aberto').map(e => e.local).filter(Boolean))).sort();
@@ -1529,9 +1895,10 @@
             <td class="p-3 text-xs">${isIndisp ? (e.responsavel || '-') : '-'}</td>
             <td class="p-3 text-xs">${isIndisp ? formatDateBR(e.previsao) : '-'}</td>
             <td class="p-3 text-xs ${lastClosed ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${lastClosed ? formatDateBR(lastClosed.fim) : '-'}</td>
+            <td class="p-3 text-xs max-w-[220px]">${isIndisp ? (e.acoesRealizadas || '-') : (lastClosed ? (lastClosed.acoesRealizadas || '-') : '-')}</td>
           </tr>
         `;
-      }).join('') || `<tr><td colspan="12" class="p-4 text-center text-xs text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
+      }).join('') || `<tr><td colspan="13" class="p-4 text-center text-xs text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
 
       lucide.createIcons();
     };
@@ -1560,11 +1927,11 @@
 
       if (user) {
         sessionStorage.setItem('pcm_auth', 'true');
-        sessionStorage.setItem('pcm_user', JSON.stringify({ login: user.login, nome: user.nome, funcao: user.funcao }));
+        sessionStorage.setItem('pcm_user', JSON.stringify({ login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null }));
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('login-error').classList.add('hidden');
-        window.currentLoggedUser = { login: user.login, nome: user.nome, funcao: user.funcao };
-        applyRolePermissions(user.funcao);
+        window.currentLoggedUser = { login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null };
+        applyRolePermissions(user.funcao, user);
         updateUserBadge(user);
       } else {
         document.getElementById('login-error').innerText = 'Usuário ou senha incorretos! Tente novamente.';
@@ -1579,7 +1946,7 @@
         const stored = sessionStorage.getItem('pcm_user');
         const userObj = stored ? JSON.parse(stored) : null;
         window.currentLoggedUser = userObj;
-        applyRolePermissions(userObj ? userObj.funcao : 'Diretor');
+        applyRolePermissions(userObj ? userObj.funcao : 'Diretor', userObj);
         updateUserBadge(userObj);
       } else {
         document.getElementById('login-overlay').classList.remove('hidden');
@@ -1637,6 +2004,7 @@
       renderParadasDetalhado();
       renderExecutiveCharts();
       renderEvolutionChart();
+      renderPlanejamento();
     };
 
     window.getToday = function() {
@@ -1757,23 +2125,26 @@
 
     function populateOperacaoFilters() {
       const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
-      ['avail-filter-operacao', 'evo-filter-operacao'].forEach(id => {
+      ['avail-filter-operacao', 'evo-filter-operacao', 'repro-filter-operacao'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
-        const allLabel = id === 'avail-filter-operacao' ? 'Todas Operações' : 'Todas Operações';
-        el.innerHTML = `<option value="TODAS">${allLabel}</option>` + ops.map(o => `<option value="${o}">${o}</option>`).join('');
+        const prefix = id === 'repro-filter-operacao' ? 'Operação: ' : '';
+        el.innerHTML = `<option value="TODAS">${prefix}Todas Operações</option>` + ops.map(o => `<option value="${o}">${o}</option>`).join('');
         if (ops.includes(current)) el.value = current;
       });
     }
 
     function populateModeloFilters() {
       const modelos = Array.from(new Set((window.assets || []).map(a => a.modelo).filter(Boolean))).sort();
-      const el = document.getElementById('avail-filter-modelo');
-      if (!el) return;
-      const current = el.value;
-      el.innerHTML = `<option value="TODOS">Todos Modelos</option>` + modelos.map(m => `<option value="${m}">${m}</option>`).join('');
-      if (modelos.includes(current)) el.value = current;
+      ['avail-filter-modelo', 'repro-filter-modelo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        const prefix = id === 'repro-filter-modelo' ? 'Modelo: ' : '';
+        el.innerHTML = `<option value="TODOS">${prefix}Todos Modelos</option>` + modelos.map(m => `<option value="${m}">${m}</option>`).join('');
+        if (modelos.includes(current)) el.value = current;
+      });
     }
 
     function refreshHistoryTagFilter() {
@@ -1825,6 +2196,7 @@
       if (tabId === 'assets') { renderAssets(); renderStatusTable(); }
       if (tabId === 'documents') renderDocCalendar();
       if (tabId === 'paradasdetalhado') renderParadasDetalhado();
+      if (tabId === 'planning') renderPlanejamento();
       if (tabId === 'users') { renderPermissionsOverview(); renderUsersTable(); }
     };
 
@@ -2004,6 +2376,7 @@
         previsao: document.getElementById('event-previsao').value,
         motivo: document.getElementById('event-motivo').value,
         responsavel: document.getElementById('event-responsavel').value,
+        acoesRealizadas: document.getElementById('event-acoes').value,
         observacoes: document.getElementById('event-observacoes').value,
         status: 'Aberto',
         fim: null,
@@ -2043,6 +2416,7 @@
       document.getElementById('event-previsao').value = evt.previsao || '';
       document.getElementById('event-motivo').value = evt.motivo || '';
       document.getElementById('event-responsavel').value = evt.responsavel || '';
+      document.getElementById('event-acoes').value = evt.acoesRealizadas || '';
       document.getElementById('event-observacoes').value = evt.observacoes || '';
       document.getElementById('modal-event').classList.replace('hidden', 'flex');
 
@@ -2056,6 +2430,7 @@
         evt.previsao = document.getElementById('event-previsao').value;
         evt.motivo = document.getElementById('event-motivo').value;
         evt.responsavel = document.getElementById('event-responsavel').value;
+        evt.acoesRealizadas = document.getElementById('event-acoes').value;
         evt.observacoes = document.getElementById('event-observacoes').value;
         addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `Atualização de dados da parada — ${evt.motivo}`, evt.inicio, evt.situacao);
         saveData();
@@ -2126,6 +2501,7 @@
             <td class="p-3 text-xs font-bold ${dias > 3 ? 'text-red-600' : 'text-slate-700'}">${isIndisp ? dias + ' dias' : '-'}</td>
             <td class="p-3 text-xs ${lastClosed ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${lastClosed ? formatDateBR(lastClosed.fim) : '-'}</td>
             <td class="p-3 text-xs">${isIndisp ? `${evt.local || '-'} / ${evt.responsavel || '-'}` : '-'}</td>
+            <td class="p-3 text-xs max-w-[220px]">${isIndisp ? (evt.acoesRealizadas || '-') : (lastClosed ? (lastClosed.acoesRealizadas || '-') : '-')}</td>
             <td class="p-3 text-center flex items-center justify-center gap-2">
               ${isIndisp
                 ? `<button onclick="editOpenEvent(${evt.id})" class="text-slate-400 hover:text-blue-600 transition" title="Atualizar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
@@ -2266,42 +2642,175 @@
       renderExecutiveCharts();
     };
 
+    window.evoBucketDatesMap = {};
+
     window.renderEvolutionChart = function() {
       const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
-      const dates = Object.keys(window.dailySnapshots || {}).sort();
-      const labels = [];
-      const pctData = [];
-      const tableRows = [];
+      const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
+      const agrupamento = document.getElementById('evo-filter-agrupamento')?.value || 'dia';
+      const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
 
+      const dates = Object.keys(window.dailySnapshots || {}).sort();
+
+      // Popula o filtro de "Nº da Semana" com as semanas realmente presentes nos snapshots
+      const weekSel = document.getElementById('evo-filter-semana-num');
+      if (weekSel) {
+        const weekOptions = {};
+        dates.forEach(d => {
+          const info = getISOWeekInfo(d);
+          if (info.weekKey) weekOptions[info.weekKey] = `Semana ${info.weekNumber}/${info.isoYear}`;
+        });
+        const currentSel = weekSel.value;
+        const sortedKeys = Object.keys(weekOptions).sort();
+        weekSel.innerHTML = `<option value="TODAS">Todas as Semanas</option>` + sortedKeys.map(k => `<option value="${k}">${weekOptions[k]}</option>`).join('');
+        if (sortedKeys.includes(currentSel)) weekSel.value = currentSel;
+      }
+
+      // Aplica filtros e agrega por dia primeiro
+      let perDay = [];
       dates.forEach(date => {
         let entries = window.dailySnapshots[date] || [];
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
+        if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
         const total = entries.length;
         const disp = entries.filter(e => e.status === 'Disponivel').length;
-        const pct = total > 0 ? Math.round((disp / total) * 100) : 0;
-        labels.push(formatDateBR(date));
-        pctData.push(pct);
-        tableRows.push({ date, total, disp, indisp: total - disp, pct });
+        perDay.push({ date, total, disp, indisp: total - disp, weekKey: getISOWeekInfo(date).weekKey });
       });
+
+      if (semanaFiltro !== 'TODAS') perDay = perDay.filter(r => r.weekKey === semanaFiltro);
+
+      // Agrupa por semana/mês/ano quando solicitado, somando totais/disponíveis antes de calcular %
+      function bucketKey(r) {
+        if (agrupamento === 'ano') return r.date.slice(0, 4);
+        if (agrupamento === 'mes') return r.date.slice(0, 7);
+        if (agrupamento === 'semana') return r.weekKey;
+        return r.date;
+      }
+      function bucketLabel(key) {
+        if (agrupamento === 'ano') return key;
+        if (agrupamento === 'mes') {
+          const [y, m] = key.split('-');
+          const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+          return `${monthNames[parseInt(m, 10) - 1]}/${y}`;
+        }
+        if (agrupamento === 'semana') return key ? key.replace('-S', ' · Semana ') : '-';
+        return formatDateBR(key);
+      }
+
+      const buckets = {};
+      window.evoBucketDatesMap = {};
+      perDay.forEach(r => {
+        const key = bucketKey(r);
+        if (!buckets[key]) buckets[key] = { total: 0, disp: 0 };
+        buckets[key].total += r.total;
+        buckets[key].disp += r.disp;
+        if (!window.evoBucketDatesMap[key]) window.evoBucketDatesMap[key] = [];
+        window.evoBucketDatesMap[key].push(r.date);
+      });
+
+      const bucketKeys = Object.keys(buckets).sort();
+      const labels = bucketKeys.map(bucketLabel);
+      const pctData = bucketKeys.map(k => buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0);
+      const tableRows = bucketKeys.map(k => ({
+        key: k, label: bucketLabel(k), total: buckets[k].total, disp: buckets[k].disp,
+        indisp: buckets[k].total - buckets[k].disp,
+        pct: buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0
+      }));
 
       const el = document.getElementById('chartEvolution');
       if (el) {
         if (window.chartEvolutionInstance) window.chartEvolutionInstance.destroy();
         window.chartEvolutionInstance = new Chart(el.getContext('2d'), {
           type: 'line',
-          data: { labels, datasets: [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } } }
+          data: { labels, datasets: [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 7 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            onClick: (evt, elements) => {
+              if (!elements || !elements.length) return;
+              const idx = elements[0].index;
+              const key = bucketKeys[idx];
+              showEvoDrillDown(window.evoBucketDatesMap[key] || [], labels[idx]);
+            },
+            plugins: { datalabels: { display: false } },
+            scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } },
+            onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+          }
         });
       }
 
       const tbody = document.getElementById('evolution-table-body');
       if (tbody) {
         tbody.innerHTML = tableRows.slice().reverse().map(r => `
-          <tr><td class="p-3">${formatDateBR(r.date)}</td><td class="p-3">${r.total}</td><td class="p-3 text-emerald-600 font-bold">${r.disp}</td><td class="p-3 text-red-600 font-bold">${r.indisp}</td><td class="p-3 font-black">${r.pct}%</td></tr>
+          <tr class="cursor-pointer hover:bg-emerald-50/50" onclick='showEvoDrillDown(${JSON.stringify(window.evoBucketDatesMap[r.key] || [])}, ${JSON.stringify(r.label)})'>
+            <td class="p-3">${r.label}</td><td class="p-3">${r.total}</td><td class="p-3 text-emerald-600 font-bold">${r.disp}</td><td class="p-3 text-red-600 font-bold">${r.indisp}</td><td class="p-3 font-black">${r.pct}%</td>
+          </tr>
         `).join('') || '<tr><td colspan="5" class="p-4 text-center text-xs text-slate-400 italic">Nenhum snapshot registrado ainda.</td></tr>';
       }
 
-      renderEvolutionMini(labels.slice(-30), pctData.slice(-30));
+      // Mini-gráfico do Painel Diretoria sempre usa a granularidade diária, últimos 30 dias, sem os filtros extras
+      const allDaily = dates.map(date => {
+        const entries = window.dailySnapshots[date] || [];
+        const total = entries.length;
+        const disp = entries.filter(e => e.status === 'Disponivel').length;
+        return { date, total, disp };
+      });
+      const dailyLabels = allDaily.map(r => formatDateBR(r.date));
+      const dailyPct = allDaily.map(r => r.total > 0 ? Math.round((r.disp / r.total) * 100) : 0);
+      renderEvolutionMini(dailyLabels.slice(-30), dailyPct.slice(-30));
+    };
+
+    // Detalhamento: o que estava indisponível no período clicado, cruzando snapshots (Gestão de Ativos) e Histórico
+    window.showEvoDrillDown = function(dateList, label) {
+      if (!dateList || dateList.length === 0) { alert('Sem dados de snapshot para este período.'); return; }
+      document.getElementById('evo-drilldown-label').innerText = label || '';
+
+      // Agrega indisponibilidades por ativo ao longo dos dias do período
+      const byAsset = {};
+      dateList.forEach(date => {
+        (window.dailySnapshots[date] || []).filter(e => e.status === 'Indisponivel').forEach(e => {
+          if (!byAsset[e.tag]) byAsset[e.tag] = { operacao: e.operacao, unidade: e.unidade, tipoParada: e.tipoParada, motivo: e.motivo, dias: 0 };
+          byAsset[e.tag].dias += 1;
+          byAsset[e.tag].tipoParada = e.tipoParada;
+          byAsset[e.tag].motivo = e.motivo;
+        });
+      });
+
+      const tbody = document.getElementById('evo-drilldown-assets-tbody');
+      const rows = Object.keys(byAsset).sort();
+      tbody.innerHTML = rows.map(tag => {
+        const a = byAsset[tag];
+        return `<tr><td class="p-2 font-bold text-slate-900">${tag}</td><td class="p-2">${a.operacao || '-'}</td><td class="p-2">${getUnitBadge(a.unidade)}</td><td class="p-2">${a.tipoParada || '-'}</td><td class="p-2">${a.motivo || '-'}</td><td class="p-2 font-bold text-red-600">${a.dias}</td></tr>`;
+      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum ativo indisponível neste período.</td></tr>`;
+
+      // Cruza com o Histórico Consolidado: eventos de Parada/Manutenção com data alvo ou saída dentro do período
+      const minDate = dateList.slice().sort()[0];
+      const maxDate = dateList.slice().sort().slice(-1)[0];
+      const historyMatches = (window.globalAuditHistory || []).filter(h => {
+        if (h.category !== 'Parada/Manutenção') return false;
+        const ref = h.dataSaida || h.targetDate;
+        return ref && ref >= minDate && ref <= maxDate;
+      });
+
+      const historyList = document.getElementById('evo-drilldown-history-list');
+      historyList.innerHTML = historyMatches.length === 0
+        ? '<p class="text-xs text-slate-400 italic text-center py-2">Nenhum evento de parada/manutenção registrado no histórico para este período.</p>'
+        : historyMatches.map(h => `
+          <div class="border border-slate-200 rounded-lg p-2 text-xs bg-slate-50">
+            <div class="flex justify-between"><span class="font-bold text-slate-900">${h.tag}</span><span class="text-slate-400">${h.timestamp}</span></div>
+            <p class="text-slate-600">${h.details}</p>
+            <p class="text-slate-400">Usuário: ${h.usuario || 'Sistema'} • Status: ${h.status}</p>
+          </div>
+        `).join('');
+
+      document.getElementById('modal-evo-drilldown').classList.replace('hidden', 'flex');
+    };
+
+    window.closeEvoDrillDown = function() {
+      document.getElementById('modal-evo-drilldown').classList.replace('flex', 'hidden');
     };
 
     function renderEvolutionMini(labels, data) {
@@ -2412,7 +2921,7 @@
       const expDate = document.getElementById('doc-exp').value;
       const status = document.getElementById('doc-status').value;
 
-      window.fleetDocs.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, docName, expDate, status });
+      window.fleetDocs.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, docName, expDate, status, dataOriginal: expDate, dataRealizada: status === 'Realizado' ? getTodayStr() : null, historico: [] });
       addAuditLog(unit, 'Documentação', asset.tag, `${docName} (${type}) cadastrado/atualizado`, expDate, status);
 
       saveData();
@@ -2424,6 +2933,8 @@
       const doc = window.fleetDocs.find(d => d.id === id);
       if (doc) {
         doc.status = newStatus;
+        if (newStatus === 'Realizado' && !doc.dataRealizada) doc.dataRealizada = getTodayStr();
+        if (newStatus !== 'Realizado') doc.dataRealizada = null;
         addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado`, doc.expDate, newStatus);
         saveData();
       }
@@ -2685,6 +3196,61 @@
       lucide.createIcons();
     };
 
+    // ===================== REPROGRAMAÇÃO (MOTIVO OBRIGATÓRIO + HISTÓRICO) =====================
+    window.pendingRepro = null;
+
+    window.openReprogramacaoModal = function(info) {
+      window.pendingRepro = info;
+      document.getElementById('repro-modal-summary').innerHTML =
+        `<strong>${info.label}</strong><br>De <strong>${formatDateBR(info.dataAnterior)}</strong> para <strong>${formatDateBR(info.dataNova)}</strong>`;
+      document.getElementById('repro-motivo').value = '';
+      document.getElementById('repro-responsavel').value = window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : '';
+      document.getElementById('modal-repro').classList.replace('hidden', 'flex');
+    };
+
+    window.cancelReprogramacaoModal = function() {
+      window.pendingRepro = null;
+      document.getElementById('modal-repro').classList.replace('flex', 'hidden');
+    };
+
+    window.confirmReprogramacao = function(e) {
+      e.preventDefault();
+      const info = window.pendingRepro;
+      if (!info) return;
+      const motivo = document.getElementById('repro-motivo').value.trim();
+      const responsavel = document.getElementById('repro-responsavel').value.trim();
+      if (!motivo) { alert('Informe o motivo da reprogramação.'); return; }
+
+      const historicoEntry = { dataAnterior: info.dataAnterior, dataNova: info.dataNova, motivo, responsavel, timestamp: getNowFormatted() };
+
+      if (info.kind === 'doc') {
+        const doc = window.fleetDocs.find(d => d.id === info.id);
+        if (doc) {
+          if (!doc.historico) doc.historico = [];
+          if (!doc.dataOriginal) doc.dataOriginal = info.dataAnterior;
+          doc.historico.push(historicoEntry);
+          doc.expDate = info.dataNova;
+          doc.status = 'Reprogramado';
+          addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} reprogramado — motivo: ${motivo}`, info.dataNova, 'Reprogramado');
+        }
+      } else if (info.kind === 'maint') {
+        const item = window.maintenanceSchedule.find(m => m.id === info.id);
+        if (item) {
+          if (!item.historico) item.historico = [];
+          if (!item.dataOriginal) item.dataOriginal = info.dataAnterior;
+          item.historico.push(historicoEntry);
+          item.date = info.dataNova;
+          item.status = 'Reprogramado';
+          addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} reprogramado — motivo: ${motivo}`, info.dataNova, 'Reprogramado');
+        }
+      }
+
+      saveData();
+      window.pendingRepro = null;
+      document.getElementById('modal-repro').classList.replace('flex', 'hidden');
+      renderReprogramacaoPanel();
+    };
+
     window.dragDocStart = function(ev, id) {
       ev.dataTransfer.setData('text/plain', String(id));
     };
@@ -2695,10 +3261,9 @@
       const id = Number(ev.dataTransfer.getData('text/plain'));
       const doc = window.fleetDocs.find(d => d.id === id);
       if (!doc) return;
-      const oldDate = doc.expDate;
-      doc.expDate = dateStr;
-      addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} reprogramado (drag & drop) de ${formatDateBR(oldDate)} para ${formatDateBR(dateStr)}`, dateStr, doc.status);
-      saveData();
+      if (doc.expDate === dateStr) return;
+      if (doc.status === 'Realizado') { alert('Este documento já foi realizado/renovado e não pode ser reprogramado.'); return; }
+      openReprogramacaoModal({ kind: 'doc', id: doc.id, label: `${doc.tag} — ${doc.docName}`, dataAnterior: doc.expDate, dataNova: dateStr });
     };
 
     // ===================== PREVENTIVAS =====================
@@ -2712,7 +3277,7 @@
       const service = document.getElementById('maint-service').value;
       const date = document.getElementById('maint-date').value;
 
-      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, status: 'Programado' });
+      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, status: 'Programado', dataOriginal: date, dataRealizada: null, historico: [] });
       addAuditLog(unit, 'Preventiva', asset.tag, `${service} (${type})`, date, 'Programado');
 
       saveData();
@@ -2724,6 +3289,8 @@
       const item = window.maintenanceSchedule.find(m => m.id === id);
       if (item) {
         item.status = newStatus;
+        if (newStatus === 'Realizado' && !item.dataRealizada) item.dataRealizada = getTodayStr();
+        if (newStatus !== 'Realizado') item.dataRealizada = null;
         addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status`, item.date, newStatus);
         saveData();
       }
@@ -2789,10 +3356,9 @@
       const id = Number(ev.dataTransfer.getData('text/plain'));
       const item = window.maintenanceSchedule.find(m => m.id === id);
       if (!item) return;
-      const oldDate = item.date;
-      item.date = dateStr;
-      addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} reprogramado (drag & drop) de ${formatDateBR(oldDate)} para ${formatDateBR(dateStr)}`, dateStr, item.status);
-      saveData();
+      if (item.date === dateStr) return;
+      if (item.status === 'Realizado') { alert('Esta preventiva já foi realizada e não pode ser reprogramada.'); return; }
+      openReprogramacaoModal({ kind: 'maint', id: item.id, label: `${item.tag} — ${item.service}`, dataAnterior: item.date, dataNova: dateStr });
     };
 
     window.renderCalendar = function() {
@@ -3121,14 +3687,329 @@
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: v => v > 0 ? v : '' } } }
         });
       }
+
+      renderAvgDowntimeBreakdown(relevantEvents);
+      renderReprogramacaoPanel();
+    };
+
+    // ===================== MÉDIA DE TEMPO PARADO (OPERAÇÃO / TIPO / MODELO / EQUIPAMENTO) =====================
+    function renderAvgDowntimeBreakdown(relevantEvents) {
+      const closed = (relevantEvents || []).filter(e => e.status === 'Encerrado' && typeof e.diasParado === 'number');
+
+      function avgByKey(keyFn) {
+        const groups = {};
+        closed.forEach(e => {
+          const key = keyFn(e) || 'N/D';
+          if (!groups[key]) groups[key] = { total: 0, count: 0 };
+          groups[key].total += e.diasParado;
+          groups[key].count += 1;
+        });
+        const labels = Object.keys(groups);
+        const values = labels.map(l => +(groups[l].total / groups[l].count).toFixed(1));
+        return { labels, values };
+      }
+
+      function renderAvgBar(canvasId, data, instanceKey) {
+        const el = document.getElementById(canvasId);
+        if (!el) return;
+        if (window[instanceKey]) window[instanceKey].destroy();
+        window[instanceKey] = new Chart(el.getContext('2d'), {
+          type: 'bar',
+          data: { labels: data.labels, datasets: [{ label: 'Média (dias)', data: data.values, backgroundColor: '#f97316', borderRadius: 4 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: v => v } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 1 } } }
+          }
+        });
+      }
+
+      renderAvgBar('chartAvgDowntimeOperacao', avgByKey(e => e.operacao), 'chartAvgDowntimeOperacaoInstance');
+      renderAvgBar('chartAvgDowntimeTipo', avgByKey(e => e.tipo), 'chartAvgDowntimeTipoInstance');
+      renderAvgBar('chartAvgDowntimeModelo', avgByKey(e => { const a = getAssetById(e.assetId); return a ? a.modelo : 'N/D'; }), 'chartAvgDowntimeModeloInstance');
+
+      // Tabela por TAG (equipamento)
+      const byTag = {};
+      closed.forEach(e => {
+        if (!byTag[e.tag]) byTag[e.tag] = { operacao: e.operacao, tipo: e.tipo, assetId: e.assetId, total: 0, count: 0 };
+        byTag[e.tag].total += e.diasParado;
+        byTag[e.tag].count += 1;
+      });
+      const tbody = document.getElementById('avg-downtime-by-asset-tbody');
+      if (tbody) {
+        const rows = Object.keys(byTag).map(tag => {
+          const g = byTag[tag];
+          const asset = getAssetById(g.assetId);
+          return { tag, operacao: g.operacao, tipo: g.tipo, modelo: asset ? asset.modelo : '-', count: g.count, avg: (g.total / g.count).toFixed(1) };
+        }).sort((a, b) => b.avg - a.avg);
+
+        tbody.innerHTML = rows.map(r => `
+          <tr><td class="p-2 font-bold text-slate-900">${r.tag}</td><td class="p-2">${r.operacao || '-'}</td><td class="p-2">${r.tipo || '-'}</td><td class="p-2">${r.modelo}</td><td class="p-2">${r.count}</td><td class="p-2 font-bold ${r.avg > 3 ? 'text-red-600' : 'text-slate-700'}">${r.avg}d</td></tr>
+        `).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum evento encerrado ainda.</td></tr>`;
+      }
+    }
+
+    // ===================== CONTROLE DE PROGRAMAÇÃO E REPROGRAMAÇÃO =====================
+    function isWithinPeriodo(dateStr, periodo) {
+      if (periodo === 'TODOS' || !dateStr) return true;
+      const parts = dateStr.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const today = getToday();
+      if (periodo === 'dia') return formatDateISO(d) === formatDateISO(today);
+      if (periodo === 'semana') {
+        const monday = getMondayOfWeek(today);
+        const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+        return d >= monday && d <= sunday;
+      }
+      if (periodo === 'mes') return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth();
+      return true;
+    }
+
+    window.renderReprogramacaoPanel = function() {
+      if (!assetsLoaded) return;
+      const periodo = document.getElementById('repro-filter-periodo')?.value || 'TODOS';
+      const tagBusca = (document.getElementById('repro-filter-tag')?.value || '').trim().toUpperCase();
+      const operacaoFiltro = document.getElementById('repro-filter-operacao')?.value || 'TODAS';
+      const unidadeFiltro = document.getElementById('repro-filter-unidade')?.value || 'TODAS';
+      const tipoFiltro = document.getElementById('repro-filter-tipo')?.value || 'TODOS';
+      const modeloFiltro = document.getElementById('repro-filter-modelo')?.value || 'TODOS';
+      const statusFiltro = document.getElementById('repro-filter-status')?.value || 'TODOS';
+      const origemFiltro = document.getElementById('repro-filter-origem')?.value || 'TODOS';
+
+      function enrich(item, origem, currentDate, atividade) {
+        const asset = getAssetById(item.assetId);
+        return {
+          origem, id: item.id, tag: item.tag, unit: item.unit, tipo: item.type,
+          operacao: asset ? asset.operacao : null, modelo: asset ? asset.modelo : null,
+          status: item.status, currentDate, atividade,
+          dataOriginal: item.dataOriginal || currentDate,
+          historico: item.historico || []
+        };
+      }
+
+      let items = [
+        ...(window.maintenanceSchedule || []).map(m => enrich(m, 'Preventiva', m.date, m.service)),
+        ...(window.fleetDocs || []).map(d => enrich(d, 'Documento', d.expDate, d.docName))
+      ];
+
+      if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
+      if (window.selectedUnit !== 'TODAS') items = items.filter(x => x.unit === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') items = items.filter(x => x.unit === unidadeFiltro);
+      if (tagBusca) items = items.filter(x => (x.tag || '').toUpperCase().includes(tagBusca));
+      if (operacaoFiltro !== 'TODAS') items = items.filter(x => x.operacao === operacaoFiltro);
+      if (tipoFiltro !== 'TODOS') items = items.filter(x => x.tipo === tipoFiltro);
+      if (modeloFiltro !== 'TODOS') items = items.filter(x => x.modelo === modeloFiltro);
+      if (statusFiltro !== 'TODOS') items = items.filter(x => x.status === statusFiltro);
+      if (periodo !== 'TODOS') items = items.filter(x => isWithinPeriodo(x.currentDate, periodo));
+
+      const programado = items.filter(x => x.status === 'Programado').length;
+      const reprogramado = items.filter(x => x.status === 'Reprogramado').length;
+      const realizado = items.filter(x => x.status === 'Realizado').length;
+      const total = items.length;
+      const cumprimento = total > 0 ? Math.round((realizado / total) * 100) : 0;
+
+      document.getElementById('repro-kpi-programado').innerText = programado;
+      document.getElementById('repro-kpi-reprogramado').innerText = reprogramado;
+      document.getElementById('repro-kpi-realizado').innerText = realizado;
+      document.getElementById('repro-kpi-cumprimento').innerText = `${cumprimento}%`;
+
+      const elStatus = document.getElementById('chartReproStatus');
+      if (elStatus) {
+        if (window.chartReproStatusInstance) window.chartReproStatusInstance.destroy();
+        window.chartReproStatusInstance = new Chart(elStatus.getContext('2d'), {
+          type: 'bar',
+          data: { labels: ['Atividades'], datasets: [
+            { label: 'Programado', data: [programado], backgroundColor: '#3b82f6', borderRadius: 4 },
+            { label: 'Reprogramado', data: [reprogramado], backgroundColor: '#f59e0b', borderRadius: 4 },
+            { label: 'Realizado', data: [realizado], backgroundColor: '#10b981', borderRadius: 4 }
+          ] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold' } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
+
+      // Motivos de reprogramação (de todo o histórico dos itens filtrados)
+      const motivoCounts = {};
+      items.forEach(x => (x.historico || []).forEach(h => {
+        const key = h.motivo || 'Não informado';
+        motivoCounts[key] = (motivoCounts[key] || 0) + 1;
+      }));
+      const motivoLabels = Object.keys(motivoCounts).sort((a, b) => motivoCounts[b] - motivoCounts[a]).slice(0, 8);
+
+      const elMotivos = document.getElementById('chartReproMotivos');
+      if (elMotivos) {
+        if (window.chartReproMotivosInstance) window.chartReproMotivosInstance.destroy();
+        window.chartReproMotivosInstance = new Chart(elMotivos.getContext('2d'), {
+          type: 'bar',
+          data: { labels: motivoLabels, datasets: [{ label: 'Ocorrências', data: motivoLabels.map(m => motivoCounts[m]), backgroundColor: '#ef4444', borderRadius: 4 }] },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#1e293b', font: { weight: 'bold', size: 10 } } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
+
+      // Tabela consolidada de reprogramações
+      let historyRows = [];
+      items.forEach(x => (x.historico || []).forEach(h => {
+        historyRows.push({ origem: x.origem, tag: x.tag, atividade: x.atividade, ...h });
+      }));
+      historyRows.sort((a, b) => new Date(b.dataNova) - new Date(a.dataNova));
+
+      const tbody = document.getElementById('repro-history-tbody');
+      if (tbody) {
+        tbody.innerHTML = historyRows.map(h => `
+          <tr>
+            <td class="p-2">${h.origem}</td>
+            <td class="p-2 font-bold text-slate-900">${h.tag}</td>
+            <td class="p-2">${h.atividade}</td>
+            <td class="p-2">${formatDateBR(h.dataAnterior)}</td>
+            <td class="p-2 font-bold text-amber-700">${formatDateBR(h.dataNova)}</td>
+            <td class="p-2">${h.motivo}</td>
+            <td class="p-2">${h.responsavel || '-'}</td>
+            <td class="p-2 text-slate-500">${h.timestamp || '-'}</td>
+          </tr>
+        `).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhuma reprogramação registrada no filtro atual.</td></tr>`;
+      }
+    };
+
+    // ===================== CONTROLE DE PLANEJAMENTO (PREVENTIVAS + DOCUMENTOS) =====================
+    window.renderPlanejamento = function() {
+      if (!assetsLoaded) return;
+      const unidadeFiltro = document.getElementById('plan-filter-unidade')?.value || 'TODAS';
+      const origemFiltro = document.getElementById('plan-filter-origem')?.value || 'TODOS';
+      const semanaFiltro = document.getElementById('plan-filter-semana-num')?.value || 'TODAS';
+      const horizonte = parseInt(document.getElementById('plan-filter-horizonte')?.value || '8', 10);
+
+      function enrich(item, origem, currentDate, atividade) {
+        return { origem, tag: item.tag, unit: item.unit, status: item.status, currentDate, atividade };
+      }
+
+      let items = [
+        ...(window.maintenanceSchedule || []).map(m => enrich(m, 'Preventiva', m.date, m.service)),
+        ...(window.fleetDocs || []).map(d => enrich(d, 'Documento', d.expDate, d.docName))
+      ];
+
+      if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
+      if (window.selectedUnit !== 'TODAS') items = items.filter(x => x.unit === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') items = items.filter(x => x.unit === unidadeFiltro);
+
+      // Cada item recebe sua semana ISO
+      items = items.map(x => ({ ...x, weekInfo: getISOWeekInfo(x.currentDate) }));
+
+      // Popula filtro de semana específica
+      const weekSel = document.getElementById('plan-filter-semana-num');
+      if (weekSel) {
+        const weekOptions = {};
+        items.forEach(x => { if (x.weekInfo.weekKey) weekOptions[x.weekInfo.weekKey] = `Semana ${x.weekInfo.weekNumber}/${x.weekInfo.isoYear}`; });
+        const currentSel = weekSel.value;
+        const sortedKeys = Object.keys(weekOptions).sort();
+        weekSel.innerHTML = `<option value="TODAS">Todas as Semanas</option>` + sortedKeys.map(k => `<option value="${k}">${weekOptions[k]}</option>`).join('');
+        if (sortedKeys.includes(currentSel)) weekSel.value = currentSel;
+      }
+
+      if (semanaFiltro !== 'TODAS') items = items.filter(x => x.weekInfo.weekKey === semanaFiltro);
+
+      const todayWeekInfo = getISOWeekInfo(getTodayStr());
+      const todayWeekKey = todayWeekInfo.weekKey;
+      const nextMonday = new Date(getMondayOfWeek(getToday()));
+      nextMonday.setDate(nextMonday.getDate() + 7);
+      const nextWeekKey = getISOWeekInfo(formatDateISO(nextMonday)).weekKey;
+
+      // Horizonte: limita para as próximas N semanas (999 = tudo, inclui atrasados/futuro distante)
+      if (horizonte !== 999) {
+        const limitMonday = new Date(getMondayOfWeek(getToday()));
+        limitMonday.setDate(limitMonday.getDate() + horizonte * 7);
+        const limitStr = formatDateISO(limitMonday);
+        items = items.filter(x => !x.currentDate || x.currentDate <= limitStr);
+      }
+
+      const naoRealizados = items.filter(x => x.status !== 'Realizado');
+      const atrasados = naoRealizados.filter(x => x.currentDate && x.currentDate < getTodayStr()).length;
+      const estaSemana = naoRealizados.filter(x => x.weekInfo.weekKey === todayWeekKey).length;
+      const proximaSemana = naoRealizados.filter(x => x.weekInfo.weekKey === nextWeekKey).length;
+      const totalFuturo = naoRealizados.length;
+
+      document.getElementById('plan-kpi-atrasados').innerText = atrasados;
+      document.getElementById('plan-kpi-esta-semana').innerText = estaSemana;
+      document.getElementById('plan-kpi-proxima-semana').innerText = proximaSemana;
+      document.getElementById('plan-kpi-total').innerText = totalFuturo;
+
+      // Agrupamento por semana para a tabela consolidada
+      const weekGroups = {};
+      items.forEach(x => {
+        const key = x.weekInfo.weekKey || 'sem-data';
+        if (!weekGroups[key]) weekGroups[key] = {
+          label: x.weekInfo.label || 'Sem data definida', mondayStr: x.weekInfo.mondayStr,
+          prevProg: 0, prevRepro: 0, prevReal: 0, docProg: 0, docRepro: 0, docReal: 0
+        };
+        const g = weekGroups[key];
+        if (x.origem === 'Preventiva') {
+          if (x.status === 'Programado') g.prevProg++;
+          else if (x.status === 'Reprogramado') g.prevRepro++;
+          else if (x.status === 'Realizado') g.prevReal++;
+        } else {
+          if (x.status === 'Programado') g.docProg++;
+          else if (x.status === 'Reprogramado') g.docRepro++;
+          else if (x.status === 'Realizado') g.docReal++;
+        }
+      });
+
+      const weekKeys = Object.keys(weekGroups).sort((a, b) => (weekGroups[a].mondayStr || '').localeCompare(weekGroups[b].mondayStr || ''));
+      const weekTbody = document.getElementById('plan-week-tbody');
+      if (weekTbody) {
+        weekTbody.innerHTML = weekKeys.map(k => {
+          const g = weekGroups[k];
+          const total = g.prevProg + g.prevRepro + g.prevReal + g.docProg + g.docRepro + g.docReal;
+          const isPast = g.mondayStr && g.mondayStr < formatDateISO(getMondayOfWeek(getToday()));
+          return `
+            <tr class="${isPast && (g.prevProg + g.prevRepro + g.docProg + g.docRepro) > 0 ? 'bg-red-50/40' : ''}">
+              <td class="p-2 font-bold text-slate-900">${g.label.split(' (')[0]}</td>
+              <td class="p-2 text-slate-500">${g.label.match(/\(([^)]+)\)/) ? g.label.match(/\(([^)]+)\)/)[1] : '-'}</td>
+              <td class="p-2 text-blue-600 font-bold">${g.prevProg}</td>
+              <td class="p-2 text-amber-600 font-bold">${g.prevRepro}</td>
+              <td class="p-2 text-emerald-600 font-bold">${g.prevReal}</td>
+              <td class="p-2 text-blue-600 font-bold">${g.docProg}</td>
+              <td class="p-2 text-amber-600 font-bold">${g.docRepro}</td>
+              <td class="p-2 text-emerald-600 font-bold">${g.docReal}</td>
+              <td class="p-2 font-black">${total}</td>
+            </tr>
+          `;
+        }).join('') || `<tr><td colspan="9" class="p-3 text-center text-slate-400 italic">Nenhum item planejado encontrado no filtro atual.</td></tr>`;
+      }
+
+      // Tabela de itens detalhados
+      const itemsTbody = document.getElementById('plan-items-tbody');
+      if (itemsTbody) {
+        const sortedItems = items.slice().sort((a, b) => (a.currentDate || '').localeCompare(b.currentDate || ''));
+        itemsTbody.innerHTML = sortedItems.map(x => {
+          let statusBadge = 'bg-blue-100 text-blue-800 border-blue-300';
+          if (x.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+          if (x.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+          const atrasado = x.status !== 'Realizado' && x.currentDate && x.currentDate < getTodayStr();
+          return `
+            <tr class="${atrasado ? 'bg-red-50/40' : ''}">
+              <td class="p-2">${x.origem}</td>
+              <td class="p-2 font-bold text-slate-900">${x.tag}</td>
+              <td class="p-2">${x.atividade}</td>
+              <td class="p-2">${getUnitBadge(x.unit)}</td>
+              <td class="p-2 text-slate-500">${x.weekInfo.weekNumber ? 'Sem. ' + x.weekInfo.weekNumber : '-'}</td>
+              <td class="p-2 ${atrasado ? 'text-red-600 font-bold' : ''}">${formatDateBR(x.currentDate)}${atrasado ? ' (atrasado)' : ''}</td>
+              <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${x.status}</span></td>
+            </tr>
+          `;
+        }).join('') || `<tr><td colspan="7" class="p-3 text-center text-slate-400 italic">Nenhum item planejado encontrado no filtro atual.</td></tr>`;
+      }
     };
 
     // ===================== INICIALIZAÇÃO =====================
+    window.toggleTvMode = function() {
+      document.body.classList.toggle('tv-mode');
+      localStorage.setItem('pcm_tv_mode', document.body.classList.contains('tv-mode') ? '1' : '0');
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       syncUsers();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
+      if (localStorage.getItem('pcm_tv_mode') === '1') document.body.classList.add('tv-mode');
       lucide.createIcons();
 
       // Reforça o snapshot diário periodicamente (cliente aberto durante virada de dia)
