@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web System GNL Brasil Logística</title>
+  <title>Gestão Integrada de Ativos, Disponibilidade, Manutenção e Documentos - GNL Brasil Logística</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     body { background-color: #f1f5f9; }
@@ -102,7 +103,7 @@
         </div>
         <div>
           <h1 class="font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
-            Gestão Integrada de Ativos <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Amazonas & Maranhão</span>
+            Gestão Integrada de Ativos <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Manaus & Maranhão</span>
           </h1>
           <p class="text-xs text-slate-500">Ativos, Disponibilidade, Manutenção Preventiva/Corretiva e Documentação — Base Única</p>
         </div>
@@ -253,9 +254,14 @@
           <h2 class="text-lg font-bold text-slate-900">Cadastro Único de Ativos</h2>
           <p class="text-xs text-slate-500">Base central de veículos — utilizada por Preventivas, Documentos, Disponibilidade e Histórico</p>
         </div>
-        <button onclick="openAssetModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Ativo
-        </button>
+        <div class="flex gap-2">
+          <button onclick="openImportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="upload" class="w-4 h-4"></i> Carga de Dados (Planilha)
+          </button>
+          <button onclick="openAssetModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Ativo
+          </button>
+        </div>
       </div>
 
       <div class="card-executive overflow-hidden">
@@ -1095,6 +1101,85 @@
           <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Ativo</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL CARGA DE DADOS (IMPORTAÇÃO DE ATIVOS VIA PLANILHA) -->
+  <div id="modal-import" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-5xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="upload" class="w-5 h-5 text-emerald-600"></i> Carga de Dados — Importação de Ativos</h3>
+        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- PASSO 1: ARQUIVO E PADRÕES -->
+      <div id="import-step-upload" class="space-y-4">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
+          Aceita planilha <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong> com as colunas: <strong>TAG, Placa, Chassi, RENAVAM, Operação, Modelo, Marca</strong>. A leitura reconhece o cabeçalho mesmo com acentos ou nomes ligeiramente diferentes.
+        </div>
+        <div class="flex flex-wrap gap-3 items-end">
+          <div class="flex-1 min-w-[220px]">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Arquivo da Planilha</label>
+            <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" onchange="handleAssetFileUpload(event)" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none">
+          </div>
+          <button type="button" onclick="downloadAssetTemplate()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+            <i data-lucide="download" class="w-4 h-4"></i> Baixar Modelo de Planilha
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo padrão (se a planilha não tiver essa coluna)</label>
+            <select id="import-default-tipo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Cavalo">Cavalo Mecânico</option>
+              <option value="Carreta">Carreta (Reboque)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Unidade padrão (se a planilha não tiver essa coluna)</label>
+            <select id="import-default-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="AM">Rio Preto da Eva / Manaus - AM</option>
+              <option value="MA">Parnaíba - MA</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Proprietário padrão</label>
+            <input type="text" id="import-default-proprietario" value="GNL Brasil Logística" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 2: SUPERVISÃO / PRÉVIA -->
+      <div id="import-step-preview" class="hidden space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800">Supervisão antes de confirmar</h4>
+          <div class="flex items-center gap-3 text-xs">
+            <span id="import-summary-count" class="font-bold text-slate-600"></span>
+            <label class="flex items-center gap-1.5 font-bold text-slate-600">
+              <input type="checkbox" id="import-update-duplicates" onchange="renderImportPreview()"> Atualizar cadastro dos TAGs já existentes
+            </label>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400">Revise linha por linha — corrija diretamente nos campos, marque o Tipo/Unidade de cada ativo, ou remova uma linha com o ícone de lixeira antes de confirmar a importação.</p>
+        <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-[40vh]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200 sticky top-0">
+              <tr>
+                <th class="p-2">Situação</th><th class="p-2">TAG</th><th class="p-2">Placa</th><th class="p-2">Chassi</th>
+                <th class="p-2">RENAVAM</th><th class="p-2">Operação</th><th class="p-2">Marca</th><th class="p-2">Modelo</th>
+                <th class="p-2">Tipo</th><th class="p-2">Unidade</th><th class="p-2 text-center">Remover</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t">
+          <button type="button" onclick="resetImportModal()" class="text-xs font-bold text-slate-500 hover:text-slate-700 underline">Recomeçar (escolher outro arquivo)</button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeImportModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+            <button type="button" onclick="confirmAssetImport()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar Importação</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2319,6 +2404,243 @@
         saveData();
         refreshAllAssetSelects();
       }
+    };
+
+    // ===================== CARGA DE DADOS (IMPORTAÇÃO DE ATIVOS VIA PLANILHA) =====================
+    window.pendingImportRows = [];
+
+    window.openImportModal = function() {
+      resetImportModal();
+      document.getElementById('modal-import').classList.replace('hidden', 'flex');
+    };
+    window.closeImportModal = function() {
+      document.getElementById('modal-import').classList.replace('flex', 'hidden');
+    };
+    window.resetImportModal = function() {
+      window.pendingImportRows = [];
+      document.getElementById('import-file-input').value = '';
+      document.getElementById('import-step-upload').classList.remove('hidden');
+      document.getElementById('import-step-preview').classList.add('hidden');
+    };
+
+    window.downloadAssetTemplate = function() {
+      const wsData = [
+        ['TAG', 'Placa', 'Chassi', 'RENAVAM', 'Operação', 'Modelo', 'Marca', 'Tipo (opcional)', 'Unidade (opcional)'],
+        ['CV020', 'ABC1D23', '9BWZZZ377VT004251', '12345678901', 'Transporte GNL', 'FH540', 'Volvo', 'Cavalo', 'AM'],
+        ['CN010', 'DEF4G56', '9BWZZZ377VT004999', '98765432109', 'Transporte GNL', 'Tanque Criogênico', 'Randon', 'Carreta', 'MA']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Ativos');
+      XLSX.writeFile(wb, 'Modelo_Importacao_Ativos.xlsx');
+    };
+
+    function normalizeHeader(str) {
+      return String(str || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
+    const IMPORT_COLUMN_ALIASES = {
+      tag: ['tag'],
+      placa: ['placa'],
+      chassi: ['chassi'],
+      renavam: ['renavam'],
+      operacao: ['operacao', 'operacao do ativo', 'operacao ativo'],
+      modelo: ['modelo'],
+      marca: ['marca'],
+      tipo: ['tipo', 'tipo de veiculo', 'tipo veiculo', 'tipo de ativo'],
+      unidade: ['unidade', 'base', 'unidade base', 'unidade/base']
+    };
+
+    function mapImportRow(rawRow) {
+      const normalizedMap = {};
+      Object.keys(rawRow).forEach(k => { normalizedMap[normalizeHeader(k)] = rawRow[k]; });
+
+      function findValue(field) {
+        const aliases = IMPORT_COLUMN_ALIASES[field];
+        for (const alias of aliases) {
+          if (normalizedMap[alias] !== undefined && String(normalizedMap[alias]).trim() !== '') {
+            return String(normalizedMap[alias]).trim();
+          }
+        }
+        return '';
+      }
+
+      return {
+        tag: findValue('tag').toUpperCase(),
+        placa: findValue('placa').toUpperCase(),
+        chassi: findValue('chassi').toUpperCase(),
+        renavam: findValue('renavam'),
+        operacao: findValue('operacao'),
+        modelo: findValue('modelo'),
+        marca: findValue('marca'),
+        tipo: findValue('tipo'),
+        unidade: findValue('unidade').toUpperCase()
+      };
+    }
+
+    window.handleAssetFileUpload = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          if (!rows || rows.length === 0) {
+            alert('A planilha não tem linhas de dados (verifique se a primeira linha é o cabeçalho).');
+            return;
+          }
+          const defaultTipo = document.getElementById('import-default-tipo').value;
+          const defaultUnidade = document.getElementById('import-default-unidade').value;
+
+          window.pendingImportRows = rows.map(r => {
+            const mapped = mapImportRow(r);
+            if (!mapped.tipo) mapped.tipo = defaultTipo;
+            else mapped.tipo = /carreta|reboque/i.test(mapped.tipo) ? 'Carreta' : 'Cavalo';
+            if (!mapped.unidade) mapped.unidade = defaultUnidade;
+            else mapped.unidade = /ma|parnaiba/i.test(mapped.unidade) ? 'MA' : 'AM';
+            mapped._removed = false;
+            return mapped;
+          });
+
+          document.getElementById('import-step-upload').classList.add('hidden');
+          document.getElementById('import-step-preview').classList.remove('hidden');
+          renderImportPreview();
+        } catch (err) {
+          console.error(err);
+          alert('Não foi possível ler o arquivo. Verifique se é uma planilha válida (.xlsx, .xls ou .csv).');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    window.updateImportField = function(index, field, value) {
+      if (!window.pendingImportRows[index]) return;
+      window.pendingImportRows[index][field] = value;
+      if (field === 'tag') window.pendingImportRows[index][field] = value.toUpperCase();
+      renderImportPreview();
+    };
+
+    window.removeImportRow = function(index) {
+      if (!window.pendingImportRows[index]) return;
+      window.pendingImportRows[index]._removed = true;
+      renderImportPreview();
+    };
+
+    window.renderImportPreview = function() {
+      const updateDuplicates = document.getElementById('import-update-duplicates').checked;
+      const tbody = document.getElementById('import-preview-tbody');
+      const tagsSeen = {};
+
+      let validCount = 0, duplicateCount = 0, errorCount = 0, removedCount = 0;
+
+      const rowsHtml = window.pendingImportRows.map((row, idx) => {
+        if (row._removed) { removedCount++; return ''; }
+
+        let status = 'valido';
+        let statusLabel = 'Novo';
+        let statusClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+
+        if (!row.tag) {
+          status = 'erro'; statusLabel = 'TAG faltando'; statusClass = 'bg-red-100 text-red-800 border-red-300';
+        } else if (tagsSeen[row.tag]) {
+          status = 'erro'; statusLabel = 'TAG duplicada na planilha'; statusClass = 'bg-red-100 text-red-800 border-red-300';
+        } else if (getAssetByTag(row.tag)) {
+          status = updateDuplicates ? 'atualizar' : 'duplicado';
+          statusLabel = updateDuplicates ? 'Vai atualizar existente' : 'Já existe (será ignorado)';
+          statusClass = updateDuplicates ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-amber-100 text-amber-800 border-amber-300';
+        }
+
+        if (row.tag) tagsSeen[row.tag] = true;
+        row._status = status;
+
+        if (status === 'valido' || status === 'atualizar') validCount++;
+        else if (status === 'duplicado') duplicateCount++;
+        else errorCount++;
+
+        return `
+          <tr class="${status === 'erro' ? 'bg-red-50/40' : ''}">
+            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${statusClass}">${statusLabel}</span></td>
+            <td class="p-2"><input value="${row.tag}" oninput="updateImportField(${idx},'tag',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs uppercase outline-none"></td>
+            <td class="p-2"><input value="${row.placa}" oninput="updateImportField(${idx},'placa',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.chassi}" oninput="updateImportField(${idx},'chassi',this.value)" class="w-24 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.renavam}" oninput="updateImportField(${idx},'renavam',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.operacao}" oninput="updateImportField(${idx},'operacao',this.value)" class="w-28 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.marca}" oninput="updateImportField(${idx},'marca',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.modelo}" oninput="updateImportField(${idx},'modelo',this.value)" class="w-24 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2">
+              <select onchange="updateImportField(${idx},'tipo',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
+                <option value="Cavalo" ${row.tipo === 'Cavalo' ? 'selected' : ''}>Cavalo</option>
+                <option value="Carreta" ${row.tipo === 'Carreta' ? 'selected' : ''}>Carreta</option>
+              </select>
+            </td>
+            <td class="p-2">
+              <select onchange="updateImportField(${idx},'unidade',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
+                <option value="AM" ${row.unidade === 'AM' ? 'selected' : ''}>AM</option>
+                <option value="MA" ${row.unidade === 'MA' ? 'selected' : ''}>MA</option>
+              </select>
+            </td>
+            <td class="p-2 text-center"><button onclick="removeImportRow(${idx})" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml || `<tr><td colspan="11" class="p-4 text-center text-slate-400 italic">Nenhuma linha para importar.</td></tr>`;
+      document.getElementById('import-summary-count').innerText =
+        `${validCount} pronto(s) para importar · ${duplicateCount} duplicado(s) ignorado(s) · ${errorCount} com erro · ${removedCount} removido(s) manualmente`;
+
+      lucide.createIcons();
+    };
+
+    window.confirmAssetImport = function() {
+      const proprietarioPadrao = document.getElementById('import-default-proprietario').value.trim();
+      let importados = 0, atualizados = 0, ignorados = 0;
+
+      window.pendingImportRows.forEach(row => {
+        if (row._removed) return;
+        if (row._status === 'erro' || row._status === 'duplicado') { ignorados++; return; }
+
+        if (row._status === 'atualizar') {
+          const existing = getAssetByTag(row.tag);
+          if (existing) {
+            existing.placa = row.placa || existing.placa;
+            existing.chassi = row.chassi || existing.chassi;
+            existing.renavam = row.renavam || existing.renavam;
+            existing.operacao = row.operacao || existing.operacao;
+            existing.modelo = row.modelo || existing.modelo;
+            existing.marca = row.marca || existing.marca;
+            existing.tipo = row.tipo || existing.tipo;
+            existing.unidade = row.unidade || existing.unidade;
+            atualizados++;
+          }
+        } else {
+          window.assets.push({
+            id: Date.now() + Math.floor(Math.random() * 10000),
+            tag: row.tag, placa: row.placa, chassi: row.chassi, renavam: row.renavam,
+            marca: row.marca, modelo: row.modelo, tipo: row.tipo, unidade: row.unidade,
+            proprietario: proprietarioPadrao, operacao: row.operacao,
+            status: 'Ativo', dataCadastro: getTodayStr()
+          });
+          importados++;
+        }
+      });
+
+      if (importados === 0 && atualizados === 0) {
+        alert('Nenhum ativo válido para importar. Verifique a supervisão da planilha.');
+        return;
+      }
+
+      addAuditLog('TODAS', 'Ativo', 'CARGA DE DADOS', `Importação em lote via planilha: ${importados} ativo(s) cadastrado(s), ${atualizados} atualizado(s), ${ignorados} ignorado(s)`, getTodayStr(), 'Importado');
+      saveData();
+      refreshAllAssetSelects();
+      renderAssets();
+      closeImportModal();
+      alert(`Importação concluída!\n\n${importados} ativo(s) novo(s) cadastrado(s)\n${atualizados} ativo(s) atualizado(s)\n${ignorados} linha(s) ignorada(s)`);
     };
 
     window.renderAssets = function() {
