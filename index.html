@@ -328,13 +328,14 @@
     <section id="tab-availability" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4">
         <h2 class="text-lg font-bold text-slate-900 mb-3">Filtros de Disponibilidade</h2>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           <select id="avail-filter-operacao" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
           <select id="avail-filter-unidade" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
+          <select id="avail-filter-marca" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
           <select id="avail-filter-modelo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
           <select id="avail-filter-tipo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos Tipos</option>
@@ -346,6 +347,7 @@
             <option value="Disponivel">Disponível</option>
             <option value="Indisponivel">Indisponível</option>
           </select>
+          <input id="avail-filter-tag" oninput="renderAvailability()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
           <div class="flex gap-1">
             <input type="date" id="avail-filter-start" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
             <input type="date" id="avail-filter-end" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
@@ -364,8 +366,23 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Operação</h3><div class="h-56"><canvas id="chartAvailByOperacao"></canvas></div></div>
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Unidade</h3><div class="h-56"><canvas id="chartAvailByUnidade"></canvas></div></div>
+        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Marca</h3><div class="h-56"><canvas id="chartAvailByMarca"></canvas></div></div>
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Modelo</h3><div class="h-56"><canvas id="chartAvailByModelo"></canvas></div></div>
-        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Tipo</h3><div class="h-56"><canvas id="chartAvailByTipo"></canvas></div></div>
+        <div class="card-executive p-5 lg:col-span-2"><h3 class="font-bold text-sm mb-3">Por Tipo</h3><div class="h-56"><canvas id="chartAvailByTipo"></canvas></div></div>
+      </div>
+
+      <!-- METAS DE DISPONIBILIDADE POR MARCA -->
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-emerald-600"></i> Metas de Disponibilidade por Marca</h3>
+        <p class="text-xs text-slate-500 mb-4">Defina a meta de disponibilidade (%) de cada marca e acompanhe se está dentro ou fora, em tempo real — integrado à Gestão de Ativos</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+              <tr><th class="p-2">Marca</th><th class="p-2">Qtd. Ativos</th><th class="p-2">Disponibilidade Atual</th><th class="p-2">Meta (%)</th><th class="p-2">Situação</th><th class="p-2">Ação</th></tr>
+            </thead>
+            <tbody id="metas-marca-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card-executive p-5">
@@ -463,7 +480,7 @@
             <i data-lucide="camera" class="w-4 h-4"></i> Forçar Snapshot de Hoje
           </button>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
           <select id="evo-filter-agrupamento" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="dia">Agrupar por Dia</option>
             <option value="semana">Agrupar por Semana</option>
@@ -479,6 +496,8 @@
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
+          <select id="evo-filter-marca" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="evo-filter-modelo" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
           <select id="evo-filter-tipo" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Tipos</option>
             <option value="Cavalo">Cavalo</option>
@@ -486,8 +505,9 @@
           </select>
           <input id="evo-filter-tag" oninput="renderEvolutionChart()" placeholder="Filtrar por TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
         </div>
-        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em um ponto do gráfico ou em uma linha da tabela para ver quais ativos estavam indisponíveis naquele período.</p>
+        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em um ponto do gráfico ou em uma linha da tabela para ver quais ativos estavam indisponíveis naquele período (dia, semana ou mês).</p>
       </div>
+      <div id="evo-meta-banner" class="hidden card-executive p-4 flex items-center justify-between"></div>
       <div class="card-executive p-5">
         <div class="h-80"><canvas id="chartEvolution"></canvas></div>
       </div>
@@ -495,7 +515,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
-              <tr><th class="p-3">Período</th><th class="p-3">Total</th><th class="p-3">Disponíveis</th><th class="p-3">Indisponíveis</th><th class="p-3">% Disponibilidade</th></tr>
+              <tr><th class="p-3">Período</th><th class="p-3">Total</th><th class="p-3">Disponíveis</th><th class="p-3">Indisponíveis</th><th class="p-3">% Disponibilidade</th><th class="p-3">Situação vs Meta</th></tr>
             </thead>
             <tbody id="evolution-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -1697,6 +1717,39 @@
       set(ref(db, 'users'), window.users || []);
     }
 
+    // ===================== METAS DE DISPONIBILIDADE POR MARCA =====================
+    window.metasMarca = {};
+    let metasLoaded = false;
+
+    function syncMetasMarca() {
+      onValue(ref(db, 'metasMarca'), (snapshot) => {
+        const data = snapshot.val();
+        window.metasMarca = data !== null ? data : {};
+        metasLoaded = true;
+        renderMetasMarcaPanel();
+        renderEvolutionChart();
+      });
+    }
+
+    function saveMetasMarcaToDb() {
+      set(ref(db, 'metasMarca'), window.metasMarca || {});
+    }
+
+    window.getMetaForMarca = function(marca) {
+      if (!marca) return null;
+      const meta = window.metasMarca ? window.metasMarca[marca] : undefined;
+      return typeof meta === 'number' ? meta : null;
+    };
+
+    window.saveMetaMarca = function(marca, inputId) {
+      const value = parseFloat(document.getElementById(inputId).value);
+      if (isNaN(value) || value < 0 || value > 100) { alert('Informe uma meta válida entre 0 e 100.'); return; }
+      if (!window.metasMarca) window.metasMarca = {};
+      window.metasMarca[marca] = value;
+      saveMetasMarcaToDb();
+      addAuditLog('TODAS', 'Ativo', marca, `Meta de disponibilidade da marca ${marca} definida em ${value}%`, getTodayStr(), 'Meta Atualizada');
+    };
+
     window.applyRolePermissions = function(funcao, userObj) {
       const custom = userObj && Array.isArray(userObj.permissoesCustom) && userObj.permissoesCustom.length > 0 ? userObj.permissoesCustom : null;
       const allowed = custom || ROLE_PERMISSIONS[funcao] || ['dashboard'];
@@ -2197,6 +2250,7 @@
       populateAssetSelect('maint-tag', true);
       populateOperacaoFilters();
       populateModeloFilters();
+      populateMarcaFilters();
     }
 
     function populateAssetSelect(selectId, activeOnly) {
@@ -2222,7 +2276,7 @@
 
     function populateModeloFilters() {
       const modelos = Array.from(new Set((window.assets || []).map(a => a.modelo).filter(Boolean))).sort();
-      ['avail-filter-modelo', 'repro-filter-modelo'].forEach(id => {
+      ['avail-filter-modelo', 'repro-filter-modelo', 'evo-filter-modelo'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
@@ -2842,16 +2896,22 @@
       if (!assetsLoaded) return;
       const opFilter = document.getElementById('avail-filter-operacao')?.value || 'TODAS';
       const unitFilter = document.getElementById('avail-filter-unidade')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('avail-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('avail-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('avail-filter-tipo')?.value || 'TODOS';
       const statusFilter = document.getElementById('avail-filter-status')?.value || 'TODOS';
+      const tagFilter = (document.getElementById('avail-filter-tag')?.value || '').trim().toUpperCase();
+
+      populateMarcaFilters();
 
       let list = getActiveAssets();
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
       if (opFilter !== 'TODAS') list = list.filter(a => a.operacao === opFilter);
       if (unitFilter !== 'TODAS') list = list.filter(a => a.unidade === unitFilter);
+      if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
       if (modeloFilter !== 'TODOS') list = list.filter(a => a.modelo === modeloFilter);
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
+      if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
 
       const withStatus = list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
       let filteredWithStatus = withStatus;
@@ -2873,16 +2933,67 @@
       document.getElementById('avail-list-context').innerText = opFilter !== 'TODAS' ? `(Operação: ${opFilter})` : '';
       document.getElementById('avail-list-disponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Disponivel').map(x => `
         <div class="flex items-center gap-2 text-xs p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.asset.modelo || ''}</span>
+          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.asset.marca || ''} ${x.asset.modelo || ''}</span>
         </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo disponível no filtro.</p>';
 
       document.getElementById('avail-list-indisponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').map(x => `
         <div class="flex items-center gap-2 text-xs p-2 bg-red-50 border border-red-200 rounded-lg">
-          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.current.event.tipoParada}</span>
+          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.current.event.tipoParada} — ${x.current.event.motivo || ''}</span>
         </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo indisponível no filtro.</p>';
 
       renderAvailabilityCharts(list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) })));
+      renderMetasMarcaPanel();
       renderDashboardKPIs();
+    };
+
+    function populateMarcaFilters() {
+      const marcas = Array.from(new Set((window.assets || []).map(a => a.marca).filter(Boolean))).sort();
+      ['avail-filter-marca', 'evo-filter-marca'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        el.innerHTML = `<option value="TODAS">Todas Marcas</option>` + marcas.map(m => `<option value="${m}">${m}</option>`).join('');
+        if (marcas.includes(current)) el.value = current;
+      });
+    }
+
+    // ===================== METAS DE DISPONIBILIDADE POR MARCA: RENDER =====================
+    window.renderMetasMarcaPanel = function() {
+      if (!assetsLoaded || !metasLoaded) return;
+      const tbody = document.getElementById('metas-marca-tbody');
+      if (!tbody) return;
+
+      let assetsInScope = getActiveAssets();
+      if (window.selectedUnit !== 'TODAS') assetsInScope = assetsInScope.filter(a => a.unidade === window.selectedUnit);
+
+      const marcas = Array.from(new Set(assetsInScope.map(a => a.marca).filter(Boolean))).sort();
+
+      tbody.innerHTML = marcas.map(marca => {
+        const assetsMarca = assetsInScope.filter(a => a.marca === marca);
+        const withStatus = assetsMarca.map(a => getAssetCurrentStatus(a.id));
+        const disp = withStatus.filter(s => s.status === 'Disponivel').length;
+        const pct = assetsMarca.length > 0 ? Math.round((disp / assetsMarca.length) * 100) : 0;
+        const meta = getMetaForMarca(marca);
+        const dentroDaMeta = meta !== null ? pct >= meta : null;
+        const inputId = `meta-input-${marca.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+        return `
+          <tr class="${dentroDaMeta === false ? 'bg-red-50/40' : dentroDaMeta === true ? 'bg-emerald-50/40' : ''}">
+            <td class="p-2 font-bold text-slate-900">${marca}</td>
+            <td class="p-2">${assetsMarca.length}</td>
+            <td class="p-2 font-black ${dentroDaMeta === false ? 'text-red-600' : 'text-emerald-600'}">${pct}%</td>
+            <td class="p-2"><input type="number" id="${inputId}" min="0" max="100" value="${meta !== null ? meta : ''}" placeholder="Ex: 90" class="w-20 border border-slate-300 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2">
+              ${meta === null
+                ? '<span class="text-[10px] text-slate-400 italic">Meta não definida</span>'
+                : dentroDaMeta
+                  ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300">✓ Dentro da Meta</span>'
+                  : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-red-100 text-red-800 border-red-300">⚠ Fora da Meta</span>'}
+            </td>
+            <td class="p-2"><button onclick="saveMetaMarca('${marca}','${inputId}')" class="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 hover:bg-slate-900 text-white">Salvar Meta</button></td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhuma marca cadastrada nos ativos ainda.</td></tr>`;
     };
 
     function groupCountAvailability(withStatus, keyFn) {
@@ -2922,6 +3033,7 @@
     window.renderAvailabilityCharts = function(withStatus) {
       renderStackedBar('chartAvailByOperacao', groupCountAvailability(withStatus, a => a.operacao), 'chartAvailOperacaoInstance');
       renderStackedBar('chartAvailByUnidade', groupCountAvailability(withStatus, a => a.unidade), 'chartAvailUnidadeInstance');
+      renderStackedBar('chartAvailByMarca', groupCountAvailability(withStatus, a => a.marca), 'chartAvailMarcaInstance');
       renderStackedBar('chartAvailByModelo', groupCountAvailability(withStatus, a => a.modelo), 'chartAvailModeloInstance');
       renderStackedBar('chartAvailByTipo', groupCountAvailability(withStatus, a => a.tipo), 'chartAvailTipoInstance');
     };
@@ -2948,6 +3060,7 @@
           operacao: a.operacao,
           unidade: a.unidade,
           modelo: a.modelo,
+          marca: a.marca,
           tipo: a.tipo,
           status: current.status,
           tipoParada: current.event ? current.event.tipoParada : null,
@@ -2969,10 +3082,16 @@
     window.renderEvolutionChart = function() {
       const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
       const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
       const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
       const agrupamento = document.getElementById('evo-filter-agrupamento')?.value || 'dia';
       const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
+
+      populateMarcaFilters();
+      const marcaSel = document.getElementById('evo-filter-marca');
+      if (marcaSel) { const cur = marcaSel.value; if (cur) marcaSel.value = cur; }
 
       const dates = Object.keys(window.dailySnapshots || {}).sort();
 
@@ -2996,6 +3115,8 @@
         let entries = window.dailySnapshots[date] || [];
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
         if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
+        if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
         const total = entries.length;
@@ -3043,12 +3164,41 @@
         pct: buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0
       }));
 
+      // Meta da marca selecionada (se houver)
+      const metaAtiva = marcaFilter !== 'TODAS' ? getMetaForMarca(marcaFilter) : null;
+      const bannerEl = document.getElementById('evo-meta-banner');
+      if (bannerEl) {
+        if (metaAtiva !== null) {
+          const ultimoPct = pctData.length > 0 ? pctData[pctData.length - 1] : 0;
+          const dentro = ultimoPct >= metaAtiva;
+          bannerEl.classList.remove('hidden');
+          bannerEl.innerHTML = `
+            <div class="flex items-center gap-3">
+              <i data-lucide="target" class="w-5 h-5 ${dentro ? 'text-emerald-600' : 'text-red-600'}"></i>
+              <div>
+                <p class="text-xs font-bold text-slate-700">Meta de Disponibilidade — ${marcaFilter}</p>
+                <p class="text-[11px] text-slate-500">Meta: <strong>${metaAtiva}%</strong> • Último período no filtro: <strong>${ultimoPct}%</strong></p>
+              </div>
+            </div>
+            <span class="px-3 py-1.5 rounded-full text-xs font-black border ${dentro ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">${dentro ? '✓ Dentro da Meta' : '⚠ Fora da Meta'}</span>
+          `;
+          lucide.createIcons();
+        } else {
+          bannerEl.classList.add('hidden');
+          bannerEl.innerHTML = '';
+        }
+      }
+
       const el = document.getElementById('chartEvolution');
       if (el) {
         if (window.chartEvolutionInstance) window.chartEvolutionInstance.destroy();
+        const datasets = [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 7 }];
+        if (metaAtiva !== null) {
+          datasets.push({ label: `Meta (${metaAtiva}%)`, data: labels.map(() => metaAtiva), borderColor: '#ef4444', borderDash: [6, 4], pointRadius: 0, fill: false, tension: 0 });
+        }
         window.chartEvolutionInstance = new Chart(el.getContext('2d'), {
           type: 'line',
-          data: { labels, datasets: [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 7 }] },
+          data: { labels, datasets },
           options: {
             responsive: true, maintainAspectRatio: false,
             onClick: (evt, elements) => {
@@ -3057,7 +3207,7 @@
               const key = bucketKeys[idx];
               showEvoDrillDown(window.evoBucketDatesMap[key] || [], labels[idx]);
             },
-            plugins: { datalabels: { display: false } },
+            plugins: { datalabels: { display: false }, legend: { display: metaAtiva !== null } },
             scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } },
             onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
           }
@@ -3066,11 +3216,18 @@
 
       const tbody = document.getElementById('evolution-table-body');
       if (tbody) {
-        tbody.innerHTML = tableRows.slice().reverse().map(r => `
+        tbody.innerHTML = tableRows.slice().reverse().map(r => {
+          let metaCell = '<span class="text-slate-300">-</span>';
+          if (metaAtiva !== null) {
+            const dentro = r.pct >= metaAtiva;
+            metaCell = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${dentro ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">${dentro ? '✓ Dentro' : '⚠ Fora'}</span>`;
+          }
+          return `
           <tr class="cursor-pointer hover:bg-emerald-50/50" onclick='showEvoDrillDown(${JSON.stringify(window.evoBucketDatesMap[r.key] || [])}, ${JSON.stringify(r.label)})'>
-            <td class="p-3">${r.label}</td><td class="p-3">${r.total}</td><td class="p-3 text-emerald-600 font-bold">${r.disp}</td><td class="p-3 text-red-600 font-bold">${r.indisp}</td><td class="p-3 font-black">${r.pct}%</td>
+            <td class="p-3">${r.label}</td><td class="p-3">${r.total}</td><td class="p-3 text-emerald-600 font-bold">${r.disp}</td><td class="p-3 text-red-600 font-bold">${r.indisp}</td><td class="p-3 font-black">${r.pct}%</td><td class="p-3">${metaCell}</td>
           </tr>
-        `).join('') || '<tr><td colspan="5" class="p-4 text-center text-xs text-slate-400 italic">Nenhum snapshot registrado ainda.</td></tr>';
+        `;
+        }).join('') || '<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400 italic">Nenhum snapshot registrado ainda.</td></tr>';
       }
 
       // Mini-gráfico do Painel Diretoria sempre usa a granularidade diária, últimos 30 dias, sem os filtros extras
@@ -4329,6 +4486,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       syncUsers();
+      syncMetasMarca();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       if (localStorage.getItem('pcm_tv_mode') === '1') document.body.classList.add('tv-mode');
