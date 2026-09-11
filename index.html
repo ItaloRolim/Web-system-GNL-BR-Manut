@@ -223,7 +223,7 @@
 
         <div class="card-executive p-5 flex items-center justify-between">
           <div>
-            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Docs Alerta (&le; 15 dias)</p>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Docs Alerta (Programação Obrigatória)</p>
             <h3 class="text-3xl font-black text-amber-600 mt-1" id="kpi-expiring-docs">0</h3>
             <p class="text-[11px] text-slate-400 mt-0.5">Pendências Urgentes</p>
           </div>
@@ -327,7 +327,12 @@
     <!-- ABA 3: DISPONIBILIDADE -->
     <section id="tab-availability" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4">
-        <h2 class="text-lg font-bold text-slate-900 mb-3">Filtros de Disponibilidade</h2>
+        <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+          <h2 class="text-lg font-bold text-slate-900">Filtros de Disponibilidade</h2>
+          <button onclick="exportAvailabilityToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+          </button>
+        </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           <select id="avail-filter-operacao" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
           <select id="avail-filter-unidade" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
@@ -363,11 +368,17 @@
         <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">% Indisponibilidade</p><h3 class="text-2xl font-black text-red-600" id="avail-kpi-pct-indisp">0%</h3></div>
       </div>
 
+      <p class="text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-2">
+        <span class="flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em uma barra para ver os veículos daquela categoria (disponíveis, indisponíveis, dias parados, previsão e local).</span>
+        <label class="flex items-center gap-1.5 font-bold text-slate-500 cursor-pointer">
+          <input type="checkbox" id="toggle-chart-modelo" onchange="renderAvailability()"> Mostrar gráfico por Modelo (opcional)
+        </label>
+      </p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Operação</h3><div class="h-56"><canvas id="chartAvailByOperacao"></canvas></div></div>
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Unidade</h3><div class="h-56"><canvas id="chartAvailByUnidade"></canvas></div></div>
         <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Marca</h3><div class="h-56"><canvas id="chartAvailByMarca"></canvas></div></div>
-        <div class="card-executive p-5"><h3 class="font-bold text-sm mb-3">Por Modelo</h3><div class="h-56"><canvas id="chartAvailByModelo"></canvas></div></div>
+        <div id="avail-modelo-chart-card" class="card-executive p-5 hidden"><h3 class="font-bold text-sm mb-3">Por Modelo</h3><div class="h-56"><canvas id="chartAvailByModelo"></canvas></div></div>
         <div class="card-executive p-5 lg:col-span-2"><h3 class="font-bold text-sm mb-3">Por Tipo</h3><div class="h-56"><canvas id="chartAvailByTipo"></canvas></div></div>
       </div>
 
@@ -442,10 +453,20 @@
         <div class="card-executive p-4"><p class="text-[11px] font-bold text-slate-500 uppercase">% Disponibilidade</p><h3 class="text-2xl font-black text-emerald-600" id="pd-kpi-pct">0%</h3></div>
       </div>
 
-      <div class="card-executive overflow-hidden">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="layout-grid" class="w-3 h-3"></i> Ativos indisponíveis aparecem primeiro, destacados em vermelho.</p>
+        <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <button onclick="setParadasView('cards')" id="btn-pd-view-cards" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Cartões</button>
+          <button onclick="setParadasView('table')" id="btn-pd-view-table" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Tabela</button>
+        </div>
+      </div>
+
+      <div id="pd-cards-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+
+      <div id="pd-table-wrap" class="hidden card-executive overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200 sticky top-0">
               <tr>
                 <th class="p-3">TAG</th>
                 <th class="p-3">Tipo</th>
@@ -475,10 +496,16 @@
           <div>
             <h2 class="text-lg font-bold text-slate-900">Evolução Diária de Disponibilidade</h2>
             <p class="text-xs text-slate-500">Baseado nos snapshots imutáveis de fechamento diário — rastreabilidade completa por dia, mês e ano</p>
+            <p class="text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> <span id="evo-snapshot-integrity">Carregando histórico...</span></p>
           </div>
-          <button onclick="runDailySnapshotIfNeeded(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
-            <i data-lucide="camera" class="w-4 h-4"></i> Forçar Snapshot de Hoje
-          </button>
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="exportEvolutionToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+            </button>
+            <button onclick="runDailySnapshotIfNeeded(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="camera" class="w-4 h-4"></i> Forçar Snapshot de Hoje
+            </button>
+          </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
           <select id="evo-filter-agrupamento" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
@@ -774,16 +801,52 @@
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Controle e Acompanhamento de Documentação Veicular</h2>
-          <p class="text-xs text-slate-500">Gestão simplificada e unificada (CRLV, CIV, CIPP e Tacógrafo) — integrada ao cadastro único de ativos</p>
+          <p class="text-xs text-slate-500">CRLV, CIV, CIPP, Tacógrafo e Calibração de Válvula — integrada ao cadastro único de ativos</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button onclick="setDocView('table')" id="btn-doc-view-table" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Tabela</button>
             <button onclick="setDocView('calendar')" id="btn-doc-view-calendar" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Calendário</button>
           </div>
+          <button onclick="openDocImportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="upload" class="w-4 h-4"></i> Carga de Dados (Planilha)
+          </button>
+          <button onclick="exportDocumentsToExcel()" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+          </button>
           <button onclick="openDocModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
             <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Documento
           </button>
+        </div>
+      </div>
+
+      <div class="card-executive p-4">
+        <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <select id="doc-filter-nome" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Documentos</option>
+            <option value="CIV + CIPP">CIV + CIPP</option>
+            <option value="CRLV Anual">CRLV Anual</option>
+            <option value="CIPP">CIPP</option>
+            <option value="CIV">CIV</option>
+            <option value="Tacógrafo">Tacógrafo</option>
+            <option value="Calibração de Válvula">Calibração de Válvula</option>
+          </select>
+          <select id="doc-filter-unidade" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <input id="doc-filter-tag" oninput="onDocFiltersChange()" placeholder="Buscar TAG / Frota..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <select id="doc-filter-marca" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="doc-filter-situacao" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Situações</option>
+            <option value="vencido">Vencido</option>
+            <option value="obrigatorio">Obrigatório (≤ 60 dias)</option>
+            <option value="opcional">Opcional (61-90 dias)</option>
+            <option value="boa">Situação Boa (&gt; 90 dias)</option>
+            <option value="renovado">Renovado</option>
+          </select>
         </div>
       </div>
 
@@ -817,7 +880,8 @@
                 <th class="p-4">Documento</th>
                 <th class="p-4">Vencimento</th>
                 <th class="p-4">Dias Restantes</th>
-                <th class="p-4">Situação / Status</th>
+                <th class="p-4">Situação</th>
+                <th class="p-4">Status</th>
                 <th class="p-4 text-center">Ações</th>
               </tr>
             </thead>
@@ -925,8 +989,44 @@
           </h2>
           <p class="text-xs text-slate-500">Registro permanente — ativos, paradas/manutenções, preventivas e documentações. Nenhum registro é sobrescrito.</p>
         </div>
-        <div class="flex items-center gap-2">
+        <button onclick="exportHistoryToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+        </button>
+      </div>
+
+      <div class="card-executive p-4">
+        <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
           <select id="history-tag-filter" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Ativos</option></select>
+          <select id="history-filter-usuario" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Usuários</option></select>
+          <select id="history-filter-unidade" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="history-filter-categoria" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todas Categorias</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Parada/Manutenção">Parada/Manutenção</option>
+            <option value="Preventiva">Preventiva</option>
+            <option value="Documentação">Documentação</option>
+          </select>
+          <select id="history-filter-status" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Status</option></select>
+          <input id="history-filter-busca" oninput="renderHistoryTable()" placeholder="Buscar na descrição..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] font-bold text-slate-400 uppercase">Data Alvo (de/até)</label>
+            <div class="flex gap-1">
+              <input type="date" id="history-filter-alvo-inicio" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] w-full outline-none">
+              <input type="date" id="history-filter-alvo-fim" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] w-full outline-none">
+            </div>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] font-bold text-slate-400 uppercase">Data de Saída (de/até)</label>
+            <div class="flex gap-1">
+              <input type="date" id="history-filter-saida-inicio" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] w-full outline-none">
+              <input type="date" id="history-filter-saida-fim" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] w-full outline-none">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1203,6 +1303,64 @@
     </div>
   </div>
 
+  <!-- MODAL CARGA DE DADOS (IMPORTAÇÃO DE DOCUMENTOS VIA PLANILHA) -->
+  <div id="modal-doc-import" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-5xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="upload" class="w-5 h-5 text-emerald-600"></i> Carga de Dados — Importação de Documentos</h3>
+        <button onclick="closeDocImportModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+
+      <div id="doc-import-step-upload" class="space-y-4">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
+          Aceita planilha <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong> com as colunas: <strong>TAG, Documento, Vencimento</strong> (e opcionalmente Status). O TAG precisa já existir no cadastro de Ativos — Unidade e Tipo são preenchidos automaticamente a partir do ativo.
+        </div>
+        <div class="flex flex-wrap gap-3 items-end">
+          <div class="flex-1 min-w-[220px]">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Arquivo da Planilha</label>
+            <input type="file" id="doc-import-file-input" accept=".xlsx,.xls,.csv" onchange="handleDocFileUpload(event)" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none">
+          </div>
+          <button type="button" onclick="downloadDocTemplate()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap">
+            <i data-lucide="download" class="w-4 h-4"></i> Baixar Modelo de Planilha
+          </button>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Status padrão (se a planilha não tiver essa coluna)</label>
+          <select id="doc-import-default-status" class="w-full md:w-64 border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="Programado">Programado / Em Andamento</option>
+            <option value="Realizado">Realizado / Renovado</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="doc-import-step-preview" class="hidden space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800">Supervisão antes de confirmar</h4>
+          <span id="doc-import-summary-count" class="text-xs font-bold text-slate-600"></span>
+        </div>
+        <p class="text-[11px] text-slate-400">Corrija diretamente nos campos, escolha o documento e a data, ou remova uma linha antes de confirmar.</p>
+        <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-[40vh]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200 sticky top-0">
+              <tr>
+                <th class="p-2">Situação</th><th class="p-2">TAG</th><th class="p-2">Unidade / Tipo (do Ativo)</th>
+                <th class="p-2">Documento</th><th class="p-2">Vencimento</th><th class="p-2">Status</th><th class="p-2 text-center">Remover</th>
+              </tr>
+            </thead>
+            <tbody id="doc-import-preview-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t">
+          <button type="button" onclick="resetDocImportModal()" class="text-xs font-bold text-slate-500 hover:text-slate-700 underline">Recomeçar (escolher outro arquivo)</button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeDocImportModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+            <button type="button" onclick="confirmDocImport()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar Importação</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL EVENTO / PARADA -->
   <div id="modal-event" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1320,6 +1478,7 @@
             <option value="CIPP">CIPP (Individual)</option>
             <option value="CIV">CIV (Individual)</option>
             <option value="Tacógrafo">Tacógrafo</option>
+            <option value="Calibração de Válvula">Calibração de Válvula (Carretas)</option>
           </select>
         </div>
         <div>
@@ -1381,6 +1540,24 @@
           <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Programação</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL DETALHAMENTO AO CLICAR EM UM GRÁFICO DE DISPONIBILIDADE -->
+  <div id="modal-avail-drilldown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5 text-emerald-600"></i> <span id="avail-drilldown-title"></span></h3>
+        <button onclick="closeAvailDrillDown()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="overflow-x-auto max-w-3xl">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+            <tr><th class="p-2">TAG</th><th class="p-2">Marca/Modelo</th><th class="p-2">Status</th><th class="p-2">Tipo de Manutenção</th><th class="p-2">Descrição do Problema</th><th class="p-2">Dias Parado</th><th class="p-2">Previsão de Liberação</th><th class="p-2">Localização</th></tr>
+          </thead>
+          <tbody id="avail-drilldown-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -2038,7 +2215,60 @@
         `;
       }).join('') || `<tr><td colspan="13" class="p-4 text-center text-xs text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
 
+      // Visão em cartões — mais intuitiva para leitura rápida
+      const cardsContainer = document.getElementById('pd-cards-container');
+      if (cardsContainer) {
+        cardsContainer.innerHTML = withStatus.map(x => {
+          const isIndisp = x.status === 'Indisponivel';
+          const e = x.event;
+          const dias = isIndisp ? calcDiasParado(e.inicio, null) : 0;
+          const semanaInfo = isIndisp ? getISOWeekInfo(e.inicio) : { label: '-' };
+          const lastClosed = getLastClosedEventForAsset(x.asset.id);
+
+          return `
+            <div class="rounded-xl border-l-4 ${isIndisp ? 'border-l-red-500 bg-red-50/30' : 'border-l-emerald-500 bg-white'} border border-slate-200 shadow-sm p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg font-black text-slate-900">${x.asset.tag}</span>
+                  ${getVehicleBadge(x.asset.tipo)}
+                  ${getUnitBadge(x.asset.unidade)}
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-black border ${isIndisp ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">
+                  ${isIndisp ? '● Indisponível' : '● Disponível'}
+                </span>
+              </div>
+
+              ${isIndisp ? `
+                <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs bg-white/70 rounded-lg p-3 border border-red-100">
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Motivo</p><p class="font-semibold text-slate-800">${e.motivo || '-'}</p></div>
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Tipo de Parada</p><p class="font-semibold text-slate-800">${e.tipoParada || '-'}</p></div>
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Início</p><p class="font-semibold text-slate-800">${formatDateBR(e.inicio)}</p></div>
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Dias Parado</p><p class="font-black ${dias > 3 ? 'text-red-600' : 'text-slate-800'}">${dias} dias</p></div>
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Semana</p><p class="font-semibold text-slate-800">${semanaInfo.label}</p></div>
+                  <div><p class="text-[10px] uppercase font-bold text-slate-400">Previsão de Saída</p><p class="font-semibold text-slate-800">${formatDateBR(e.previsao)}</p></div>
+                  <div class="col-span-2"><p class="text-[10px] uppercase font-bold text-slate-400">Local / Responsável</p><p class="font-semibold text-slate-800">${e.local || '-'} / ${e.responsavel || '-'}</p></div>
+                  ${e.acoesRealizadas ? `<div class="col-span-2"><p class="text-[10px] uppercase font-bold text-slate-400">Ações Realizadas</p><p class="text-slate-600">${e.acoesRealizadas}</p></div>` : ''}
+                </div>
+              ` : `
+                <div class="text-xs text-slate-500 bg-emerald-50/50 rounded-lg p-3 border border-emerald-100">
+                  <p>✓ Operacional — nenhuma parada em aberto.</p>
+                  ${lastClosed ? `<p class="mt-1">Última liberação: <strong class="text-emerald-700">${formatDateBR(lastClosed.fim)}</strong>${lastClosed.acoesRealizadas ? ` — ${lastClosed.acoesRealizadas}` : ''}</p>` : ''}
+                </div>
+              `}
+            </div>
+          `;
+        }).join('') || `<div class="col-span-full text-center text-xs text-slate-400 italic py-8">Nenhum ativo encontrado com os filtros atuais.</div>`;
+      }
+
       lucide.createIcons();
+    };
+
+    window.setParadasView = function(mode) {
+      const isCards = mode === 'cards';
+      document.getElementById('pd-cards-container').classList.toggle('hidden', !isCards);
+      document.getElementById('pd-table-wrap').classList.toggle('hidden', isCards);
+      document.getElementById('btn-pd-view-cards').classList.toggle('active', isCards);
+      document.getElementById('btn-pd-view-table').classList.toggle('active', !isCards);
     };
 
     window.updateUserBadge = function(userObj) {
@@ -2169,6 +2399,24 @@
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
+    // Classificação de Situação do documento conforme prazo de vencimento:
+    // até 60 dias -> programação obrigatória | 61-90 dias -> programação opcional | acima de 90 dias -> situação boa (dentro do prazo)
+    window.getDocSituacao = function(days, status) {
+      if (status === 'Realizado') {
+        return { tier: 'renovado', label: 'Renovado', shortLabel: 'Renovado', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+      }
+      if (days < 0) {
+        return { tier: 'vencido', label: 'Vencido — Situação Crítica', shortLabel: 'Vencido', badge: 'bg-red-200 text-red-900 border-red-400' };
+      }
+      if (days <= 60) {
+        return { tier: 'obrigatorio', label: 'Programação Obrigatória', shortLabel: 'Obrigatório', badge: 'bg-red-100 text-red-800 border-red-300' };
+      }
+      if (days <= 90) {
+        return { tier: 'opcional', label: 'Programação Opcional', shortLabel: 'Opcional', badge: 'bg-amber-100 text-amber-800 border-amber-300' };
+      }
+      return { tier: 'boa', label: 'Dentro do Prazo — Situação Boa', shortLabel: 'Situação Boa', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+    };
+
     window.calcDiasParado = function(inicioStr, fimStr) {
       if (!inicioStr) return 0;
       const p1 = inicioStr.split('-');
@@ -2289,10 +2537,27 @@
     function refreshHistoryTagFilter() {
       const tags = Array.from(new Set((window.globalAuditHistory || []).map(h => h.tag).filter(Boolean))).sort();
       const el = document.getElementById('history-tag-filter');
-      if (!el) return;
-      const current = el.value;
-      el.innerHTML = `<option value="TODOS">Todos os Ativos</option>` + tags.map(t => `<option value="${t}">${t}</option>`).join('');
-      if (tags.includes(current)) el.value = current;
+      if (el) {
+        const current = el.value;
+        el.innerHTML = `<option value="TODOS">Todos os Ativos</option>` + tags.map(t => `<option value="${t}">${t}</option>`).join('');
+        if (tags.includes(current)) el.value = current;
+      }
+
+      const usuarios = Array.from(new Set((window.globalAuditHistory || []).map(h => h.usuario).filter(Boolean))).sort();
+      const usuarioEl = document.getElementById('history-filter-usuario');
+      if (usuarioEl) {
+        const current = usuarioEl.value;
+        usuarioEl.innerHTML = `<option value="TODOS">Todos os Usuários</option>` + usuarios.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (usuarios.includes(current)) usuarioEl.value = current;
+      }
+
+      const statusList = Array.from(new Set((window.globalAuditHistory || []).map(h => h.status).filter(Boolean))).sort();
+      const statusEl = document.getElementById('history-filter-status');
+      if (statusEl) {
+        const current = statusEl.value;
+        statusEl.innerHTML = `<option value="TODOS">Todos os Status</option>` + statusList.map(s => `<option value="${s}">${s}</option>`).join('');
+        if (statusList.includes(current)) statusEl.value = current;
+      }
     }
 
     window.onEventAssetChange = function() {
@@ -2697,6 +2962,216 @@
       alert(`Importação concluída!\n\n${importados} ativo(s) novo(s) cadastrado(s)\n${atualizados} ativo(s) atualizado(s)\n${ignorados} linha(s) ignorada(s)`);
     };
 
+    // ===================== CARGA DE DADOS (IMPORTAÇÃO DE DOCUMENTOS VIA PLANILHA) =====================
+    window.pendingDocImportRows = [];
+
+    window.openDocImportModal = function() {
+      resetDocImportModal();
+      document.getElementById('modal-doc-import').classList.replace('hidden', 'flex');
+    };
+    window.closeDocImportModal = function() {
+      document.getElementById('modal-doc-import').classList.replace('flex', 'hidden');
+    };
+    window.resetDocImportModal = function() {
+      window.pendingDocImportRows = [];
+      document.getElementById('doc-import-file-input').value = '';
+      document.getElementById('doc-import-step-upload').classList.remove('hidden');
+      document.getElementById('doc-import-step-preview').classList.add('hidden');
+    };
+
+    window.downloadDocTemplate = function() {
+      const wsData = [
+        ['TAG', 'Documento', 'Vencimento', 'Status (opcional)'],
+        ['CV010', 'CRLV Anual', '2026-12-31', 'Programado'],
+        ['CNC05', 'CIV + CIPP', '2026-11-15', 'Programado'],
+        ['CV008', 'Tacógrafo', '2026-10-05', 'Realizado']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Documentos');
+      XLSX.writeFile(wb, 'Modelo_Importacao_Documentos.xlsx');
+    };
+
+    const DOC_IMPORT_COLUMN_ALIASES = {
+      tag: ['tag'],
+      documento: ['documento', 'doc', 'nome do documento', 'tipo de documento'],
+      vencimento: ['vencimento', 'data de vencimento', 'data vencimento', 'validade'],
+      status: ['status', 'situacao']
+    };
+
+    const DOC_NAME_CANONICAL = ['CIV + CIPP', 'CRLV Anual', 'CIPP', 'CIV', 'Tacógrafo', 'Calibração de Válvula'];
+
+    function normalizeDocName(raw) {
+      const norm = normalizeHeader(raw);
+      const match = DOC_NAME_CANONICAL.find(n => normalizeHeader(n) === norm);
+      if (match) return match;
+      if (norm.includes('civ') && norm.includes('cipp')) return 'CIV + CIPP';
+      if (norm.includes('cipp')) return 'CIPP';
+      if (norm.includes('civ')) return 'CIV';
+      if (norm.includes('taco')) return 'Tacógrafo';
+      if (norm.includes('calibra') || norm.includes('valvula')) return 'Calibração de Válvula';
+      if (norm.includes('crlv')) return 'CRLV Anual';
+      return raw;
+    }
+
+    function parseSheetDate(raw) {
+      if (raw === undefined || raw === null || raw === '') return '';
+      if (typeof raw === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(raw);
+        if (parsed) return `${parsed.y}-${String(parsed.m).padStart(2, '0')}-${String(parsed.d).padStart(2, '0')}`;
+      }
+      const str = String(raw).trim();
+      const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+      const brMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (brMatch) return `${brMatch[3]}-${brMatch[2].padStart(2, '0')}-${brMatch[1].padStart(2, '0')}`;
+      return '';
+    }
+
+    function mapDocImportRow(rawRow) {
+      const normalizedMap = {};
+      Object.keys(rawRow).forEach(k => { normalizedMap[normalizeHeader(k)] = rawRow[k]; });
+
+      function findValue(field) {
+        const aliases = DOC_IMPORT_COLUMN_ALIASES[field];
+        for (const alias of aliases) {
+          if (normalizedMap[alias] !== undefined && String(normalizedMap[alias]).trim() !== '') {
+            return normalizedMap[alias];
+          }
+        }
+        return '';
+      }
+
+      return {
+        tag: String(findValue('tag')).toUpperCase().trim(),
+        docName: normalizeDocName(String(findValue('documento')).trim()),
+        expDate: parseSheetDate(findValue('vencimento')),
+        status: String(findValue('status')).trim()
+      };
+    }
+
+    window.handleDocFileUpload = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          if (!rows || rows.length === 0) {
+            alert('A planilha não tem linhas de dados (verifique se a primeira linha é o cabeçalho).');
+            return;
+          }
+          const defaultStatus = document.getElementById('doc-import-default-status').value;
+          window.pendingDocImportRows = rows.map(r => {
+            const mapped = mapDocImportRow(r);
+            if (!mapped.status) mapped.status = defaultStatus;
+            else mapped.status = /realiz/i.test(mapped.status) ? 'Realizado' : /reprog/i.test(mapped.status) ? 'Reprogramado' : 'Programado';
+            mapped._removed = false;
+            return mapped;
+          });
+          document.getElementById('doc-import-step-upload').classList.add('hidden');
+          document.getElementById('doc-import-step-preview').classList.remove('hidden');
+          renderDocImportPreview();
+        } catch (err) {
+          console.error(err);
+          alert('Não foi possível ler o arquivo. Verifique se é uma planilha válida (.xlsx, .xls ou .csv).');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    window.updateDocImportField = function(index, field, value) {
+      if (!window.pendingDocImportRows[index]) return;
+      window.pendingDocImportRows[index][field] = field === 'tag' ? value.toUpperCase() : value;
+      renderDocImportPreview();
+    };
+
+    window.removeDocImportRow = function(index) {
+      if (!window.pendingDocImportRows[index]) return;
+      window.pendingDocImportRows[index]._removed = true;
+      renderDocImportPreview();
+    };
+
+    window.renderDocImportPreview = function() {
+      const tbody = document.getElementById('doc-import-preview-tbody');
+      let validCount = 0, errorCount = 0, removedCount = 0;
+
+      const rowsHtml = window.pendingDocImportRows.map((row, idx) => {
+        if (row._removed) { removedCount++; return ''; }
+
+        const asset = getAssetByTag(row.tag);
+        let status = 'valido', statusLabel = 'Pronto', statusClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+
+        if (!row.tag) { status = 'erro'; statusLabel = 'TAG faltando'; statusClass = 'bg-red-100 text-red-800 border-red-300'; }
+        else if (!asset) { status = 'erro'; statusLabel = 'TAG não cadastrada em Ativos'; statusClass = 'bg-red-100 text-red-800 border-red-300'; }
+        else if (!row.docName) { status = 'erro'; statusLabel = 'Documento não reconhecido'; statusClass = 'bg-red-100 text-red-800 border-red-300'; }
+        else if (!row.expDate) { status = 'erro'; statusLabel = 'Data de vencimento inválida'; statusClass = 'bg-red-100 text-red-800 border-red-300'; }
+
+        row._status = status;
+        if (status === 'valido') validCount++; else errorCount++;
+
+        return `
+          <tr class="${status === 'erro' ? 'bg-red-50/40' : ''}">
+            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${statusClass}">${statusLabel}</span></td>
+            <td class="p-2"><input value="${row.tag}" oninput="updateDocImportField(${idx},'tag',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs uppercase outline-none"></td>
+            <td class="p-2 text-slate-500">${asset ? `${getUnitBadge(asset.unidade)} ${asset.tipo}` : '<span class="text-red-500 italic">Ativo não encontrado</span>'}</td>
+            <td class="p-2">
+              <select onchange="updateDocImportField(${idx},'docName',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
+                ${DOC_NAME_CANONICAL.map(n => `<option value="${n}" ${row.docName === n ? 'selected' : ''}>${n}</option>`).join('')}
+              </select>
+            </td>
+            <td class="p-2"><input type="date" value="${row.expDate}" oninput="updateDocImportField(${idx},'expDate',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2">
+              <select onchange="updateDocImportField(${idx},'status',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
+                <option value="Programado" ${row.status === 'Programado' ? 'selected' : ''}>Programado</option>
+                <option value="Realizado" ${row.status === 'Realizado' ? 'selected' : ''}>Realizado</option>
+                <option value="Reprogramado" ${row.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
+              </select>
+            </td>
+            <td class="p-2 text-center"><button onclick="removeDocImportRow(${idx})" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml || `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nenhuma linha para importar.</td></tr>`;
+      document.getElementById('doc-import-summary-count').innerText =
+        `${validCount} pronto(s) para importar · ${errorCount} com erro · ${removedCount} removido(s) manualmente`;
+      lucide.createIcons();
+    };
+
+    window.confirmDocImport = function() {
+      let importados = 0, ignorados = 0;
+
+      window.pendingDocImportRows.forEach(row => {
+        if (row._removed || row._status === 'erro') { if (!row._removed) ignorados++; return; }
+        const asset = getAssetByTag(row.tag);
+        if (!asset) { ignorados++; return; }
+
+        window.fleetDocs.push({
+          id: Date.now() + Math.floor(Math.random() * 10000),
+          unit: asset.unidade, tag: asset.tag, assetId: asset.id, type: asset.tipo,
+          docName: row.docName, expDate: row.expDate, status: row.status,
+          dataOriginal: row.expDate, dataRealizada: row.status === 'Realizado' ? getTodayStr() : null, historico: []
+        });
+        importados++;
+      });
+
+      if (importados === 0) {
+        alert('Nenhum documento válido para importar. Verifique a supervisão da planilha.');
+        return;
+      }
+
+      addAuditLog('TODAS', 'Documentação', 'CARGA DE DADOS', `Importação em lote via planilha: ${importados} documento(s) cadastrado(s), ${ignorados} ignorado(s)`, getTodayStr(), 'Importado');
+      saveData();
+      renderDocuments();
+      renderDocCalendar();
+      closeDocImportModal();
+      alert(`Importação concluída!\n\n${importados} documento(s) novo(s) cadastrado(s)\n${ignorados} linha(s) ignorada(s)`);
+    };
+
     window.renderAssets = function() {
       const tbody = document.getElementById('assets-table-body');
       if (!tbody) return;
@@ -2892,8 +3367,7 @@
     };
 
     // ===================== DISPONIBILIDADE =====================
-    window.renderAvailability = function() {
-      if (!assetsLoaded) return;
+    function getFilteredAvailabilityList() {
       const opFilter = document.getElementById('avail-filter-operacao')?.value || 'TODAS';
       const unitFilter = document.getElementById('avail-filter-unidade')?.value || 'TODAS';
       const marcaFilter = document.getElementById('avail-filter-marca')?.value || 'TODAS';
@@ -2901,8 +3375,6 @@
       const tipoFilter = document.getElementById('avail-filter-tipo')?.value || 'TODOS';
       const statusFilter = document.getElementById('avail-filter-status')?.value || 'TODOS';
       const tagFilter = (document.getElementById('avail-filter-tag')?.value || '').trim().toUpperCase();
-
-      populateMarcaFilters();
 
       let list = getActiveAssets();
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
@@ -2914,8 +3386,14 @@
       if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
 
       const withStatus = list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
-      let filteredWithStatus = withStatus;
-      if (statusFilter !== 'TODOS') filteredWithStatus = withStatus.filter(x => x.current.status === statusFilter);
+      const filteredWithStatus = statusFilter !== 'TODOS' ? withStatus.filter(x => x.current.status === statusFilter) : withStatus;
+      return { list, withStatus, filteredWithStatus, opFilter };
+    }
+
+    window.renderAvailability = function() {
+      if (!assetsLoaded) return;
+      populateMarcaFilters();
+      const { list, filteredWithStatus, opFilter } = getFilteredAvailabilityList();
 
       const total = filteredWithStatus.length;
       const disp = filteredWithStatus.filter(x => x.current.status === 'Disponivel').length;
@@ -2946,9 +3424,98 @@
       renderDashboardKPIs();
     };
 
+    // ===================== EXPORTAÇÃO PARA EXCEL =====================
+    function exportRowsToExcel(filename, sheetName, headers, rows) {
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, filename);
+    }
+
+    window.exportAvailabilityToExcel = function() {
+      const { filteredWithStatus } = getFilteredAvailabilityList();
+      if (filteredWithStatus.length === 0) { alert('Nenhum dado no filtro atual para exportar.'); return; }
+
+      const rows = filteredWithStatus.map(x => {
+        const isIndisp = x.current.status === 'Indisponivel';
+        const evt = x.current.event;
+        return [
+          x.asset.tag, x.asset.marca || '', x.asset.modelo || '', x.asset.tipo || '', x.asset.unidade || '', x.asset.operacao || '',
+          isIndisp ? 'Indisponível' : 'Disponível',
+          isIndisp ? (evt.tipoParada || '') : '',
+          isIndisp ? (evt.motivo || '') : '',
+          isIndisp ? formatDateBR(evt.inicio) : '',
+          isIndisp ? calcDiasParado(evt.inicio, null) : 0,
+          isIndisp ? formatDateBR(evt.previsao) : '',
+          isIndisp ? (evt.local || '') : ''
+        ];
+      });
+
+      exportRowsToExcel(
+        `Disponibilidade_${getTodayStr()}.xlsx`, 'Disponibilidade',
+        ['TAG', 'Marca', 'Modelo', 'Tipo', 'Unidade', 'Operação', 'Status', 'Tipo de Manutenção', 'Descrição do Problema', 'Início da Parada', 'Dias Parado', 'Previsão de Liberação', 'Localização'],
+        rows
+      );
+    };
+
+    window.exportEvolutionToExcel = function() {
+      const rows = window.lastEvolutionTableRows || [];
+      if (rows.length === 0) { alert('Nenhum dado de evolução para exportar. Gere ao menos um snapshot primeiro.'); return; }
+
+      const meta = window.lastEvolutionMeta;
+      const marcaFilter = window.lastEvolutionMarcaFilter;
+      const headers = ['Período', 'Total', 'Disponíveis', 'Indisponíveis', '% Disponibilidade'];
+      if (meta !== null) headers.push(`Meta (${marcaFilter})`, 'Situação vs Meta');
+
+      const dataRows = rows.slice().reverse().map(r => {
+        const row = [r.label, r.total, r.disp, r.indisp, r.pct];
+        if (meta !== null) {
+          row.push(meta, r.pct >= meta ? 'Dentro da Meta' : 'Fora da Meta');
+        }
+        return row;
+      });
+
+      exportRowsToExcel(`Evolucao_Disponibilidade_${getTodayStr()}.xlsx`, 'Evolução', headers, dataRows);
+    };
+
+    window.exportHistoryToExcel = function() {
+      const logs = getFilteredHistory();
+      if (logs.length === 0) { alert('Nenhum dado no filtro atual para exportar.'); return; }
+
+      const rows = logs.map(h => [
+        h.timestamp, h.usuario || 'Sistema', h.unit, h.category, h.tag, h.details,
+        formatDateBR(h.targetDate), h.dataSaida ? formatDateBR(h.dataSaida) : '', h.status
+      ]);
+
+      exportRowsToExcel(
+        `Historico_Consolidado_${getTodayStr()}.xlsx`, 'Histórico',
+        ['Data/Hora Registro', 'Usuário', 'Unidade', 'Categoria', 'Veículo/TAG', 'Descrição do Evento/Serviço', 'Data Alvo/Programada', 'Data de Saída', 'Status Final'],
+        rows
+      );
+    };
+
+    window.exportDocumentsToExcel = function() {
+      const docs = getDocsForDocumentsTab();
+      if (docs.length === 0) { alert('Nenhum documento no filtro atual para exportar.'); return; }
+
+      const rows = docs.map(d => {
+        const asset = getAssetById(d.assetId);
+        const days = calculateDaysRemaining(d.expDate);
+        const situacao = getDocSituacao(days, d.status);
+        return [d.unit, d.tag, d.type, asset ? (asset.marca || '') : '', d.docName, formatDateBR(d.expDate), days, situacao.label, d.status];
+      });
+
+      exportRowsToExcel(
+        `Documentos_${getTodayStr()}.xlsx`, 'Documentos',
+        ['Unidade', 'TAG', 'Tipo', 'Marca', 'Documento', 'Vencimento', 'Dias Restantes', 'Situação', 'Status'],
+        rows
+      );
+    };
+
     function populateMarcaFilters() {
       const marcas = Array.from(new Set((window.assets || []).map(a => a.marca).filter(Boolean))).sort();
-      ['avail-filter-marca', 'evo-filter-marca'].forEach(id => {
+      ['avail-filter-marca', 'evo-filter-marca', 'doc-filter-marca'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
@@ -3006,7 +3573,19 @@
       return groups;
     }
 
-    function renderStackedBar(canvasId, groups, instanceKey) {
+    function groupAssetsByKey(withStatus, keyFn) {
+      const groups = {};
+      withStatus.forEach(x => {
+        const key = keyFn(x.asset) || 'N/D';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(x);
+      });
+      return groups;
+    }
+
+    window.availDrillDownData = {};
+
+    function renderStackedBar(canvasId, groups, instanceKey, rawGroups, groupTitle) {
       const el = document.getElementById(canvasId);
       if (!el) return;
       const labels = Object.keys(groups);
@@ -3024,6 +3603,13 @@
         },
         options: {
           responsive: true, maintainAspectRatio: false,
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length || !rawGroups) return;
+            const idx = elements[0].index;
+            const label = labels[idx];
+            showAvailDrillDown(groupTitle, label, rawGroups[label] || []);
+          },
+          onHover: (evt, elements) => { evt.native.target.style.cursor = (elements.length && rawGroups) ? 'pointer' : 'default'; },
           plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { display: false } },
           scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
         }
@@ -3031,11 +3617,56 @@
     }
 
     window.renderAvailabilityCharts = function(withStatus) {
-      renderStackedBar('chartAvailByOperacao', groupCountAvailability(withStatus, a => a.operacao), 'chartAvailOperacaoInstance');
-      renderStackedBar('chartAvailByUnidade', groupCountAvailability(withStatus, a => a.unidade), 'chartAvailUnidadeInstance');
-      renderStackedBar('chartAvailByMarca', groupCountAvailability(withStatus, a => a.marca), 'chartAvailMarcaInstance');
-      renderStackedBar('chartAvailByModelo', groupCountAvailability(withStatus, a => a.modelo), 'chartAvailModeloInstance');
-      renderStackedBar('chartAvailByTipo', groupCountAvailability(withStatus, a => a.tipo), 'chartAvailTipoInstance');
+      const byOperacao = groupAssetsByKey(withStatus, a => a.operacao);
+      const byUnidade = groupAssetsByKey(withStatus, a => a.unidade);
+      const byMarca = groupAssetsByKey(withStatus, a => a.marca);
+      const byModelo = groupAssetsByKey(withStatus, a => a.modelo);
+      const byTipo = groupAssetsByKey(withStatus, a => a.tipo);
+
+      window.availDrillDownData = { operacao: byOperacao, unidade: byUnidade, marca: byMarca, modelo: byModelo, tipo: byTipo };
+
+      const showModelo = document.getElementById('toggle-chart-modelo')?.checked;
+      document.getElementById('avail-modelo-chart-card')?.classList.toggle('hidden', !showModelo);
+
+      renderStackedBar('chartAvailByOperacao', groupCountAvailability(withStatus, a => a.operacao), 'chartAvailOperacaoInstance', byOperacao, 'Operação');
+      renderStackedBar('chartAvailByUnidade', groupCountAvailability(withStatus, a => a.unidade), 'chartAvailUnidadeInstance', byUnidade, 'Unidade');
+      renderStackedBar('chartAvailByMarca', groupCountAvailability(withStatus, a => a.marca), 'chartAvailMarcaInstance', byMarca, 'Marca');
+      if (showModelo) {
+        renderStackedBar('chartAvailByModelo', groupCountAvailability(withStatus, a => a.modelo), 'chartAvailModeloInstance', byModelo, 'Modelo');
+      }
+      renderStackedBar('chartAvailByTipo', groupCountAvailability(withStatus, a => a.tipo), 'chartAvailTipoInstance', byTipo, 'Tipo');
+    };
+
+    // Detalhamento ao clicar numa barra: veículos daquela categoria, disponíveis e indisponíveis
+    window.showAvailDrillDown = function(groupTitle, label, list) {
+      document.getElementById('avail-drilldown-title').innerText = `${groupTitle}: ${label}`;
+      const rows = list.slice().sort((a, b) => {
+        if (a.current.status !== b.current.status) return a.current.status === 'Indisponivel' ? -1 : 1;
+        return (a.asset.tag || '').localeCompare(b.asset.tag || '');
+      });
+
+      document.getElementById('avail-drilldown-tbody').innerHTML = rows.map(x => {
+        const isIndisp = x.current.status === 'Indisponivel';
+        const evt = x.current.event;
+        const dias = isIndisp ? calcDiasParado(evt.inicio, null) : 0;
+        return `
+          <tr class="${isIndisp ? 'bg-red-50/40' : ''}">
+            <td class="p-2 font-bold text-slate-900">${x.asset.tag}</td>
+            <td class="p-2">${x.asset.marca || ''} ${x.asset.modelo || ''}</td>
+            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${isIndisp ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">${isIndisp ? 'Indisponível' : 'Disponível'}</span></td>
+            <td class="p-2">${isIndisp ? (evt.tipoParada || '-') : '-'}</td>
+            <td class="p-2">${isIndisp ? (evt.motivo || '-') : '-'}</td>
+            <td class="p-2 font-bold ${dias > 3 ? 'text-red-600' : 'text-slate-700'}">${isIndisp ? dias + ' dias' : '-'}</td>
+            <td class="p-2">${isIndisp ? formatDateBR(evt.previsao) : '-'}</td>
+            <td class="p-2">${isIndisp ? (evt.local || '-') : '-'}</td>
+          </tr>
+        `;
+      }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum ativo nesta categoria.</td></tr>`;
+
+      document.getElementById('modal-avail-drilldown').classList.replace('hidden', 'flex');
+    };
+    window.closeAvailDrillDown = function() {
+      document.getElementById('modal-avail-drilldown').classList.replace('flex', 'hidden');
     };
 
     // ===================== FECHAMENTO DIÁRIO (SNAPSHOT IMUTÁVEL) =====================
@@ -3094,6 +3725,13 @@
       if (marcaSel) { const cur = marcaSel.value; if (cur) marcaSel.value = cur; }
 
       const dates = Object.keys(window.dailySnapshots || {}).sort();
+
+      const integrityEl = document.getElementById('evo-snapshot-integrity');
+      if (integrityEl) {
+        integrityEl.innerText = dates.length === 0
+          ? 'Nenhum snapshot registrado ainda — clique em "Forçar Snapshot de Hoje" para começar.'
+          : `${dates.length} dia(s) de histórico registrado(s), de ${formatDateBR(dates[0])} até ${formatDateBR(dates[dates.length - 1])} — dados permanentes, nunca sobrescritos.`;
+      }
 
       // Popula o filtro de "Nº da Semana" com as semanas realmente presentes nos snapshots
       const weekSel = document.getElementById('evo-filter-semana-num');
@@ -3166,6 +3804,9 @@
 
       // Meta da marca selecionada (se houver)
       const metaAtiva = marcaFilter !== 'TODAS' ? getMetaForMarca(marcaFilter) : null;
+      window.lastEvolutionTableRows = tableRows;
+      window.lastEvolutionMeta = metaAtiva;
+      window.lastEvolutionMarcaFilter = marcaFilter;
       const bannerEl = document.getElementById('evo-meta-banner');
       if (bannerEl) {
         if (metaAtiva !== null) {
@@ -3192,23 +3833,49 @@
       const el = document.getElementById('chartEvolution');
       if (el) {
         if (window.chartEvolutionInstance) window.chartEvolutionInstance.destroy();
-        const datasets = [{ label: '% Disponibilidade', data: pctData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 7 }];
+        const pointColors = metaAtiva !== null
+          ? pctData.map(v => v >= metaAtiva ? '#10b981' : '#ef4444')
+          : '#10b981';
+        const datasets = [{
+          label: '% Disponibilidade', data: pctData,
+          borderColor: '#0ea5e9', backgroundColor: 'rgba(16,185,129,0.12)',
+          fill: true, tension: 0.25,
+          pointRadius: 5, pointHoverRadius: 8, borderWidth: 3,
+          pointBackgroundColor: pointColors, pointBorderColor: '#fff', pointBorderWidth: 2
+        }];
         if (metaAtiva !== null) {
-          datasets.push({ label: `Meta (${metaAtiva}%)`, data: labels.map(() => metaAtiva), borderColor: '#ef4444', borderDash: [6, 4], pointRadius: 0, fill: false, tension: 0 });
+          datasets.push({ label: `Meta (${metaAtiva}%)`, data: labels.map(() => metaAtiva), borderColor: '#ef4444', borderDash: [8, 5], borderWidth: 2, pointRadius: 0, fill: false, tension: 0 });
         }
         window.chartEvolutionInstance = new Chart(el.getContext('2d'), {
           type: 'line',
           data: { labels, datasets },
           options: {
             responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             onClick: (evt, elements) => {
               if (!elements || !elements.length) return;
               const idx = elements[0].index;
               const key = bucketKeys[idx];
               showEvoDrillDown(window.evoBucketDatesMap[key] || [], labels[idx]);
             },
-            plugins: { datalabels: { display: false }, legend: { display: metaAtiva !== null } },
-            scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } },
+            plugins: {
+              datalabels: { display: false },
+              legend: { display: metaAtiva !== null, position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    if (ctx.dataset.label.startsWith('Meta')) return ctx.dataset.label;
+                    const v = ctx.parsed.y;
+                    if (metaAtiva !== null) return `Disponibilidade: ${v}% ${v >= metaAtiva ? '(dentro da meta ✓)' : '(fora da meta ⚠)'}`;
+                    return `Disponibilidade: ${v}%`;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 11 } }, grid: { color: 'rgba(148,163,184,0.15)' } },
+              x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+            },
             onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
           }
         });
@@ -3384,8 +4051,27 @@
 
     window.getFilteredHistory = function() {
       const tagFilter = document.getElementById('history-tag-filter')?.value || 'TODOS';
+      const usuarioFilter = document.getElementById('history-filter-usuario')?.value || 'TODOS';
+      const unidadeFilter = document.getElementById('history-filter-unidade')?.value || 'TODAS';
+      const categoriaFilter = document.getElementById('history-filter-categoria')?.value || 'TODOS';
+      const statusFilter = document.getElementById('history-filter-status')?.value || 'TODOS';
+      const buscaFilter = (document.getElementById('history-filter-busca')?.value || '').trim().toLowerCase();
+      const alvoInicio = document.getElementById('history-filter-alvo-inicio')?.value || '';
+      const alvoFim = document.getElementById('history-filter-alvo-fim')?.value || '';
+      const saidaInicio = document.getElementById('history-filter-saida-inicio')?.value || '';
+      const saidaFim = document.getElementById('history-filter-saida-fim')?.value || '';
+
       let data = window.selectedUnit === 'TODAS' ? window.globalAuditHistory : window.globalAuditHistory.filter(h => h.unit === window.selectedUnit);
       if (tagFilter !== 'TODOS') data = data.filter(h => h.tag === tagFilter);
+      if (usuarioFilter !== 'TODOS') data = data.filter(h => h.usuario === usuarioFilter);
+      if (unidadeFilter !== 'TODAS') data = data.filter(h => h.unit === unidadeFilter);
+      if (categoriaFilter !== 'TODOS') data = data.filter(h => h.category === categoriaFilter);
+      if (statusFilter !== 'TODOS') data = data.filter(h => h.status === statusFilter);
+      if (buscaFilter) data = data.filter(h => (h.details || '').toLowerCase().includes(buscaFilter) || (h.timestamp || '').toLowerCase().includes(buscaFilter));
+      if (alvoInicio) data = data.filter(h => h.targetDate && h.targetDate >= alvoInicio);
+      if (alvoFim) data = data.filter(h => h.targetDate && h.targetDate <= alvoFim);
+      if (saidaInicio) data = data.filter(h => h.dataSaida && h.dataSaida >= saidaInicio);
+      if (saidaFim) data = data.filter(h => h.dataSaida && h.dataSaida <= saidaFim);
       return data;
     };
 
@@ -3439,19 +4125,72 @@
       if (view === 'calendar') renderDocCalendar();
     };
 
+    function getDocsForDocumentsTab() {
+      let data = getFilteredDocs();
+      const nomeFiltro = document.getElementById('doc-filter-nome')?.value || 'TODOS';
+      const unidadeFiltro = document.getElementById('doc-filter-unidade')?.value || 'TODAS';
+      const tagFiltro = (document.getElementById('doc-filter-tag')?.value || '').trim().toUpperCase();
+      const marcaFiltro = document.getElementById('doc-filter-marca')?.value || 'TODAS';
+      const situacaoFiltro = document.getElementById('doc-filter-situacao')?.value || 'TODAS';
+      if (nomeFiltro !== 'TODOS') data = data.filter(d => d.docName === nomeFiltro);
+      if (unidadeFiltro !== 'TODAS') data = data.filter(d => d.unit === unidadeFiltro);
+      if (tagFiltro) data = data.filter(d => (d.tag || '').toUpperCase().includes(tagFiltro));
+      if (marcaFiltro !== 'TODAS') data = data.filter(d => { const a = getAssetById(d.assetId); return a && a.marca === marcaFiltro; });
+      if (situacaoFiltro !== 'TODAS') data = data.filter(d => getDocSituacao(calculateDaysRemaining(d.expDate), d.status).tier === situacaoFiltro);
+      return data;
+    }
+
+    window.onDocFiltersChange = function() {
+      renderDocuments();
+      renderDocCalendar();
+    };
+
     window.renderDocuments = function() {
       const tbody = document.getElementById('docs-table-body');
       const criticalContainer = document.getElementById('dashboard-critical-docs');
       if (!tbody || !criticalContainer) return;
 
+      populateMarcaFilters();
       tbody.innerHTML = '';
       criticalContainer.innerHTML = '';
 
-      const activeDocs = getFilteredDocs();
+      // Painel "Documentos em Atenção" da Visão Geral: respeita só a unidade global, não os filtros desta aba
+      // Alerta alinhado à regra de negócio: até 60 dias = programação obrigatória (crítico/urgente para a diretoria)
+      const dashboardDocs = getFilteredDocs().slice().sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
       let expiringCount = 0;
+      dashboardDocs.forEach(item => {
+        const days = calculateDaysRemaining(item.expDate);
+        const situacao = getDocSituacao(days, item.status);
+        if ((situacao.tier === 'obrigatorio' || situacao.tier === 'vencido')) {
+          expiringCount++;
+          criticalContainer.innerHTML += `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200/80 shadow-sm">
+              <div class="flex items-center gap-3">
+                ${getUnitBadge(item.unit)}
+                <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${item.tag}</span>
+                ${getVehicleBadge(item.type)}
+                <div>
+                  <p class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                    ${item.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[10px] font-black px-1.5 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
+                    ${item.docName}
+                  </p>
+                  <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(item.expDate)}</p>
+                </div>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${situacao.badge}">
+                  ${days < 0 ? 'Vencido há ' + Math.abs(days) + ' dias' : 'Faltam ' + days + ' dias'}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500">${situacao.label}</span>
+              </div>
+            </div>
+          `;
+        }
+      });
+      document.getElementById('kpi-expiring-docs').innerText = expiringCount;
 
-      activeDocs.sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
-
+      // Tabela e métricas desta aba: respeitam Documento / Unidade / TAG / Marca / Situação
+      const activeDocs = getDocsForDocumentsTab().slice().sort((a, b) => new Date(a.expDate) - new Date(b.expDate));
       let totalDocs = 0, realizedDocs = 0, pendingDocs = 0, reprogDocs = 0;
 
       activeDocs.forEach(d => {
@@ -3469,33 +4208,7 @@
 
       activeDocs.forEach(item => {
         const days = calculateDaysRemaining(item.expDate);
-        let alertBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-        if (days <= 7) alertBadge = 'bg-red-100 text-red-800 border-red-300';
-        else if (days <= 15) alertBadge = 'bg-amber-100 text-amber-800 border-amber-300';
-
-        if (days <= 15 && item.status !== 'Realizado') {
-          expiringCount++;
-          criticalContainer.innerHTML += `
-            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200/80 shadow-sm">
-              <div class="flex items-center gap-3">
-                ${getUnitBadge(item.unit)}
-                <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${item.tag}</span>
-                ${getVehicleBadge(item.type)}
-                <div>
-                  <p class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-                    ${item.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[10px] font-black px-1.5 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
-                    ${item.docName}
-                  </p>
-                  <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(item.expDate)}</p>
-                </div>
-              </div>
-              <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${alertBadge}">
-                ${days < 0 ? 'Vencido há ' + Math.abs(days) + ' dias' : 'Faltam ' + days + ' dias'}
-              </span>
-            </div>
-          `;
-        }
-
+        const situacao = getDocSituacao(days, item.status);
         const isAtrelado = item.docName === 'CIV + CIPP';
 
         tbody.innerHTML += `
@@ -3508,7 +4221,10 @@
               ${isAtrelado ? '<span class="bg-purple-100 text-purple-800 font-black text-[10px] px-2 py-0.5 rounded-full border border-purple-200">CIV + CIPP</span>' : ''}
             </td>
             <td class="p-4 text-slate-700">${formatDateBR(item.expDate)}</td>
-            <td class="p-4 font-bold ${days <= 15 ? 'text-amber-600' : 'text-slate-800'}">${days} dias</td>
+            <td class="p-4 font-bold ${days <= 60 ? 'text-red-600' : days <= 90 ? 'text-amber-600' : 'text-slate-800'}">${days} dias</td>
+            <td class="p-4">
+              <span class="px-2 py-1 rounded-full text-[10px] font-black border ${situacao.badge}" title="${situacao.label}">${situacao.shortLabel}</span>
+            </td>
             <td class="p-4">
               <select onchange="toggleDocStatus(${item.id}, this.value)" class="text-xs font-bold p-1.5 rounded border outline-none ${item.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : item.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">
                 <option value="Programado" ${item.status === 'Programado' ? 'selected' : ''}>Programado / Em Andamento</option>
@@ -3523,7 +4239,6 @@
         `;
       });
 
-      document.getElementById('kpi-expiring-docs').innerText = expiringCount;
       lucide.createIcons();
     };
 
@@ -3575,7 +4290,7 @@
     window.renderDocCalendar = function() {
       const container = document.getElementById('doc-calendar-grid');
       if (!container) return;
-      const activeDocs = getFilteredDocs();
+      const activeDocs = getDocsForDocumentsTab();
 
       if (window.currentDocCalendarView === 'weekly') {
         container.className = 'grid grid-cols-1 md:grid-cols-5 gap-4';
