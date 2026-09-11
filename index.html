@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão Integrada de Ativos, Disponibilidade, Manutenção e Documentos - GNL Brasil Logística</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,28 +14,101 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    body { background-color: #f1f5f9; }
+    :root {
+      --brand-50:#ecfdf5; --brand-100:#d1fae5; --brand-200:#a7f3d0; --brand-500:#10b981;
+      --brand-600:#059669; --brand-700:#047857; --brand-900:#064e3b;
+      --ink-900:#0f172a; --ink-700:#334155; --ink-500:#64748b; --ink-400:#94a3b8;
+      --surface:#ffffff; --canvas:#f4f7f6; --line:#e2e8f0;
+      --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+      --shadow-md: 0 6px 16px -6px rgba(15,23,42,.10), 0 2px 6px -2px rgba(15,23,42,.06);
+      --shadow-lg: 0 20px 40px -18px rgba(15,23,42,.22);
+      --radius-lg: 1rem; --radius-md: 0.7rem;
+    }
+    * { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+    h1, h2, .font-brand { font-family: 'Lexend', 'Inter', ui-sans-serif, sans-serif; letter-spacing: -0.01em; }
+    body {
+      background:
+        radial-gradient(1100px 420px at 100% -10%, rgba(16,185,129,0.07), transparent 60%),
+        radial-gradient(900px 380px at -5% 0%, rgba(15,118,110,0.05), transparent 55%),
+        var(--canvas);
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--brand-200); color: var(--brand-900); }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; border: 2px solid var(--canvas); }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .fade-in { animation: fadeIn 0.25s ease-in-out; }
+    .fade-in { animation: fadeIn .3s cubic-bezier(.16,1,.3,1); }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes softPulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+    .pulse-dot { animation: softPulse 1.4s ease-in-out infinite; }
+
     .card-executive {
-      background-color: #ffffff;
-      border: 1px solid #a7f3d0; /* Emerald-200 */
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      border-radius: 0.75rem;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg);
+      transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
     }
+    .card-executive:hover { box-shadow: var(--shadow-md); }
+
+    /* Botões: hierarquia consistente em todo o sistema */
+    button, .btn { transition: all .15s ease; }
+    button:not(.tab-btn):not(.subtab-btn):active { transform: translateY(1px); }
+    button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--brand-500); outline-offset: 2px;
+    }
+
+    /* Tabelas: cabeçalho fixo, zebra sutil, hover claro */
+    table thead th { position: sticky; top: 0; z-index: 1; letter-spacing: .04em; backdrop-filter: blur(2px); }
+    table tbody tr { transition: background-color .12s ease; }
+    .card-executive table tbody tr:nth-child(even) { background-color: rgba(148,163,184,0.035); }
+
+    input, select, textarea {
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input:hover, select:hover, textarea:hover { border-color: #94a3b8; }
+
     .drag-chip { cursor: grab; }
     .drag-chip:active { cursor: grabbing; }
     .drop-target-hover { outline: 2px dashed #10b981; outline-offset: -2px; background-color: #ecfdf5 !important; }
     .subtab-btn.active { background-color:#0f766e; color:#fff; }
 
+    /* Navegação principal por abas — trilho com indicador ativo mais nítido */
+    #main-tab-nav { position: relative; }
+    #main-tab-nav .tab-btn { position: relative; }
+    #main-tab-nav .tab-btn.bg-emerald-600 { box-shadow: 0 8px 16px -8px rgba(5,150,105,.55); }
+
+    /* Cabeçalho fixo com leve vidro fosco */
+    header.app-header {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: saturate(180%) blur(10px);
+      -webkit-backdrop-filter: saturate(180%) blur(10px);
+    }
+
+    /* Indicador de status de sincronização */
+    #sync-status-badge { transition: all .2s ease; }
+    #sync-status-badge .dot { width: 7px; height: 7px; border-radius: 99px; display: inline-block; }
+
+    /* Badges de vínculo com parada real (reconciliação Preventiva/Documento x Disponibilidade) */
+    .vinc-badge { display:inline-flex; align-items:center; gap:.25rem; font-weight:800; font-size:9.5px; letter-spacing:.02em; padding:.2rem .45rem; border-radius:999px; border-width:1px; white-space:nowrap; }
+    .vinc-confirmado { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+    .vinc-divergente { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+    .vinc-pendente { background:#f8fafc; color:#64748b; border-color:#e2e8f0; }
+    .vinc-semregistro { background:#fffbeb; color:#b45309; border-color:#fde68a; }
+    .vinc-reprogramado { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+
+    .empty-state { border: 1.5px dashed var(--line); border-radius: var(--radius-md); background: rgba(248,250,252,.6); }
+
     /* ===== RESPONSIVIDADE: celular pequeno (até ~5"), tablet, notebook, monitor e TV/projetor ===== */
     @media (max-width: 380px) {
-      .card-executive { border-radius: 0.5rem; }
+      .card-executive { border-radius: 0.6rem; }
       h1 { font-size: 1.05rem !important; }
     }
     /* Modo TV / Projeção: aumenta fontes e espaçamentos para leitura à distância em telas grandes */
@@ -94,22 +170,26 @@
   </div>
 
   <!-- CABEÇALHO DA APLICAÇÃO -->
-  <header class="bg-white border-b border-emerald-100 sticky top-0 z-40 shadow-sm">
+  <header class="app-header border-b border-slate-200/80 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-4 w-full md:w-auto">
-        <div id="logo-container" class="w-12 h-12 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center overflow-hidden">
+        <div id="logo-container" class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm">
           <img src="Img/Logo Gnl Brasil.jpg" alt="Logo Empresa" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';">
           <i data-lucide="truck" class="w-6 h-6 text-emerald-600 hidden" id="logo-placeholder"></i>
         </div>
         <div>
-          <h1 class="font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
+          <h1 class="font-brand font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
             Gestão Integrada de Ativos <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Manaus & Maranhão</span>
           </h1>
           <p class="text-xs text-slate-500">Ativos, Disponibilidade, Manutenção Preventiva/Corretiva e Documentação — Base Única</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+      <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
+        <div id="sync-status-badge" title="Status de sincronização com a nuvem" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-500">
+          <span class="dot bg-slate-300"></span> <span id="sync-status-label">Conectando...</span>
+        </div>
+
         <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 p-1.5 rounded-xl">
           <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 ml-1"></i>
           <span class="text-xs font-bold text-emerald-900">Unidade:</span>
@@ -146,7 +226,7 @@
   <div class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
 
     <!-- MENU DE NAVEGAÇÃO POR ABAS -->
-    <nav class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
+    <nav id="main-tab-nav" class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
       <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="hidden sm:inline">Visão Geral</span>
       </button>
@@ -229,6 +309,19 @@
           </div>
           <div class="p-3 bg-amber-50 rounded-lg text-amber-600 border border-amber-100"><i data-lucide="alert-triangle"></i></div>
         </div>
+      </div>
+
+      <!-- PAINEL DE DIVERGÊNCIAS: cruza Preventiva/Documentação programada com paradas reais registradas em Disponibilidade -->
+      <div class="card-executive p-6 border-l-4 border-l-red-400">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="git-compare-arrows" class="w-5 h-5 text-red-600"></i> Divergências: Programação x Execução Real
+            <span id="dashboard-divergencias-count" class="bg-red-100 text-red-800 border border-red-300 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+          </h2>
+          <button onclick="switchTab('planning')" class="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline">Ver painel completo de Planejamento →</button>
+        </div>
+        <p class="text-xs text-slate-500 mb-4">Check automático por TAG e data: programações de hoje e vencidas (preventivas e documentos) sem parada real correspondente em Gestão de Ativos/Disponibilidade. Para cada uma: registre a parada (já vinculada) ou reprograme com motivo.</p>
+        <div id="dashboard-divergencias-list" class="space-y-2"></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -440,6 +533,7 @@
             <option value="Preventiva">Preventiva</option>
             <option value="Corretiva">Corretiva</option>
             <option value="Reforma">Reforma</option>
+            <option value="Documentação">Documentação</option>
             <option value="Outros">Outros</option>
           </select>
           <input id="pd-filter-tag" oninput="renderParadasDetalhado()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs w-full outline-none">
@@ -791,7 +885,9 @@
           </div>
         </div>
       </div>
-      <p class="text-[11px] text-slate-400 -mt-3 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Dica: no modo Mensal, arraste um card de manutenção e solte em outro dia para reprogramar automaticamente.</p>
+      <p class="text-[11px] text-slate-400 -mt-3 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Dica: no modo Mensal, arraste um card de manutenção e solte em outro dia para reprogramar automaticamente. Cada card mostra se o ativo realmente parou na data — e, se não parou, os botões <strong>Registrar Parada</strong> e <strong>Reprogramar</strong>.</p>
+
+      <div id="calendar-check-banner"></div>
 
       <div id="calendar-grid"></div>
     </section>
@@ -942,11 +1038,19 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div class="card-executive p-4 border-l-4 border-l-red-500 text-center"><p class="text-[11px] font-bold text-red-700 uppercase">Atrasados</p><h3 class="text-2xl font-black text-red-600" id="plan-kpi-atrasados">0</h3></div>
         <div class="card-executive p-4 border-l-4 border-l-amber-500 text-center"><p class="text-[11px] font-bold text-amber-700 uppercase">Esta Semana</p><h3 class="text-2xl font-black text-amber-600" id="plan-kpi-esta-semana">0</h3></div>
         <div class="card-executive p-4 border-l-4 border-l-blue-500 text-center"><p class="text-[11px] font-bold text-blue-700 uppercase">Próxima Semana</p><h3 class="text-2xl font-black text-blue-600" id="plan-kpi-proxima-semana">0</h3></div>
         <div class="card-executive p-4 text-center"><p class="text-[11px] font-bold text-slate-500 uppercase">Total Planejado (futuro)</p><h3 class="text-2xl font-black text-slate-800" id="plan-kpi-total">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-red-400 text-center"><p class="text-[11px] font-bold text-red-700 uppercase flex items-center justify-center gap-1"><i data-lucide="git-compare-arrows" class="w-3 h-3"></i> Divergências</p><h3 class="text-2xl font-black text-red-600" id="plan-kpi-divergencias">0</h3></div>
+      </div>
+
+      <!-- PAINEL DE DIVERGÊNCIAS DETALHADO -->
+      <div class="card-executive p-5 border-l-4 border-l-red-400">
+        <h3 class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2"><i data-lucide="git-compare-arrows" class="w-4 h-4 text-red-600"></i> Divergências: Programação x Execução Real</h3>
+        <p class="text-xs text-slate-500 mb-3">Cruzamento automático, por TAG e data (± ${window.RECONCILIACAO_TOLERANCIA_DIAS || 3} dias), entre Preventivas/Documentos programados e as paradas reais registradas em Gestão de Ativos/Disponibilidade.</p>
+        <div id="plan-divergencias-list" class="space-y-2"></div>
       </div>
 
       <div class="card-executive overflow-hidden">
@@ -972,7 +1076,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
-              <tr><th class="p-2">Origem</th><th class="p-2">TAG</th><th class="p-2">Atividade</th><th class="p-2">Unidade</th><th class="p-2">Semana</th><th class="p-2">Data</th><th class="p-2">Status</th></tr>
+              <tr><th class="p-2">Origem</th><th class="p-2">TAG</th><th class="p-2">Atividade</th><th class="p-2">Unidade</th><th class="p-2">Semana</th><th class="p-2">Data</th><th class="p-2">Status</th><th class="p-2">Vínculo Real</th></tr>
             </thead>
             <tbody id="plan-items-tbody" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -989,9 +1093,23 @@
           </h2>
           <p class="text-xs text-slate-500">Registro permanente — ativos, paradas/manutenções, preventivas e documentações. Nenhum registro é sobrescrito.</p>
         </div>
-        <button onclick="exportHistoryToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
-          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
-        </button>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="exportHistoryToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+          </button>
+          <button onclick="exportFullBackup()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap" title="Baixa um arquivo .json com todos os dados do sistema — cópia de segurança independente da nuvem">
+            <i data-lucide="download-cloud" class="w-4 h-4"></i> Baixar Backup Completo
+          </button>
+          <label class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer" title="Restaura todos os dados a partir de um arquivo de backup .json">
+            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Restaurar Backup
+            <input type="file" accept=".json" onchange="importFullBackupFile(event)" class="hidden">
+          </label>
+        </div>
+      </div>
+
+      <div class="card-executive p-3 bg-emerald-50/40 border-emerald-200 flex items-center gap-2 text-[11px] text-emerald-800">
+        <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+        Todos os dados são salvos em tempo real na nuvem (Firebase) a cada alteração, com um backup diário completo guardado automaticamente. O botão "Baixar Backup Completo" cria ainda uma cópia local independente, para guardar fora do sistema.
       </div>
 
       <div class="card-executive p-4">
@@ -1381,6 +1499,7 @@
               <option value="Preventiva">Preventiva</option>
               <option value="Corretiva">Corretiva</option>
               <option value="Reforma">Reforma</option>
+              <option value="Documentação">Documentação (CRLV, CIV, CIPP, Tacógrafo, Válvula)</option>
               <option value="Outros">Outros</option>
             </select>
           </div>
@@ -1616,6 +1735,10 @@
       <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800" id="repro-modal-summary"></div>
       <form id="form-repro" onsubmit="confirmReprogramacao(event)" class="space-y-3">
         <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nova Data Programada</label>
+          <input type="date" id="repro-nova-data" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Motivo da Reprogramação</label>
           <input type="text" id="repro-motivo" required placeholder="Ex: Falta de peça, prioridade operacional..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
         </div>
@@ -1737,7 +1860,7 @@
     window.maintenanceSchedule = [];
     window.globalAuditHistory = [];
 
-    let assetsLoaded = false, eventsLoaded = false, snapshotsLoaded = false;
+    let assetsLoaded = false, eventsLoaded = false, snapshotsLoaded = false, docsLoaded = false, maintLoaded = false, auditLoaded = false, metaLoaded = false;
 
     // ===================== DADOS INICIAIS (SEED) =====================
     const initialAssetsDefault = [
@@ -1801,6 +1924,7 @@
       onValue(ref(db, 'snapshotMeta'), (snapshot) => {
         const data = snapshot.val();
         window.snapshotMeta = data !== null ? data : { lastDate: null };
+        metaLoaded = true;
         maybeRunSnapshot();
       });
 
@@ -1812,10 +1936,13 @@
           window.fleetDocs = initialDocsDefault;
           set(ref(db, 'fleetDocs'), initialDocsDefault);
         }
+        docsLoaded = true;
+        maybeRunSnapshot();
         renderDocuments();
         renderDocCalendar();
         renderExecutiveCharts();
         renderPlanejamento();
+        renderDivergenciasPanel();
       });
 
       onValue(ref(db, 'maintenanceSchedule'), (snapshot) => {
@@ -1826,9 +1953,12 @@
           window.maintenanceSchedule = initialMaintDefault;
           set(ref(db, 'maintenanceSchedule'), initialMaintDefault);
         }
+        maintLoaded = true;
+        maybeRunSnapshot();
         renderCalendar();
         renderExecutiveCharts();
         renderPlanejamento();
+        renderDivergenciasPanel();
       });
 
       onValue(ref(db, 'globalAuditHistory'), (snapshot) => {
@@ -1839,19 +1969,144 @@
           window.globalAuditHistory = [];
           set(ref(db, 'globalAuditHistory'), []);
         }
+        auditLoaded = true;
+        maybeRunSnapshot();
         renderHistoryTable();
         refreshHistoryTagFilter();
       });
     }
 
-    window.saveData = function() {
-      set(ref(db, 'assets'), window.assets || []);
-      set(ref(db, 'assetEvents'), window.assetEvents || []);
-      set(ref(db, 'dailySnapshots'), window.dailySnapshots || {});
-      set(ref(db, 'snapshotMeta'), window.snapshotMeta || { lastDate: null });
-      set(ref(db, 'fleetDocs'), window.fleetDocs || []);
-      set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []);
-      set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []);
+    // ===================== STATUS DE SINCRONIZAÇÃO E CONFIABILIDADE DE SALVAMENTO =====================
+    // Reflete a conexão real com o banco (Firebase .info/connected) — não apenas se a última escrita
+    // funcionou — para que a equipe saiba, a qualquer momento, se os dados estão realmente salvos na nuvem.
+    window.setSyncStatus = function(state) {
+      const badge = document.getElementById('sync-status-badge');
+      const label = document.getElementById('sync-status-label');
+      const dot = badge ? badge.querySelector('.dot') : null;
+      if (!badge || !label || !dot) return;
+      const states = {
+        connecting: { text: 'Conectando...', dotClass: 'bg-slate-300 pulse-dot', badgeClass: 'bg-slate-50 border-slate-200 text-slate-500' },
+        online: { text: 'Dados sincronizados', dotClass: 'bg-emerald-500', badgeClass: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        saving: { text: 'Salvando...', dotClass: 'bg-amber-500 pulse-dot', badgeClass: 'bg-amber-50 border-amber-200 text-amber-700' },
+        offline: { text: 'Sem conexão — alterações serão salvas ao reconectar', dotClass: 'bg-red-500 pulse-dot', badgeClass: 'bg-red-50 border-red-200 text-red-700' },
+        error: { text: 'Falha ao salvar — tentando novamente...', dotClass: 'bg-red-500 pulse-dot', badgeClass: 'bg-red-50 border-red-200 text-red-700' }
+      };
+      const s = states[state] || states.connecting;
+      label.innerText = s.text;
+      dot.className = 'dot ' + s.dotClass;
+      badge.className = 'flex items-center gap-1.5 border px-2.5 py-1.5 rounded-lg text-[11px] font-bold ' + s.badgeClass;
+    };
+
+    window.isFirebaseConnected = true;
+    function watchConnection() {
+      onValue(ref(db, '.info/connected'), (snap) => {
+        window.isFirebaseConnected = snap.val() === true;
+        setSyncStatus(window.isFirebaseConnected ? 'online' : 'offline');
+      });
+    }
+
+    // Todas as escritas passam por aqui — cada chamada confirma sucesso/erro visivelmente, com nova
+    // tentativa automática em caso de falha, para garantir que nenhuma alteração se perca silenciosamente.
+    window.saveData = function(retry) {
+      setSyncStatus('saving');
+      // Proteção contra perda de dados: um nó só é gravado depois de ter sido carregado da nuvem.
+      // (Antes, uma gravação disparada cedo podia sobrescrever preventivas/documentos/histórico com listas vazias.)
+      const writes = [];
+      if (assetsLoaded) writes.push(set(ref(db, 'assets'), window.assets || []));
+      if (eventsLoaded) writes.push(set(ref(db, 'assetEvents'), window.assetEvents || []));
+      if (snapshotsLoaded) writes.push(set(ref(db, 'dailySnapshots'), window.dailySnapshots || {}));
+      if (metaLoaded) writes.push(set(ref(db, 'snapshotMeta'), window.snapshotMeta || { lastDate: null }));
+      if (docsLoaded) writes.push(set(ref(db, 'fleetDocs'), window.fleetDocs || []));
+      if (maintLoaded) writes.push(set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []));
+      if (auditLoaded) writes.push(set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []));
+      Promise.all(writes).then(() => {
+        setSyncStatus('online');
+      }).catch((err) => {
+        console.error('Erro ao salvar dados:', err);
+        setSyncStatus('error');
+        if (!retry) {
+          setTimeout(() => saveData(true), 2500);
+        } else {
+          showToast('Não foi possível salvar as últimas alterações na nuvem. Verifique sua conexão — o sistema tentará salvar automaticamente assim que possível.', 'error');
+        }
+      });
+      maybeRunDailyBackup();
+    };
+
+    // Backup diário completo (assets, eventos, docs, preventivas, usuários, histórico) em nó separado —
+    // garante um ponto de restauração além da base "ao vivo", mantendo os últimos 45 dias.
+    window.backupHistory = {};
+    function maybeRunDailyBackup() {
+      const today = getTodayStr();
+      if (!assetsLoaded || !eventsLoaded || !docsLoaded || !maintLoaded || !auditLoaded) return;
+      if (window.lastBackupDate === today) return;
+      window.lastBackupDate = today;
+      const snapshot = {
+        timestamp: getNowFormatted(),
+        assets: window.assets || [],
+        assetEvents: window.assetEvents || [],
+        fleetDocs: window.fleetDocs || [],
+        maintenanceSchedule: window.maintenanceSchedule || [],
+        users: (window.users || []).map(u => ({ ...u, senha: undefined })),
+        totalHistorico: (window.globalAuditHistory || []).length
+      };
+      set(ref(db, `backupHistory/${today}`), snapshot).catch(err => console.error('Erro ao gravar backup diário:', err));
+    }
+
+    // Exportação/Importação manual de backup completo (arquivo .json) — camada extra de segurança,
+    // independente da nuvem, para a equipe guardar cópias locais quando desejar.
+    window.exportFullBackup = function() {
+      const payload = {
+        exportadoEm: getNowFormatted(),
+        assets: window.assets || [],
+        assetEvents: window.assetEvents || [],
+        fleetDocs: window.fleetDocs || [],
+        maintenanceSchedule: window.maintenanceSchedule || [],
+        dailySnapshots: window.dailySnapshots || {},
+        globalAuditHistory: window.globalAuditHistory || [],
+        metasMarca: window.metasMarca || {}
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Backup_GNL_Brasil_${getTodayStr()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Backup completo exportado com sucesso.', 'success');
+    };
+
+    window.importFullBackupFile = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!confirm('Importar este backup substituirá TODOS os dados atuais (ativos, paradas, documentos, preventivas, histórico) pelos dados do arquivo. Esta ação não pode ser desfeita. Deseja continuar?')) {
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.assets) window.assets = data.assets;
+          if (data.assetEvents) window.assetEvents = data.assetEvents;
+          if (data.fleetDocs) window.fleetDocs = data.fleetDocs;
+          if (data.maintenanceSchedule) window.maintenanceSchedule = data.maintenanceSchedule;
+          if (data.dailySnapshots) window.dailySnapshots = data.dailySnapshots;
+          if (data.globalAuditHistory) window.globalAuditHistory = data.globalAuditHistory;
+          if (data.metasMarca) window.metasMarca = data.metasMarca;
+          addAuditLog('TODAS', 'Ativo', '-', `Backup completo importado a partir de arquivo (${file.name})`, getTodayStr(), 'Importado');
+          saveData();
+          refreshAllAssetSelects();
+          renderAll();
+          showToast('Backup importado e restaurado com sucesso.', 'success');
+        } catch (err) {
+          console.error(err);
+          alert('Não foi possível ler este arquivo de backup. Verifique se é um arquivo .json exportado por este sistema.');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     };
 
     // ===================== USUÁRIOS & PERMISSÕES (RBAC) =====================
@@ -2373,6 +2628,53 @@
       renderExecutiveCharts();
       renderEvolutionChart();
       renderPlanejamento();
+      renderDivergenciasPanel();
+    };
+
+    // Painel de Divergências (Visão Geral): lista preventivas/documentos vencidos sem parada real vinculada
+    window.renderDivergenciasPanel = function() {
+      const countEl = document.getElementById('dashboard-divergencias-count');
+      const listEl = document.getElementById('dashboard-divergencias-list');
+      if (!countEl || !listEl) return;
+      const divergencias = window.getDivergencias();
+      countEl.innerText = divergencias.length;
+      if (!window.checkExecucaoAvisado && eventsLoaded && (window.maintenanceSchedule || []).length + (window.fleetDocs || []).length > 0) {
+        window.checkExecucaoAvisado = true;
+        const vencidas = divergencias.filter(x => x.vinculo.situacao === 'divergente').length;
+        const hoje = divergencias.filter(x => x.vinculo.situacao === 'pendente').length;
+        if (vencidas + hoje > 0) showToast(`Check de execução: ${vencidas} programação(ões) venceu(ram) sem parada registrada e ${hoje} está(ão) programada(s) para hoje. Veja o painel de Divergências.`, vencidas > 0 ? 'warning' : 'info');
+      }
+      countEl.className = divergencias.length > 0
+        ? 'bg-red-100 text-red-800 border border-red-300 text-xs font-black px-2 py-0.5 rounded-full'
+        : 'bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-black px-2 py-0.5 rounded-full';
+
+      if (divergencias.length === 0) {
+        listEl.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4 empty-state">Nenhuma divergência no momento — toda a programação vencida tem parada real correspondente. 🎉</p>';
+        return;
+      }
+
+      listEl.innerHTML = divergencias.slice(0, 12).map(x => {
+        const isDoc = x.origem === 'Documento';
+        const semRegistro = x.vinculo.situacao === 'semregistro';
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-lg border ${semRegistro || x.vinculo.situacao === 'pendente' ? 'border-amber-200' : 'border-red-200'} shadow-sm">
+            <div class="flex items-center gap-3 flex-wrap">
+              ${getUnitBadge(x.unit)}
+              <span class="text-[10px] font-black px-1.5 py-0.5 rounded border ${isDoc ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">${x.origem}</span>
+              <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${x.tag}</span>
+              <div>
+                <p class="text-sm font-semibold text-slate-800">${x.atividade}</p>
+                <p class="text-xs text-slate-500">${semRegistro ? 'Marcado como Realizado em ' + formatDateBR(x.date) + ' — sem parada real vinculada' : (x.date === getTodayStr() ? 'Programado para <strong>hoje</strong> — o ativo ainda não parou' : 'Programado para ' + formatDateBR(x.date) + ' — venceu sem parada real registrada')}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${window.vincBadgeHTML(x.origem, x.raw)}
+              ${!semRegistro ? window.vincAcoesHTML(x.origem, x.raw) : ''}
+            </div>
+          </div>
+        `;
+      }).join('') + (divergencias.length > 12 ? `<p class="text-[11px] text-slate-400 text-center pt-1">+ ${divergencias.length - 12} outra(s) — veja o painel completo em Planejamento.</p>` : '');
+      lucide.createIcons();
     };
 
     window.getToday = function() {
@@ -2459,6 +2761,259 @@
         return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 border border-amber-300">AM</span>`;
       }
       return `<span class="font-black px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 border border-teal-300">MA</span>`;
+    };
+
+    // ===================== NOTIFICAÇÕES (TOAST) =====================
+    window.showToast = function(message, kind) {
+      kind = kind || 'info';
+      const palettes = {
+        info: { bg: 'bg-slate-900', icon: 'info' },
+        success: { bg: 'bg-emerald-700', icon: 'check-circle-2' },
+        warning: { bg: 'bg-amber-600', icon: 'alert-triangle' },
+        error: { bg: 'bg-red-700', icon: 'octagon-alert' }
+      };
+      const p = palettes[kind] || palettes.info;
+      let host = document.getElementById('toast-host');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'toast-host';
+        host.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2 items-end';
+        document.body.appendChild(host);
+      }
+      const el = document.createElement('div');
+      el.className = `fade-in ${p.bg} text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 max-w-sm`;
+      el.innerHTML = `<i data-lucide="${p.icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+      host.appendChild(el);
+      lucide.createIcons();
+      setTimeout(() => { el.style.transition = 'opacity .35s ease, transform .35s ease'; el.style.opacity = '0'; el.style.transform = 'translateX(12px)'; setTimeout(() => el.remove(), 400); }, 5200);
+    };
+
+    // ===================== RECONCILIAÇÃO: PREVENTIVA/DOCUMENTO x PARADA REAL =====================
+    // Cruza a programação (Preventivas de Manutenção e Documentação) com os eventos reais de parada
+    // registrados em Gestão de Ativos/Disponibilidade — confirma se o equipamento realmente parou na
+    // data programada, e alerta quando uma atividade venceu sem nenhuma parada real correspondente.
+    window.RECONCILIACAO_TOLERANCIA_DIAS = 3;
+
+    function parseLocalDate(str) {
+      if (!str) return null;
+      const p = String(str).split('-');
+      if (p.length !== 3) return null;
+      const d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Procura, entre os eventos de parada do ativo (por TAG), o que melhor cobre a data-alvo (± tolerância).
+    // Se o item já tiver vínculo explícito (eventoId, criado pelo botão "Registrar Parada" da programação), ele prevalece.
+    window.encontrarEventoVinculado = function(tag, dateStr, item) {
+      if (item && item.eventoId) {
+        const explicito = (window.assetEvents || []).find(e => String(e.id) === String(item.eventoId));
+        if (explicito) return explicito;
+      }
+      if (!tag || !dateStr) return null;
+      const target = parseLocalDate(dateStr);
+      if (!target) return null;
+      const tol = window.RECONCILIACAO_TOLERANCIA_DIAS * 86400000;
+      let melhor = null, melhorDist = Infinity;
+      (window.assetEvents || []).forEach(e => {
+        if (e.tag !== tag) return;
+        const inicio = parseLocalDate(e.inicio);
+        if (!inicio) return;
+        const fim = e.fim ? parseLocalDate(e.fim) : new Date();
+        const janelaIni = inicio.getTime() - tol;
+        const janelaFim = fim.getTime() + tol;
+        if (target.getTime() >= janelaIni && target.getTime() <= janelaFim) {
+          const dist = target.getTime() < inicio.getTime() ? inicio.getTime() - target.getTime()
+            : (target.getTime() > fim.getTime() ? target.getTime() - fim.getTime() : 0);
+          if (dist < melhorDist) { melhor = e; melhorDist = dist; }
+        }
+      });
+      return melhor;
+    };
+
+    // Situação de reconciliação de um item (Preventiva ou Documento) frente à disponibilidade real.
+    // Retorna: confirmado | divergente | pendente | semregistro | reprogramado
+    window.getSituacaoVinculo = function(origem, item) {
+      const dateStr = origem === 'Preventiva' ? item.date : item.expDate;
+      if (item.status === 'Reprogramado') {
+        return { situacao: 'reprogramado', label: 'Reprogramado', event: null };
+      }
+      const evento = window.encontrarEventoVinculado(item.tag, dateStr, item);
+      if (evento) {
+        const emAberto = evento.status === 'Aberto';
+        return { situacao: 'confirmado', label: emAberto ? 'Parado agora (parada em aberto)' : 'Confirmado por parada real', event: evento };
+      }
+      if (item.status === 'Realizado') {
+        return { situacao: 'semregistro', label: 'Sem parada vinculada', event: null };
+      }
+      const hoje = getTodayStr();
+      if (dateStr && dateStr < hoje) {
+        return { situacao: 'divergente', label: 'Venceu sem parada registrada', event: null, precisaCheck: true };
+      }
+      if (dateStr === hoje) {
+        return { situacao: 'pendente', label: 'Hoje — ainda não parou', event: null, precisaCheck: true };
+      }
+      return { situacao: 'pendente', label: 'Aguardando data', event: null };
+    };
+
+    // Ações do "check de execução": quando a data programada chegou e o ativo NÃO ficou indisponível,
+    // oferece registrar a parada (vinculada à programação) ou reprogramar — direto no card/linha.
+    window.vincAcoesHTML = function(origem, item, compact) {
+      const r = window.getSituacaoVinculo(origem, item);
+      if (!r.precisaCheck) return '';
+      const tipo = origem === 'Preventiva' ? 'Preventiva' : 'Documentação';
+      const btnBase = compact
+        ? 'inline-flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded border transition'
+        : 'inline-flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-md border transition';
+      return `
+        <div class="flex flex-wrap gap-1 ${compact ? 'mt-0.5' : 'mt-1'}">
+          <button type="button" onclick="registrarParadaProgramacao('${origem}', ${item.id})" class="${btnBase} bg-red-600 border-red-700 text-white hover:bg-red-700" title="O ativo parou para ${tipo.toLowerCase()}? Registre a parada já vinculada a esta programação">
+            <i data-lucide="octagon-pause" class="w-2.5 h-2.5"></i> ${compact ? 'Parada' : 'Registrar Parada'}
+          </button>
+          <button type="button" onclick="reprogramarProgramacao('${origem}', ${item.id})" class="${btnBase} bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100" title="Não parou nesta data? Reprograme informando o motivo">
+            <i data-lucide="calendar-clock" class="w-2.5 h-2.5"></i> ${compact ? 'Reprog.' : 'Reprogramar'}
+          </button>
+        </div>`;
+    };
+
+    // Vínculo pendente entre o modal de Parada e a programação que o originou
+    window.pendingEventLink = null;
+
+    window.registrarParadaProgramacao = function(origem, id) {
+      const item = origem === 'Preventiva'
+        ? (window.maintenanceSchedule || []).find(m => String(m.id) === String(id))
+        : (window.fleetDocs || []).find(d => String(d.id) === String(id));
+      if (!item) return;
+      const asset = getAssetByTag(item.tag);
+      if (!asset) { alert('Ativo não encontrado na base.'); return; }
+      if (getOpenEventForAsset(asset.id)) {
+        alert(`O ativo ${asset.tag} já possui uma parada em aberto. Ao liberar essa parada, a programação será confirmada automaticamente se a data coincidir.`);
+        return;
+      }
+      const dataProg = origem === 'Preventiva' ? item.date : item.expDate;
+      const atividade = origem === 'Preventiva' ? item.service : item.docName;
+      switchTab('assets');
+      openEventModal();
+      window.pendingEventLink = { origem, id: item.id };
+      document.getElementById('modal-event-title').innerHTML = `Registrar Parada — <span class="text-emerald-600">${origem}: ${atividade}</span>`;
+      const sel = document.getElementById('event-asset');
+      if (sel) sel.value = asset.id;
+      document.getElementById('event-tipo-parada').value = origem === 'Preventiva' ? 'Preventiva' : 'Documentação';
+      document.getElementById('event-inicio').value = dataProg && dataProg <= getTodayStr() ? dataProg : getTodayStr();
+      document.getElementById('event-motivo').value = atividade || '';
+      showToast(`Parada será vinculada à programação "${atividade}" (${formatDateBR(dataProg)}).`, 'info');
+    };
+
+    window.reprogramarProgramacao = function(origem, id) {
+      if (origem === 'Preventiva') {
+        const item = (window.maintenanceSchedule || []).find(m => String(m.id) === String(id));
+        if (!item) return;
+        if (item.status === 'Realizado') { alert('Esta preventiva já foi realizada e não pode ser reprogramada.'); return; }
+        openReprogramacaoModal({ kind: 'maint', id: item.id, label: `${item.tag} — ${item.service}`, dataAnterior: item.date, dataNova: '' });
+      } else {
+        const doc = (window.fleetDocs || []).find(d => String(d.id) === String(id));
+        if (!doc) return;
+        if (doc.status === 'Realizado') { alert('Este documento já foi realizado/renovado e não pode ser reprogramado.'); return; }
+        openReprogramacaoModal({ kind: 'doc', id: doc.id, label: `${doc.tag} — ${doc.docName}`, dataAnterior: doc.expDate, dataNova: '' });
+      }
+    };
+
+    window.vincBadgeHTML = function(origem, item, compact) {
+      const r = window.getSituacaoVinculo(origem, item);
+      const icons = { confirmado: 'shield-check', divergente: 'alert-triangle', pendente: 'clock', semregistro: 'help-circle', reprogramado: 'calendar-clock' };
+      const cls = { confirmado: 'vinc-confirmado', divergente: 'vinc-divergente', pendente: 'vinc-pendente', semregistro: 'vinc-semregistro', reprogramado: 'vinc-reprogramado' };
+      const evtInfo = r.event ? ` — evento #${r.event.id} (${formatDateBR(r.event.inicio)} a ${r.event.fim ? formatDateBR(r.event.fim) : 'em aberto'})` : '';
+      const text = compact ? '' : r.label;
+      return `<span class="vinc-badge ${cls[r.situacao]}" title="${r.label}${evtInfo}"><i data-lucide="${icons[r.situacao]}" class="w-2.5 h-2.5"></i>${text}</span>`;
+    };
+
+    // Lista consolidada de divergências (atrasados sem parada real) e realizações sem registro vinculado —
+    // usada no Dashboard e no Planejamento para dar visibilidade imediata à liderança.
+    window.getDivergencias = function() {
+      const items = [
+        ...(window.maintenanceSchedule || []).map(m => ({ origem: 'Preventiva', id: m.id, tag: m.tag, unit: m.unit, atividade: m.service, date: m.date, status: m.status, raw: m })),
+        ...(window.fleetDocs || []).map(d => ({ origem: 'Documento', id: d.id, tag: d.tag, unit: d.unit, atividade: d.docName, date: d.expDate, status: d.status, raw: d }))
+      ];
+      let list = items.map(x => ({ ...x, vinculo: window.getSituacaoVinculo(x.origem, x.raw) }))
+        .filter(x => x.vinculo.situacao === 'divergente' || x.vinculo.situacao === 'semregistro' || x.vinculo.precisaCheck);
+      if (window.selectedUnit !== 'TODAS') list = list.filter(x => x.unit === window.selectedUnit);
+      return list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    };
+
+    // Ao encerrar (liberar) uma parada real, confirma automaticamente as preventivas programadas para o
+    // mesmo ativo cuja data caía dentro do período da parada — fecha o ciclo "programação → execução real"
+    // sem exigir dupla digitação, e deixa o vínculo registrado no histórico permanente.
+    function autoConfirmarProgramacoesPorEvento(evt) {
+      const tol = window.RECONCILIACAO_TOLERANCIA_DIAS * 86400000;
+      const inicioMs = parseLocalDate(evt.inicio) ? parseLocalDate(evt.inicio).getTime() - tol : null;
+      const fimMs = (evt.fim && parseLocalDate(evt.fim) ? parseLocalDate(evt.fim).getTime() : Date.now()) + tol;
+      if (inicioMs === null) return [];
+      const confirmados = [];
+      const vinculoExplicito = (origem, id) => evt.programacaoOrigem === origem && String(evt.programacaoId) === String(id);
+      (window.maintenanceSchedule || []).forEach(m => {
+        if (m.tag !== evt.tag || m.status === 'Realizado') return;
+        const explicito = vinculoExplicito('Preventiva', m.id) || String(m.eventoId) === String(evt.id);
+        if (!explicito) {
+          if (m.status === 'Reprogramado') return;
+          const d = parseLocalDate(m.date);
+          if (!d || d.getTime() < inicioMs || d.getTime() > fimMs) return;
+        }
+        m.eventoId = evt.id;
+        m.status = 'Realizado';
+        m.dataRealizada = evt.fim || getTodayStr();
+        if (!m.historico) m.historico = [];
+        m.historico.push({
+          dataAnterior: m.date, dataNova: m.date, responsavel: 'Sistema (automático)',
+          motivo: `Confirmado automaticamente — vínculo com parada real #${evt.id} (${evt.tipoParada}, ${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`,
+          timestamp: getNowFormatted()
+        });
+        addAuditLog(m.unit, 'Preventiva', m.tag, `${m.service} confirmado automaticamente pela parada real registrada (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`, m.date, 'Realizado', evt.fim);
+        confirmados.push(m);
+      });
+      (window.fleetDocs || []).forEach(doc => {
+        if (doc.tag !== evt.tag || doc.status === 'Realizado') return;
+        const explicito = vinculoExplicito('Documento', doc.id) || String(doc.eventoId) === String(evt.id);
+        if (!explicito) {
+          if (doc.status === 'Reprogramado') return;
+          const d = parseLocalDate(doc.expDate);
+          if (!d || d.getTime() < inicioMs || d.getTime() > fimMs) return;
+        }
+        doc.eventoId = evt.id;
+        if (!doc.historico) doc.historico = [];
+        // Parada do tipo "Documentação" (ou vinculada explicitamente a este documento) = documento renovado.
+        // Parada de outro tipo apenas registra o vínculo — a renovação continua sendo confirmada manualmente.
+        if (evt.tipoParada === 'Documentação' || explicito) {
+          doc.status = 'Realizado';
+          doc.dataRealizada = evt.fim || getTodayStr();
+          doc.historico.push({
+            dataAnterior: doc.expDate, dataNova: doc.expDate, responsavel: 'Sistema (automático)',
+            motivo: `Renovação confirmada automaticamente — parada de ${evt.tipoParada} #${evt.id} (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`,
+            timestamp: getNowFormatted()
+          });
+          addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} renovado — confirmado pela parada real registrada (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`, doc.expDate, 'Realizado', evt.fim);
+          confirmados.push(doc);
+        } else {
+          doc.historico.push({
+            dataAnterior: doc.expDate, dataNova: doc.expDate, responsavel: 'Sistema (automático)',
+            motivo: `Parada real vinculada — evento #${evt.id} (${evt.tipoParada}, ${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)}). Renovação do documento ainda precisa ser confirmada.`,
+            timestamp: getNowFormatted()
+          });
+        }
+      });
+      return confirmados;
+    }
+
+    // Atalho: abre a Gestão de Ativos já com o modal de Registrar Parada preenchido para o TAG informado —
+    // usado nas ações rápidas do painel de Divergências.
+    window.abrirParadaParaTag = function(tag, tipoSugerido) {
+      const asset = getAssetByTag(tag);
+      if (!asset) { alert('Ativo não encontrado na base.'); return; }
+      switchTab('assets');
+      openEventModal();
+      setTimeout(() => {
+        const sel = document.getElementById('event-asset');
+        if (sel) sel.value = asset.id;
+        if (tipoSugerido) document.getElementById('event-tipo-parada').value = tipoSugerido;
+      }, 0);
     };
 
     // ===================== BASE ÚNICA DE ATIVOS: HELPERS =====================
@@ -2635,6 +3190,7 @@
     };
 
     window.openEventModal = function() {
+      window.pendingEventLink = null;
       document.getElementById('form-event').reset();
       document.getElementById('event-editing-id').value = '';
       document.getElementById('modal-event-title').innerText = 'Registrar Parada / Evento';
@@ -2642,7 +3198,7 @@
       document.getElementById('event-inicio').value = getTodayStr();
       document.getElementById('modal-event').classList.replace('hidden', 'flex');
     };
-    window.closeEventModal = function() { document.getElementById('modal-event').classList.replace('flex', 'hidden'); };
+    window.closeEventModal = function() { window.pendingEventLink = null; document.getElementById('modal-event').classList.replace('flex', 'hidden'); };
 
     window.openDocModal = function() {
       populateAssetSelect('doc-tag', true);
@@ -3234,10 +3790,49 @@
         diasParado: 0
       };
 
+      // Vínculo explícito com a programação que originou esta parada (botão "Registrar Parada" do Planejamento/Calendário)
+      const link = window.pendingEventLink;
+      if (link && link.origem) {
+        newEvent.programacaoOrigem = link.origem;
+        newEvent.programacaoId = link.id;
+        const alvo = link.origem === 'Preventiva'
+          ? (window.maintenanceSchedule || []).find(m => String(m.id) === String(link.id))
+          : (window.fleetDocs || []).find(d => String(d.id) === String(link.id));
+        if (alvo && alvo.tag === asset.tag) {
+          alvo.eventoId = newEvent.id;
+          if (!alvo.historico) alvo.historico = [];
+          alvo.historico.push({
+            dataAnterior: link.origem === 'Preventiva' ? alvo.date : alvo.expDate,
+            dataNova: link.origem === 'Preventiva' ? alvo.date : alvo.expDate,
+            responsavel: window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema',
+            motivo: `Parada registrada a partir da programação — evento #${newEvent.id} iniciado em ${formatDateBR(newEvent.inicio)}`,
+            timestamp: getNowFormatted()
+          });
+          addAuditLog(asset.unidade, link.origem === 'Preventiva' ? 'Preventiva' : 'Documentação', asset.tag,
+            `${link.origem === 'Preventiva' ? alvo.service : alvo.docName} — ativo parou conforme programado (parada #${newEvent.id} em aberto)`,
+            link.origem === 'Preventiva' ? alvo.date : alvo.expDate, 'Em Execução');
+        }
+      }
+      window.pendingEventLink = null;
+
       window.assetEvents.push(newEvent);
       addAuditLog(asset.unidade, 'Parada/Manutenção', asset.tag, `${newEvent.tipoParada} iniciada — ${newEvent.motivo}`, newEvent.inicio, 'Aberto');
+
+      // Comunicação com o Planejamento: avisa se esta parada corresponde a uma programação já existente
+      if (!link) {
+        const tol = window.RECONCILIACAO_TOLERANCIA_DIAS * 86400000;
+        const ini = parseLocalDate(newEvent.inicio)?.getTime() || 0;
+        const vinculada = (window.maintenanceSchedule || []).find(m => m.tag === asset.tag && m.status !== 'Realizado' && m.status !== 'Reprogramado' && Math.abs((parseLocalDate(m.date)?.getTime() || 0) - ini) <= tol);
+        const docVinc = (window.fleetDocs || []).find(d => d.tag === asset.tag && d.status !== 'Realizado' && d.status !== 'Reprogramado' && Math.abs((parseLocalDate(d.expDate)?.getTime() || 0) - ini) <= tol);
+        if (vinculada) showToast(`Parada vinculada à preventiva programada "${vinculada.service}" (${formatDateBR(vinculada.date)}). Ao liberar o ativo, a programação será confirmada automaticamente.`, 'info');
+        else if (docVinc) showToast(`Parada coincide com o documento "${docVinc.docName}" (${formatDateBR(docVinc.expDate)}). ${newEvent.tipoParada === 'Documentação' ? 'Ao liberar, a renovação será confirmada automaticamente.' : 'O vínculo ficará registrado no histórico do documento.'}`, 'info');
+      }
+
       saveData();
       closeEventModal();
+      renderPlanejamento();
+      renderCalendar();
+      renderDocuments();
     };
 
     window.liberarEvento = function(eventId) {
@@ -3249,7 +3844,16 @@
       evt.situacao = 'Concluído';
       evt.diasParado = calcDiasParado(evt.inicio, evt.fim);
       addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado`, evt.fim, 'Encerrado', evt.fim);
+
+      // Comunicação com Planejamento: confirma automaticamente preventivas cuja data caiu dentro desta parada real
+      const confirmados = autoConfirmarProgramacoesPorEvento(evt);
+      if (confirmados.length > 0) {
+        showToast(`${evt.tag}: ${confirmados.length} programação(ões) (preventiva/documento) confirmada(s) automaticamente como Realizada(s), com base nesta parada real.`, 'success');
+      }
+
       saveData();
+      renderPlanejamento();
+      renderCalendar();
     };
 
     window.editOpenEvent = function(eventId) {
@@ -3671,7 +4275,8 @@
 
     // ===================== FECHAMENTO DIÁRIO (SNAPSHOT IMUTÁVEL) =====================
     function maybeRunSnapshot() {
-      if (!assetsLoaded || !eventsLoaded) return;
+      // Só fecha o snapshot diário quando TODA a base já chegou da nuvem — evita gravar nós ainda não carregados
+      if (!assetsLoaded || !eventsLoaded || !snapshotsLoaded || !metaLoaded || !docsLoaded || !maintLoaded || !auditLoaded) return;
       runDailySnapshotIfNeeded(false);
     }
 
@@ -4231,6 +4836,7 @@
                 <option value="Realizado" ${item.status === 'Realizado' ? 'selected' : ''}>Realizado / Renovado</option>
                 <option value="Reprogramado" ${item.status === 'Reprogramado' ? 'selected' : ''}>Reprogramado</option>
               </select>
+              <div class="mt-1">${window.vincBadgeHTML('Documento', item)}${window.vincAcoesHTML('Documento', item)}</div>
             </td>
             <td class="p-4 text-center">
               <button onclick="deleteDocument(${item.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir Documento"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -4321,6 +4927,7 @@
                       ${d.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[9px] font-black px-1 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
                       ${d.docName}
                     </p>
+                    <div>${window.vincBadgeHTML('Documento', d)}${window.vincAcoesHTML('Documento', d)}</div>
                     <select onchange="toggleDocStatus(${d.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none w-full ${d.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : d.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">
                       <option value="Programado" ${d.status === 'Programado' ? 'selected' : ''}>Programado</option>
                       <option value="Realizado" ${d.status === 'Realizado' ? 'selected' : ''}>Realizado</option>
@@ -4379,6 +4986,7 @@
                     ${getUnitBadge(d.unit)}<span class="font-extrabold text-slate-900">${d.tag}</span>
                   </div>
                   <p class="text-slate-700 font-semibold leading-tight">${d.docName}</p>
+                  <div>${window.vincBadgeHTML('Documento', d, true)}${window.vincAcoesHTML('Documento', d, true)}</div>
                 </div>
               `).join('')}
             </div>
@@ -4395,8 +5003,10 @@
 
     window.openReprogramacaoModal = function(info) {
       window.pendingRepro = info;
-      document.getElementById('repro-modal-summary').innerHTML =
-        `<strong>${info.label}</strong><br>De <strong>${formatDateBR(info.dataAnterior)}</strong> para <strong>${formatDateBR(info.dataNova)}</strong>`;
+      document.getElementById('repro-modal-summary').innerHTML = info.dataNova
+        ? `<strong>${info.label}</strong><br>De <strong>${formatDateBR(info.dataAnterior)}</strong> para <strong>${formatDateBR(info.dataNova)}</strong>`
+        : `<strong>${info.label}</strong><br>Programado para <strong>${formatDateBR(info.dataAnterior)}</strong> — o ativo não ficou parado nesta data. Escolha a nova data e informe o motivo.`;
+      document.getElementById('repro-nova-data').value = info.dataNova || '';
       document.getElementById('repro-motivo').value = '';
       document.getElementById('repro-responsavel').value = window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : '';
       document.getElementById('modal-repro').classList.replace('hidden', 'flex');
@@ -4413,6 +5023,10 @@
       if (!info) return;
       const motivo = document.getElementById('repro-motivo').value.trim();
       const responsavel = document.getElementById('repro-responsavel').value.trim();
+      const novaData = document.getElementById('repro-nova-data').value;
+      if (!novaData) { alert('Informe a nova data programada.'); return; }
+      if (novaData === info.dataAnterior) { alert('A nova data é igual à data atual. Escolha outra data para reprogramar.'); return; }
+      info.dataNova = novaData;
       if (!motivo) { alert('Informe o motivo da reprogramação.'); return; }
 
       const historicoEntry = { dataAnterior: info.dataAnterior, dataNova: info.dataNova, motivo, responsavel, timestamp: getNowFormatted() };
@@ -4443,6 +5057,12 @@
       window.pendingRepro = null;
       document.getElementById('modal-repro').classList.replace('flex', 'hidden');
       renderReprogramacaoPanel();
+      renderCalendar();
+      renderDocuments();
+      renderDocCalendar();
+      renderPlanejamento();
+      renderDivergenciasPanel();
+      showToast(`Reprogramado para ${formatDateBR(info.dataNova)} — motivo registrado no histórico.`, 'success');
     };
 
     window.dragDocStart = function(ev, id) {
@@ -4592,6 +5212,7 @@
                       ${getVehicleBadge(s.type)}
                     </div>
                     <p class="text-slate-600 font-medium">${s.service}</p>
+                    <div>${window.vincBadgeHTML('Preventiva', s)}${window.vincAcoesHTML('Preventiva', s)}</div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-2 gap-1">
                       <select onchange="toggleStatus(${s.id}, this.value)" class="text-[10px] font-bold p-1 rounded border outline-none ${s.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : s.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-200 text-slate-700'}">
                         <option value="Programado" ${s.status === 'Programado' ? 'selected' : ''}>Programado</option>
@@ -4660,6 +5281,7 @@
                     </div>
 
                     <p class="text-slate-700 font-semibold leading-tight text-[10px] bg-white p-1 rounded border border-slate-100">${e.service}</p>
+                    <div>${window.vincBadgeHTML('Preventiva', e, true)}${window.vincAcoesHTML('Preventiva', e, true)}</div>
 
                     <div class="flex justify-between items-center pt-0.5">
                       <select onchange="toggleStatus(${e.id}, this.value)" class="text-[9px] font-bold p-0.5 rounded outline-none border ${e.status === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : e.status === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-700'}">
@@ -4690,6 +5312,26 @@
       document.getElementById('kpi-month-maint').innerText = totalMaint;
       document.getElementById('kpi-maint-realized').innerText = realizedMaint;
       document.getElementById('kpi-adherence-rate').innerText = `${adherence}%`;
+
+      // Check de execução do calendário: resumo do que já venceu (ou é hoje) e ainda não tem parada real
+      const checkEl = document.getElementById('calendar-check-banner');
+      if (checkEl) {
+        const stats = { confirmado: 0, parado: 0, semParada: 0, hoje: 0 };
+        activeMaint.forEach(m => {
+          const r = getSituacaoVinculo('Preventiva', m);
+          if (r.situacao === 'confirmado') { if (r.event && r.event.status === 'Aberto') stats.parado++; else stats.confirmado++; }
+          else if (r.situacao === 'divergente') stats.semParada++;
+          else if (r.precisaCheck) stats.hoje++;
+        });
+        const alerta = stats.semParada + stats.hoje;
+        checkEl.className = `card-executive p-3 flex flex-wrap items-center gap-3 text-xs ${alerta > 0 ? 'border-red-200 bg-red-50/40' : 'border-emerald-200 bg-emerald-50/40'}`;
+        checkEl.innerHTML = `
+          <span class="font-bold text-slate-800 flex items-center gap-1.5"><i data-lucide="clipboard-check" class="w-4 h-4 ${alerta > 0 ? 'text-red-600' : 'text-emerald-600'}"></i> Check de execução (cruzado com Disponibilidade / Gestão de Ativos):</span>
+          <span class="vinc-badge vinc-confirmado">${stats.confirmado} confirmada(s) por parada real</span>
+          <span class="vinc-badge vinc-reprogramado">${stats.parado} parada(s) em andamento</span>
+          <span class="vinc-badge ${stats.hoje > 0 ? 'vinc-semregistro' : 'vinc-pendente'}">${stats.hoje} programada(s) para hoje sem parada</span>
+          <span class="vinc-badge ${stats.semParada > 0 ? 'vinc-divergente' : 'vinc-pendente'}">${stats.semParada} venceu(ram) sem parada — registre a parada ou reprograme</span>`;
+      }
 
       lucide.createIcons();
     };
@@ -4872,12 +5514,12 @@
       // Tipo de parada (todos os eventos relevantes)
       const elParada = document.getElementById('chartParadaTipo');
       if (elParada) {
-        const tipos = ['Preventiva', 'Corretiva', 'Reforma', 'Outros'];
+        const tipos = ['Preventiva', 'Corretiva', 'Reforma', 'Documentação', 'Outros'];
         const counts = tipos.map(t => relevantEvents.filter(e => e.tipoParada === t).length);
         if (window.chartParadaTipoInstance) window.chartParadaTipoInstance.destroy();
         window.chartParadaTipoInstance = new Chart(elParada.getContext('2d'), {
           type: 'doughnut',
-          data: { labels: tipos, datasets: [{ data: counts, backgroundColor: ['#3b82f6', '#ef4444', '#a855f7', '#94a3b8'] }] },
+          data: { labels: tipos, datasets: [{ data: counts, backgroundColor: ['#3b82f6', '#ef4444', '#a855f7', '#14b8a6', '#94a3b8'] }] },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: v => v > 0 ? v : '' } } }
         });
       }
@@ -5072,7 +5714,7 @@
       const horizonte = parseInt(document.getElementById('plan-filter-horizonte')?.value || '8', 10);
 
       function enrich(item, origem, currentDate, atividade) {
-        return { origem, tag: item.tag, unit: item.unit, status: item.status, currentDate, atividade };
+        return { origem, tag: item.tag, unit: item.unit, status: item.status, currentDate, atividade, raw: item };
       }
 
       let items = [
@@ -5124,6 +5766,41 @@
       document.getElementById('plan-kpi-esta-semana').innerText = estaSemana;
       document.getElementById('plan-kpi-proxima-semana').innerText = proximaSemana;
       document.getElementById('plan-kpi-total').innerText = totalFuturo;
+
+      // Painel de divergências (mesmo cruzamento do Dashboard, mas dentro dos filtros desta aba)
+      const divergenciasFiltro = window.getDivergencias().filter(x => {
+        if (origemFiltro !== 'TODOS' && x.origem !== origemFiltro) return false;
+        if (unidadeFiltro !== 'TODAS' && x.unit !== unidadeFiltro) return false;
+        return true;
+      });
+      const divKpi = document.getElementById('plan-kpi-divergencias');
+      if (divKpi) divKpi.innerText = divergenciasFiltro.length;
+      const divList = document.getElementById('plan-divergencias-list');
+      if (divList) {
+        divList.innerHTML = divergenciasFiltro.length === 0
+          ? '<p class="text-xs text-slate-400 italic text-center py-4 empty-state">Nenhuma divergência no filtro atual. 🎉</p>'
+          : divergenciasFiltro.map(x => {
+              const isDoc = x.origem === 'Documento';
+              const semRegistro = x.vinculo.situacao === 'semregistro';
+              return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-lg border ${semRegistro || x.vinculo.situacao === 'pendente' ? 'border-amber-200' : 'border-red-200'} shadow-sm">
+                  <div class="flex items-center gap-3 flex-wrap">
+                    ${getUnitBadge(x.unit)}
+                    <span class="text-[10px] font-black px-1.5 py-0.5 rounded border ${isDoc ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">${x.origem}</span>
+                    <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${x.tag}</span>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-800">${x.atividade}</p>
+                      <p class="text-xs text-slate-500">${semRegistro ? 'Marcado como Realizado em ' + formatDateBR(x.date) + ' — sem parada vinculada' : (x.date === getTodayStr() ? 'Programado para <strong>hoje</strong> — o ativo ainda não parou' : 'Programado para ' + formatDateBR(x.date) + ' — venceu sem parada real registrada')}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    ${window.vincBadgeHTML(x.origem, x.raw)}
+                    ${!semRegistro ? window.vincAcoesHTML(x.origem, x.raw) : ''}
+                  </div>
+                </div>`;
+            }).join('');
+        lucide.createIcons();
+      }
 
       // Agrupamento por semana para a tabela consolidada
       const weekGroups = {};
@@ -5186,9 +5863,10 @@
               <td class="p-2 text-slate-500">${x.weekInfo.weekNumber ? 'Sem. ' + x.weekInfo.weekNumber : '-'}</td>
               <td class="p-2 ${atrasado ? 'text-red-600 font-bold' : ''}">${formatDateBR(x.currentDate)}${atrasado ? ' (atrasado)' : ''}</td>
               <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${x.status}</span></td>
+              <td class="p-2">${window.vincBadgeHTML(x.origem, x.raw)}${window.vincAcoesHTML(x.origem, x.raw)}</td>
             </tr>
           `;
-        }).join('') || `<tr><td colspan="7" class="p-3 text-center text-slate-400 italic">Nenhum item planejado encontrado no filtro atual.</td></tr>`;
+        }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum item planejado encontrado no filtro atual.</td></tr>`;
       }
     };
 
@@ -5204,6 +5882,7 @@
       syncMetasMarca();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
+      watchConnection();
       if (localStorage.getItem('pcm_tv_mode') === '1') document.body.classList.add('tv-mode');
       lucide.createIcons();
 
