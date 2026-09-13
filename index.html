@@ -254,6 +254,9 @@
       <button onclick="switchTab('planning')" id="btn-tab-planning" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="calendar-check-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Planejamento</span>
       </button>
+      <button onclick="switchTab('progrealizado')" id="btn-tab-progrealizado" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="bar-chart-4" class="w-4 h-4"></i> <span class="hidden sm:inline">Prog. x Realizado</span>
+      </button>
       <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="history" class="w-4 h-4"></i> <span class="hidden sm:inline">Histórico Consolidado</span>
       </button>
@@ -903,6 +906,7 @@
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button onclick="setDocView('table')" id="btn-doc-view-table" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Tabela</button>
             <button onclick="setDocView('calendar')" id="btn-doc-view-calendar" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Calendário</button>
+            <button onclick="setDocView('vencimentos')" id="btn-doc-view-vencimentos" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Vencimentos</button>
           </div>
           <button onclick="openDocImportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
             <i data-lucide="upload" class="w-4 h-4"></i> Carga de Dados (Planilha)
@@ -1008,6 +1012,41 @@
         <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Arraste um documento e solte em outro dia para atualizar o vencimento automaticamente.</p>
         <div id="doc-calendar-grid"></div>
       </div>
+
+      <!-- SUBABA: ACOMPANHAMENTO DE VENCIMENTOS (SEGUE A REGRA DE 60/90 DIAS JÁ EXISTENTE) -->
+      <div id="doc-view-vencimentos-wrap" class="hidden space-y-4">
+        <div class="card-executive p-4 border-l-4 border-l-red-400">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-red-600"></i> Acompanhamento de Prazos de Vencimento</h3>
+          <p class="text-xs text-slate-500 mb-3">Aplica a mesma regra já usada no sistema: até 60 dias para o vencimento = programação obrigatória; de 61 a 90 dias = programação opcional; acima de 90 dias = situação boa. Assim que um documento entra nessas faixas, o sistema já disponibiliza aqui a ação de programar a renovação.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <select id="venc-filter-unidade" onchange="renderDocVencimentos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+              <option value="TODAS">Todas Unidades</option>
+              <option value="AM">AM</option>
+              <option value="MA">MA</option>
+            </select>
+            <select id="venc-filter-tipo" onchange="renderDocVencimentos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+              <option value="TODOS">Cavalo + Carreta</option>
+              <option value="Cavalo">Só Cavalo</option>
+              <option value="Carreta">Só Carreta</option>
+            </select>
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2">
+              <input type="checkbox" id="venc-filter-incluir-boa" onchange="renderDocVencimentos()"> Incluir situação boa (&gt; 90 dias)
+            </label>
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2">
+              <input type="checkbox" id="venc-filter-incluir-renovados" onchange="renderDocVencimentos()"> Incluir já renovados
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="card-executive p-3 border-l-4 border-l-red-700 text-center"><p class="text-[10px] font-bold text-red-700 uppercase">Vencidos</p><h4 class="text-xl font-black text-red-700" id="venc-kpi-vencido">0</h4></div>
+          <div class="card-executive p-3 border-l-4 border-l-red-400 text-center"><p class="text-[10px] font-bold text-red-600 uppercase">Obrigatório &le;60d</p><h4 class="text-xl font-black text-red-600" id="venc-kpi-obrigatorio">0</h4></div>
+          <div class="card-executive p-3 border-l-4 border-l-amber-400 text-center"><p class="text-[10px] font-bold text-amber-600 uppercase">Opcional 61-90d</p><h4 class="text-xl font-black text-amber-600" id="venc-kpi-opcional">0</h4></div>
+          <div class="card-executive p-3 border-l-4 border-l-emerald-400 text-center"><p class="text-[10px] font-bold text-emerald-600 uppercase">Situação Boa</p><h4 class="text-xl font-black text-emerald-600" id="venc-kpi-boa">0</h4></div>
+        </div>
+
+        <div id="venc-list" class="space-y-2"></div>
+      </div>
     </section>
 
     <!-- ABA 7B: CONTROLE DE PLANEJAMENTO -->
@@ -1079,6 +1118,91 @@
               <tr><th class="p-2">Origem</th><th class="p-2">TAG</th><th class="p-2">Atividade</th><th class="p-2">Unidade</th><th class="p-2">Semana</th><th class="p-2">Data</th><th class="p-2">Status</th><th class="p-2">Vínculo Real</th></tr>
             </thead>
             <tbody id="plan-items-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 7C: PROGRAMADO X REALIZADO (HISTÓRICO SEMANAL/MENSAL/ANUAL POR FROTA) -->
+    <section id="tab-progrealizado" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="bar-chart-4" class="w-5 h-5 text-emerald-600"></i> Programado x Realizado — Histórico e Aderência</h2>
+        <p class="text-xs text-slate-500 mb-3">Compare o que foi programado com o que realmente foi realizado, semana a semana, mês a mês e ano a ano — separado por Cavalo e Carreta, Preventiva e Documentação. Clique em qualquer linha da tabela para ver o detalhe por frota (TAG, placa, data da realização e status).</p>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <select id="pr-filter-agrupamento" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="semana">Agrupar por Semana</option>
+            <option value="mes" selected>Agrupar por Mês</option>
+            <option value="ano">Agrupar por Ano</option>
+          </select>
+          <select id="pr-filter-unidade" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="pr-filter-tipo" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Cavalo + Carreta</option>
+            <option value="Cavalo">Só Cavalo</option>
+            <option value="Carreta">Só Carreta</option>
+          </select>
+          <select id="pr-filter-origem" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Preventiva + Documentação</option>
+            <option value="Preventiva">Só Preventiva</option>
+            <option value="Documento">Só Documentação</option>
+          </select>
+          <input id="pr-filter-tag" oninput="renderProgRealizado()" placeholder="Filtrar por TAG / Placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="card-executive p-4 border-l-4 border-l-blue-500">
+          <p class="text-[11px] font-bold text-blue-700 uppercase flex items-center gap-1"><i data-lucide="truck" class="w-3.5 h-3.5"></i> Cavalo — Preventiva</p>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span class="text-2xl font-black text-blue-600" id="pr-kpi-cavalo-prev-pct">0%</span>
+            <span class="text-[11px] text-slate-500 font-bold" id="pr-kpi-cavalo-prev-ratio">0/0</span>
+          </div>
+        </div>
+        <div class="card-executive p-4 border-l-4 border-l-purple-500">
+          <p class="text-[11px] font-bold text-purple-700 uppercase flex items-center gap-1"><i data-lucide="container" class="w-3.5 h-3.5"></i> Carreta — Preventiva</p>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span class="text-2xl font-black text-purple-600" id="pr-kpi-carreta-prev-pct">0%</span>
+            <span class="text-[11px] text-slate-500 font-bold" id="pr-kpi-carreta-prev-ratio">0/0</span>
+          </div>
+        </div>
+        <div class="card-executive p-4 border-l-4 border-l-teal-500">
+          <p class="text-[11px] font-bold text-teal-700 uppercase flex items-center gap-1"><i data-lucide="truck" class="w-3.5 h-3.5"></i> Cavalo — Documentação</p>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span class="text-2xl font-black text-teal-600" id="pr-kpi-cavalo-doc-pct">0%</span>
+            <span class="text-[11px] text-slate-500 font-bold" id="pr-kpi-cavalo-doc-ratio">0/0</span>
+          </div>
+        </div>
+        <div class="card-executive p-4 border-l-4 border-l-amber-500">
+          <p class="text-[11px] font-bold text-amber-700 uppercase flex items-center gap-1"><i data-lucide="container" class="w-3.5 h-3.5"></i> Carreta — Documentação</p>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span class="text-2xl font-black text-amber-600" id="pr-kpi-carreta-doc-pct">0%</span>
+            <span class="text-[11px] text-slate-500 font-bold" id="pr-kpi-carreta-doc-ratio">0/0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-slate-900 text-sm mb-3">Evolução da Aderência (% Realizado / Programado) por período</h3>
+        <div class="h-80"><canvas id="chartProgRealizado"></canvas></div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-sm font-bold text-slate-700">Consolidado por Período, Tipo e Origem</h3>
+          <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em uma linha para ver o detalhe por frota</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-2">Período</th><th class="p-2">Tipo</th><th class="p-2">Origem</th>
+                <th class="p-2">Programado</th><th class="p-2">Realizado</th><th class="p-2">% Aderência</th>
+              </tr>
+            </thead>
+            <tbody id="pr-consolidado-tbody" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
@@ -1705,6 +1829,24 @@
     </div>
   </div>
 
+  <!-- MODAL DETALHAMENTO POR FROTA (CLIQUE NA TABELA PROGRAMADO X REALIZADO) -->
+  <div id="modal-pr-drilldown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5 text-emerald-600"></i> <span id="pr-drilldown-title"></span></h3>
+        <button onclick="closePrDrillDown()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+            <tr><th class="p-2">TAG / Frota</th><th class="p-2">Placa</th><th class="p-2">Tipo</th><th class="p-2">Unidade</th><th class="p-2">Atividade</th><th class="p-2">Data Programada</th><th class="p-2">Data Realizada</th><th class="p-2">Status</th></tr>
+          </thead>
+          <tbody id="pr-drilldown-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL PERMISSÕES INDIVIDUAIS (SOMENTE DESENVOLVEDOR) -->
   <div id="modal-user-permissions" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
@@ -1940,6 +2082,7 @@
         maybeRunSnapshot();
         renderDocuments();
         renderDocCalendar();
+        renderDocVencimentos();
         renderExecutiveCharts();
         renderPlanejamento();
         renderDivergenciasPanel();
@@ -2113,14 +2256,14 @@
     // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'documents', 'history'],
-      'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'planning', 'evolution', 'history'],
-      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'planning', 'history'],
-      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'planning', 'history'],
-      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history'],
-      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users'],
-      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users']
+      'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'planning', 'progrealizado', 'evolution', 'history'],
+      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'planning', 'progrealizado', 'history'],
+      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
+      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
     };
-    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'history', 'users'];
+    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -2313,6 +2456,7 @@
       dashboard: 'Visão Geral', assets: 'Ativos & Status', availability: 'Disponibilidade',
       paradasdetalhado: 'Paradas Detalhado', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento',
+      progrealizado: 'Programado x Realizado',
       history: 'Histórico Consolidado', users: 'Usuários & Permissões'
     };
 
@@ -2628,6 +2772,8 @@
       renderExecutiveCharts();
       renderEvolutionChart();
       renderPlanejamento();
+      renderProgRealizado();
+      if (docsLoaded) { renderDocuments(); renderDocVencimentos(); }
       renderDivergenciasPanel();
     };
 
@@ -3156,6 +3302,7 @@
       if (tabId === 'documents') renderDocCalendar();
       if (tabId === 'paradasdetalhado') renderParadasDetalhado();
       if (tabId === 'planning') renderPlanejamento();
+      if (tabId === 'progrealizado') renderProgRealizado();
       if (tabId === 'users') { renderPermissionsOverview(); renderUsersTable(); }
     };
 
@@ -3724,6 +3871,7 @@
       saveData();
       renderDocuments();
       renderDocCalendar();
+      renderDocVencimentos();
       closeDocImportModal();
       alert(`Importação concluída!\n\n${importados} documento(s) novo(s) cadastrado(s)\n${ignorados} linha(s) ignorada(s)`);
     };
@@ -4725,9 +4873,12 @@
       window.currentDocView = view;
       document.getElementById('doc-view-table-wrap').classList.toggle('hidden', view !== 'table');
       document.getElementById('doc-view-calendar-wrap').classList.toggle('hidden', view !== 'calendar');
+      document.getElementById('doc-view-vencimentos-wrap').classList.toggle('hidden', view !== 'vencimentos');
       document.getElementById('btn-doc-view-table').classList.toggle('active', view === 'table');
       document.getElementById('btn-doc-view-calendar').classList.toggle('active', view === 'calendar');
+      document.getElementById('btn-doc-view-vencimentos').classList.toggle('active', view === 'vencimentos');
       if (view === 'calendar') renderDocCalendar();
+      if (view === 'vencimentos') renderDocVencimentos();
     };
 
     function getDocsForDocumentsTab() {
@@ -4844,6 +4995,72 @@
           </tr>
         `;
       });
+
+      lucide.createIcons();
+    };
+
+    // Acompanhamento dedicado de vencimentos: aplica a mesma regra de negócio (getDocSituacao) já usada
+    // no restante do sistema, mas isolada numa visão própria só para follow-up de prazos e para acionar
+    // a programação da renovação assim que o documento entra na janela obrigatória/opcional.
+    window.renderDocVencimentos = function() {
+      const list = document.getElementById('venc-list');
+      if (!list) return;
+      const unidadeFiltro = document.getElementById('venc-filter-unidade')?.value || 'TODAS';
+      const tipoFiltro = document.getElementById('venc-filter-tipo')?.value || 'TODOS';
+      const incluirBoa = document.getElementById('venc-filter-incluir-boa')?.checked;
+      const incluirRenovados = document.getElementById('venc-filter-incluir-renovados')?.checked;
+
+      let data = (window.fleetDocs || []).slice();
+      if (window.selectedUnit !== 'TODAS') data = data.filter(d => d.unit === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') data = data.filter(d => d.unit === unidadeFiltro);
+      if (tipoFiltro !== 'TODOS') data = data.filter(d => d.type === tipoFiltro);
+
+      const enriched = data.map(d => {
+        const days = calculateDaysRemaining(d.expDate);
+        const situacao = getDocSituacao(days, d.status);
+        return { d, days, situacao };
+      });
+
+      const counts = { vencido: 0, obrigatorio: 0, opcional: 0, boa: 0, renovado: 0 };
+      enriched.forEach(x => { if (counts[x.situacao.tier] !== undefined) counts[x.situacao.tier]++; });
+      document.getElementById('venc-kpi-vencido').innerText = counts.vencido;
+      document.getElementById('venc-kpi-obrigatorio').innerText = counts.obrigatorio;
+      document.getElementById('venc-kpi-opcional').innerText = counts.opcional;
+      document.getElementById('venc-kpi-boa').innerText = counts.boa;
+
+      let visible = enriched.filter(x => x.situacao.tier === 'vencido' || x.situacao.tier === 'obrigatorio' || x.situacao.tier === 'opcional');
+      if (incluirBoa) visible = visible.concat(enriched.filter(x => x.situacao.tier === 'boa'));
+      if (incluirRenovados) visible = visible.concat(enriched.filter(x => x.situacao.tier === 'renovado'));
+      visible.sort((a, b) => a.days - b.days);
+
+      list.innerHTML = visible.map(({ d, days, situacao }) => {
+        const isAtrelado = d.docName === 'CIV + CIPP';
+        const podeProgramar = d.status !== 'Realizado';
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border ${situacao.tier === 'vencido' ? 'border-red-300' : situacao.tier === 'obrigatorio' ? 'border-red-200' : situacao.tier === 'opcional' ? 'border-amber-200' : 'border-slate-200'} shadow-sm">
+            <div class="flex items-center gap-3 flex-wrap">
+              ${getUnitBadge(d.unit)}
+              <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${d.tag}</span>
+              ${getVehicleBadge(d.type)}
+              <div>
+                <p class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                  ${d.docName}
+                  ${isAtrelado ? '<span class="bg-purple-100 text-purple-800 font-black text-[10px] px-2 py-0.5 rounded-full border border-purple-200">CIV + CIPP</span>' : ''}
+                </p>
+                <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(d.expDate)} · Status: ${d.status}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${situacao.badge}">
+                  ${days < 0 ? 'Vencido há ' + Math.abs(days) + ' dias' : 'Faltam ' + days + ' dias'}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500">${situacao.label}</span>
+              </div>
+              ${podeProgramar ? `<button type="button" onclick="reprogramarProgramacao('Documento', ${d.id})" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 transition" title="Programar a data de realização da renovação"><i data-lucide="calendar-clock" class="w-3 h-3"></i> Programar Renovação</button>` : ''}
+            </div>
+          </div>`;
+      }).join('') || `<p class="text-xs text-slate-400 italic text-center py-6 empty-state">Nenhum documento nas faixas de atenção com os filtros atuais. 🎉</p>`;
 
       lucide.createIcons();
     };
@@ -5060,7 +5277,9 @@
       renderCalendar();
       renderDocuments();
       renderDocCalendar();
+      renderDocVencimentos();
       renderPlanejamento();
+      renderProgRealizado();
       renderDivergenciasPanel();
       showToast(`Reprogramado para ${formatDateBR(info.dataNova)} — motivo registrado no histórico.`, 'success');
     };
@@ -5869,6 +6088,207 @@
         }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum item planejado encontrado no filtro atual.</td></tr>`;
       }
     };
+
+    // ===================== PROGRAMADO X REALIZADO (HISTÓRICO SEMANAL/MENSAL/ANUAL) =====================
+    const MESES_PT_PR = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+    // Retorna a chave/rótulo/ordenação do período (semana ISO, mês ou ano) para uma data ISO (YYYY-MM-DD)
+    window.getPeriodInfoPR = function(dateStr, agrupamento) {
+      if (!dateStr) return { key: 'sem-data', label: 'Sem data definida', sortKey: '' };
+      if (agrupamento === 'semana') {
+        const w = getISOWeekInfo(dateStr);
+        return { key: w.weekKey || 'sem-data', label: w.label, sortKey: w.mondayStr || '' };
+      }
+      const parts = dateStr.split('-');
+      const year = parts[0], month = parseInt(parts[1], 10);
+      if (agrupamento === 'ano') return { key: year, label: year, sortKey: `${year}-00` };
+      const mesKey = `${year}-${String(month).padStart(2, '0')}`;
+      return { key: mesKey, label: `${MESES_PT_PR[month - 1]}/${year}`, sortKey: mesKey };
+    };
+
+    // Dataset unificado (Preventivas + Documentos), enriquecido com Placa e Tipo vindos do cadastro único de ativos
+    window.buildProgRealizadoDataset = function() {
+      const assetByTag = {};
+      (window.assets || []).forEach(a => { assetByTag[a.tag] = a; });
+      const prevs = (window.maintenanceSchedule || []).map(m => {
+        const a = assetByTag[m.tag];
+        return {
+          origem: 'Preventiva', tag: m.tag, unit: m.unit, tipo: m.type || (a && a.tipo) || '-',
+          placa: (a && a.placa) || '-', atividade: m.service,
+          progDate: m.date, realDate: m.dataRealizada || (m.status === 'Realizado' ? m.date : null),
+          status: m.status, raw: m
+        };
+      });
+      const docs = (window.fleetDocs || []).map(d => {
+        const a = assetByTag[d.tag];
+        return {
+          origem: 'Documento', tag: d.tag, unit: d.unit, tipo: d.type || (a && a.tipo) || '-',
+          placa: (a && a.placa) || '-', atividade: d.docName,
+          progDate: d.expDate, realDate: d.dataRealizada || (d.status === 'Realizado' ? d.expDate : null),
+          status: d.status, raw: d
+        };
+      });
+      return prevs.concat(docs);
+    };
+
+    window.currentPrGroups = {};
+
+    window.renderProgRealizado = function() {
+      if (!assetsLoaded) return;
+      const agrupamento = document.getElementById('pr-filter-agrupamento')?.value || 'mes';
+      const unidadeFiltro = document.getElementById('pr-filter-unidade')?.value || 'TODAS';
+      const tipoFiltro = document.getElementById('pr-filter-tipo')?.value || 'TODOS';
+      const origemFiltro = document.getElementById('pr-filter-origem')?.value || 'TODOS';
+      const tagFiltro = (document.getElementById('pr-filter-tag')?.value || '').trim().toUpperCase();
+
+      let items = window.buildProgRealizadoDataset();
+      if (window.selectedUnit !== 'TODAS') items = items.filter(x => x.unit === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') items = items.filter(x => x.unit === unidadeFiltro);
+      if (tipoFiltro !== 'TODOS') items = items.filter(x => x.tipo === tipoFiltro);
+      if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
+      if (tagFiltro) items = items.filter(x => (x.tag || '').toUpperCase().includes(tagFiltro) || (x.placa || '').toUpperCase().includes(tagFiltro));
+
+      // Agrupa por período + tipo + origem. "Programado" conta pela data programada atual; "Realizado" conta
+      // pela data em que a atividade realmente foi concluída — permitindo comparar, por período, o que estava
+      // previsto com o que de fato foi executado naquele período (mesmo que programado em outro momento).
+      const groups = {};
+      function ensureGroup(periodInfo, tipo, origem) {
+        const key = `${periodInfo.key}|${tipo}|${origem}`;
+        if (!groups[key]) {
+          groups[key] = { key, periodLabel: periodInfo.label, sortKey: periodInfo.sortKey, tipo, origem, programado: 0, realizado: 0, itens: [] };
+        }
+        return groups[key];
+      }
+
+      items.forEach(x => {
+        if (x.progDate) {
+          const pInfo = window.getPeriodInfoPR(x.progDate, agrupamento);
+          const g = ensureGroup(pInfo, x.tipo, x.origem);
+          g.programado++;
+          g.itens.push(x);
+        }
+        if (x.realDate) {
+          const rInfo = window.getPeriodInfoPR(x.realDate, agrupamento);
+          const g = ensureGroup(rInfo, x.tipo, x.origem);
+          g.realizado++;
+          if (!g.itens.includes(x)) g.itens.push(x);
+        }
+      });
+
+      window.currentPrGroups = groups;
+
+      // KPIs consolidados (soma de todos os períodos visíveis no filtro atual)
+      function sumFor(tipo, origem) {
+        let programado = 0, realizado = 0;
+        Object.values(groups).forEach(g => { if (g.tipo === tipo && g.origem === origem) { programado += g.programado; realizado += g.realizado; } });
+        return { programado, realizado, pct: programado > 0 ? Math.round((realizado / programado) * 100) : 0 };
+      }
+      const combos = [
+        ['Cavalo', 'Preventiva', 'pr-kpi-cavalo-prev'],
+        ['Carreta', 'Preventiva', 'pr-kpi-carreta-prev'],
+        ['Cavalo', 'Documento', 'pr-kpi-cavalo-doc'],
+        ['Carreta', 'Documento', 'pr-kpi-carreta-doc']
+      ];
+      combos.forEach(([tipo, origem, prefix]) => {
+        const r = sumFor(tipo, origem);
+        const pctEl = document.getElementById(`${prefix}-pct`);
+        const ratioEl = document.getElementById(`${prefix}-ratio`);
+        if (pctEl) pctEl.innerText = `${r.pct}%`;
+        if (ratioEl) ratioEl.innerText = `${r.realizado}/${r.programado}`;
+      });
+
+      // Tabela consolidada, ordenada por período
+      const sortedGroups = Object.values(groups).sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.tipo.localeCompare(b.tipo) || a.origem.localeCompare(b.origem));
+      const tbody = document.getElementById('pr-consolidado-tbody');
+      if (tbody) {
+        tbody.innerHTML = sortedGroups.map(g => {
+          const pct = g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : (g.realizado > 0 ? 100 : 0);
+          const pctColor = pct >= 90 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600';
+          const origemBadge = g.origem === 'Documento' ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-blue-100 text-blue-800 border-blue-300';
+          return `
+            <tr class="cursor-pointer hover:bg-emerald-50/40 transition" onclick="openPrDrillDown('${g.key.replace(/'/g, "\\'")}')">
+              <td class="p-2 font-bold text-slate-900">${g.periodLabel}</td>
+              <td class="p-2">${getVehicleBadge(g.tipo)}</td>
+              <td class="p-2"><span class="text-[10px] font-black px-1.5 py-0.5 rounded border ${origemBadge}">${g.origem}</span></td>
+              <td class="p-2 text-blue-600 font-bold">${g.programado}</td>
+              <td class="p-2 text-emerald-600 font-bold">${g.realizado}</td>
+              <td class="p-2 font-black ${pctColor}">${pct}%</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum dado encontrado no filtro atual.</td></tr>`;
+      }
+
+      renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro);
+      lucide.createIcons();
+    };
+
+    window.chartProgRealizadoInstance = null;
+    function renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro) {
+      const el = document.getElementById('chartProgRealizado');
+      if (!el) return;
+      if (window.chartProgRealizadoInstance) window.chartProgRealizadoInstance.destroy();
+
+      // Eixo X: todos os períodos distintos, em ordem cronológica
+      const periodOrder = [];
+      const periodLabelByKeyPart = {};
+      sortedGroups.forEach(g => {
+        const pKey = g.sortKey;
+        if (!periodLabelByKeyPart[pKey]) { periodLabelByKeyPart[pKey] = g.periodLabel; periodOrder.push(pKey); }
+      });
+      periodOrder.sort();
+      const labels = periodOrder.map(k => periodLabelByKeyPart[k]);
+
+      const combos = [
+        { tipo: 'Cavalo', origem: 'Preventiva', label: 'Cavalo — Preventiva', color: '#2563eb' },
+        { tipo: 'Carreta', origem: 'Preventiva', label: 'Carreta — Preventiva', color: '#7c3aed' },
+        { tipo: 'Cavalo', origem: 'Documento', label: 'Cavalo — Documentação', color: '#0d9488' },
+        { tipo: 'Carreta', origem: 'Documento', label: 'Carreta — Documentação', color: '#d97706' }
+      ].filter(c => (tipoFiltro === 'TODOS' || c.tipo === tipoFiltro) && (origemFiltro === 'TODOS' || c.origem === origemFiltro));
+
+      const datasets = combos.map(c => {
+        const data = periodOrder.map(pKey => {
+          const g = sortedGroups.find(x => x.sortKey === pKey && x.tipo === c.tipo && x.origem === c.origem);
+          if (!g) return null;
+          return g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : (g.realizado > 0 ? 100 : null);
+        });
+        return { label: c.label, data, borderColor: c.color, backgroundColor: c.color, tension: 0.3, spanGaps: true };
+      });
+
+      window.chartProgRealizadoInstance = new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 110, ticks: { callback: v => v + '%' } } },
+          plugins: { datalabels: { display: false }, legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    window.openPrDrillDown = function(key) {
+      const g = window.currentPrGroups[key];
+      if (!g) return;
+      document.getElementById('pr-drilldown-title').innerText = `${g.periodLabel} — ${g.tipo} / ${g.origem} (Programado: ${g.programado} · Realizado: ${g.realizado})`;
+      const tbody = document.getElementById('pr-drilldown-tbody');
+      tbody.innerHTML = g.itens.slice().sort((a, b) => (a.progDate || '').localeCompare(b.progDate || '')).map(x => {
+        let statusBadge = 'bg-blue-100 text-blue-800 border-blue-300';
+        if (x.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+        if (x.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        return `
+          <tr>
+            <td class="p-2 font-bold text-slate-900">${x.tag}</td>
+            <td class="p-2">${x.placa}</td>
+            <td class="p-2">${getVehicleBadge(x.tipo)}</td>
+            <td class="p-2">${getUnitBadge(x.unit)}</td>
+            <td class="p-2">${x.atividade}</td>
+            <td class="p-2">${formatDateBR(x.progDate)}</td>
+            <td class="p-2">${x.realDate ? formatDateBR(x.realDate) : '-'}</td>
+            <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${x.status}</span></td>
+          </tr>`;
+      }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum item neste período.</td></tr>`;
+      document.getElementById('modal-pr-drilldown').classList.replace('hidden', 'flex');
+      lucide.createIcons();
+    };
+    window.closePrDrillDown = function() { document.getElementById('modal-pr-drilldown').classList.replace('flex', 'hidden'); };
 
     // ===================== INICIALIZAÇÃO =====================
     window.toggleTvMode = function() {
