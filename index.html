@@ -58,6 +58,21 @@
     }
     .card-executive:hover { box-shadow: var(--shadow-md); }
 
+    /* Grade de filtros responsiva: cada campo tem largura mínima e a grade encaixa quantas colunas couberem,
+       evitando que os filtros fiquem espremidos ou cortados em telas médias (notebook) */
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.6rem; }
+
+    .sticky-col-right {
+      position: sticky;
+      right: 0;
+      background: inherit;
+      box-shadow: -6px 0 8px -6px rgba(15,23,42,.15);
+    }
+    thead .sticky-col-right { background-color: #f8fafc; z-index: 2; }
+    tbody tr td.sticky-col-right { background-color: #fff; z-index: 1; }
+    tbody tr:hover td.sticky-col-right { background-color: #f8fafc; }
+    tbody tr.bg-red-50\/40 td.sticky-col-right { background-color: #fef2f2; }
+
     /* Botões: hierarquia consistente em todo o sistema */
     button, .btn { transition: all .15s ease; }
     button:not(.tab-btn):not(.subtab-btn):active { transform: translateY(1px); }
@@ -122,7 +137,7 @@
     body.tv-mode .text-3xl { font-size: 3rem !important; }
     body.tv-mode .text-2xl { font-size: 2.1rem !important; }
     @media (min-width: 1600px) {
-      body.tv-mode .max-w-7xl { max-width: 1800px; }
+      body.tv-mode .max-w-7xl, body.tv-mode .max-w-\[1680px\] { max-width: 1800px; }
     }
   </style>
 </head>
@@ -135,7 +150,7 @@
         <img src="Img/Logo Gnl Brasil.jpg" alt="Logo" onerror="this.style.display='none'">
       </div>
       <h2 class="text-2xl font-black text-slate-900 tracking-tight">
-        Gestão Integrada de Ativos - GNL Brasil Logística
+        Web System - GNL Brasil Logística
       </h2>
       <p class="text-xs text-slate-500 mt-1 mb-6">
         Acesso restrito ao Sistema de Ativos, Disponibilidade, Manutenção e Documentos
@@ -171,7 +186,7 @@
 
   <!-- CABEÇALHO DA APLICAÇÃO -->
   <header class="app-header border-b border-slate-200/80 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="max-w-[1680px] mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-4 w-full md:w-auto">
         <div id="logo-container" class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm">
           <img src="Img/Logo Gnl Brasil.jpg" alt="Logo Empresa" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='block';">
@@ -223,7 +238,7 @@
   </header>
 
   <!-- CORPO PRINCIPAL DE ABAS -->
-  <div class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
+  <div class="max-w-[1680px] mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
 
     <!-- MENU DE NAVEGAÇÃO POR ABAS -->
     <nav id="main-tab-nav" class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
@@ -231,7 +246,10 @@
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="hidden sm:inline">Visão Geral</span>
       </button>
       <button onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span class="hidden sm:inline">Ativos & Status</span>
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span class="hidden sm:inline">Cadastro de Ativos</span>
+      </button>
+      <button onclick="switchTab('status')" id="btn-tab-status" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span class="hidden sm:inline">Status & Paradas</span>
       </button>
       <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="gauge" class="w-4 h-4"></i> <span class="hidden sm:inline">Disponibilidade</span>
@@ -360,6 +378,32 @@
         </div>
       </div>
 
+      <div class="card-executive p-4">
+        <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
+        <div class="filter-grid">
+          <input id="cad-filter-tag" oninput="renderAssets()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <input id="cad-filter-placa" oninput="renderAssets()" placeholder="Buscar Placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <select id="cad-filter-tipo" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Tipos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <select id="cad-filter-operacao" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="cad-filter-situacao" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Situações</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+          <select id="cad-filter-unidade" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="cad-filter-marca" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="cad-filter-modelo" onchange="renderAssets()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
+        </div>
+      </div>
+
       <div class="card-executive overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
@@ -376,14 +420,17 @@
                 <th class="p-3">Proprietário</th>
                 <th class="p-3">Situação</th>
                 <th class="p-3">Cadastro</th>
-                <th class="p-3 text-center">Ações</th>
+                <th class="p-3 text-center sticky-col-right">Ações</th>
               </tr>
             </thead>
             <tbody id="assets-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
+    </section>
 
+    <!-- ABA 2B: STATUS ATUAL & GESTÃO DE DISPONIBILIDADE (separada do cadastro para agilizar registrar/liberar parada) -->
+    <section id="tab-status" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Status Atual & Gestão de Disponibilidade</h2>
@@ -392,6 +439,47 @@
         <button onclick="openEventModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
           <i data-lucide="octagon-pause" class="w-4 h-4"></i> Registrar Parada / Evento
         </button>
+      </div>
+
+      <div class="card-executive p-4">
+        <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
+        <div class="filter-grid">
+          <input id="st-filter-tag" oninput="renderStatusTable()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <input id="st-filter-placa" oninput="renderStatusTable()" placeholder="Buscar Placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <select id="st-filter-tipo" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos os Tipos</option>
+            <option value="Cavalo">Cavalo</option>
+            <option value="Carreta">Carreta</option>
+          </select>
+          <select id="st-filter-operacao" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="st-filter-status" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Disponível + Indisponível</option>
+            <option value="Disponivel">Só Disponível</option>
+            <option value="Indisponivel">Só Indisponível</option>
+          </select>
+          <select id="st-filter-situacao" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Situações</option>
+            <option value="Em Execução">Em Execução</option>
+            <option value="Aguardando Peça">Aguardando Peça</option>
+            <option value="Aguardando Serviço Terceiros">Aguardando Serviço Terceiros</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+          <select id="st-filter-tipo-parada" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODOS">Todos Tipos de Parada</option>
+            <option value="Preventiva">Preventiva</option>
+            <option value="Corretiva">Corretiva</option>
+            <option value="Reforma">Reforma</option>
+            <option value="Documentação">Documentação</option>
+            <option value="Outros">Outros</option>
+          </select>
+          <select id="st-filter-unidade" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="TODAS">Todas Unidades</option>
+            <option value="AM">AM</option>
+            <option value="MA">MA</option>
+          </select>
+          <select id="st-filter-marca" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="st-filter-modelo" onchange="renderStatusTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
+        </div>
       </div>
 
       <div class="card-executive overflow-hidden">
@@ -411,7 +499,7 @@
                 <th class="p-3">Data de Saída (Última Liberação)</th>
                 <th class="p-3">Local / Responsável</th>
                 <th class="p-3">Ações Realizadas</th>
-                <th class="p-3 text-center">Ações</th>
+                <th class="p-3 text-center sticky-col-right">Ações</th>
               </tr>
             </thead>
             <tbody id="status-table-body" class="divide-y divide-slate-100"></tbody>
@@ -429,31 +517,33 @@
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
           </button>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          <select id="avail-filter-operacao" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
-          <select id="avail-filter-unidade" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+        <div class="flex flex-wrap gap-3">
+          <select id="avail-filter-operacao" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="avail-filter-unidade" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
-          <select id="avail-filter-marca" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
-          <select id="avail-filter-modelo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
-          <select id="avail-filter-tipo" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="avail-filter-marca" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="avail-filter-modelo" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
+          <select id="avail-filter-tipo" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos Tipos</option>
             <option value="Cavalo">Cavalo</option>
             <option value="Carreta">Carreta</option>
           </select>
-          <select id="avail-filter-status" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="avail-filter-status" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos Status</option>
             <option value="Disponivel">Disponível</option>
             <option value="Indisponivel">Indisponível</option>
           </select>
-          <input id="avail-filter-tag" oninput="renderAvailability()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
-          <div class="flex gap-1">
-            <input type="date" id="avail-filter-start" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
-            <input type="date" id="avail-filter-end" onchange="renderAvailability()" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
+          <input id="avail-filter-tag" oninput="renderAvailability()" placeholder="Buscar TAG..." class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <div class="flex gap-1 items-center flex-1 min-w-[220px]">
+            <input type="date" id="avail-filter-start" onchange="renderAvailability()" title="Data inicial do período" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
+            <input type="date" id="avail-filter-end" onchange="renderAvailability()" title="Data final do período" class="border border-slate-300 rounded-lg p-2 text-[11px] w-full outline-none">
+            <button onclick="document.getElementById('avail-filter-start').value='';document.getElementById('avail-filter-end').value='';renderAvailability();" title="Limpar período (voltar para hoje)" class="text-slate-400 hover:text-red-600 shrink-0"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
           </div>
         </div>
+        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> O filtro de data mostra o status real do ativo no período escolhido (com base nos mesmos eventos de parada usados em Gestão de Ativos, Evolução e Histórico). Sem data, mostra a situação de hoje.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -512,26 +602,28 @@
       <div class="card-executive p-4">
         <h2 class="text-lg font-bold text-slate-900">Painel Detalhado de Paradas por Ativo</h2>
         <p class="text-xs text-slate-500 mb-3">Status, motivo, dia e semana da parada, local e previsão de saída — direto do cadastro único de ativos</p>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <select id="pd-filter-unidade" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+        <div class="flex flex-wrap gap-3">
+          <select id="pd-filter-unidade" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM - Rio Preto/Manaus</option>
             <option value="MA">MA - Parnaíba</option>
           </select>
-          <select id="pd-filter-tipo" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="pd-filter-operacao" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="pd-filter-marca" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="pd-filter-tipo" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Tipos</option>
             <option value="Cavalo">Cavalo</option>
             <option value="Carreta">Carreta</option>
           </select>
-          <select id="pd-filter-status" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="pd-filter-status" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos Status</option>
             <option value="Disponivel">Disponível</option>
             <option value="Indisponivel">Indisponível</option>
           </select>
-          <select id="pd-filter-local" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="pd-filter-local" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Locais</option>
           </select>
-          <select id="pd-filter-tipo-parada" onchange="renderParadasDetalhado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="pd-filter-tipo-parada" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos Tipos de Parada</option>
             <option value="Preventiva">Preventiva</option>
             <option value="Corretiva">Corretiva</option>
@@ -539,7 +631,7 @@
             <option value="Documentação">Documentação</option>
             <option value="Outros">Outros</option>
           </select>
-          <input id="pd-filter-tag" oninput="renderParadasDetalhado()" placeholder="Buscar TAG..." class="border border-slate-300 rounded-lg p-2 text-xs w-full outline-none">
+          <input id="pd-filter-tag" oninput="renderParadasDetalhado()" placeholder="Buscar TAG..." class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs outline-none">
         </div>
       </div>
 
@@ -604,32 +696,32 @@
             </button>
           </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-          <select id="evo-filter-agrupamento" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+        <div class="flex flex-wrap gap-2">
+          <select id="evo-filter-agrupamento" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="dia">Agrupar por Dia</option>
             <option value="semana">Agrupar por Semana</option>
             <option value="mes">Agrupar por Mês</option>
             <option value="ano">Agrupar por Ano</option>
           </select>
-          <select id="evo-filter-semana-num" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="evo-filter-semana-num" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas as Semanas</option>
           </select>
-          <select id="evo-filter-operacao" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
-          <select id="evo-filter-unidade" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="evo-filter-operacao" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="evo-filter-unidade" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
-          <select id="evo-filter-marca" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
-          <select id="evo-filter-modelo" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
-          <select id="evo-filter-tipo" onchange="renderEvolutionChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+          <select id="evo-filter-marca" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
+          <select id="evo-filter-modelo" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
+          <select id="evo-filter-tipo" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Tipos</option>
             <option value="Cavalo">Cavalo</option>
             <option value="Carreta">Carreta</option>
           </select>
-          <input id="evo-filter-tag" oninput="renderEvolutionChart()" placeholder="Filtrar por TAG..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          <input id="evo-filter-tag" oninput="renderEvolutionChart()" placeholder="Filtrar por TAG..." class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs outline-none">
         </div>
-        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em um ponto do gráfico ou em uma linha da tabela para ver quais ativos estavam indisponíveis naquele período (dia, semana ou mês).</p>
+        <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em um ponto do gráfico ou em uma linha da tabela para ver quais ativos estavam indisponíveis naquele período (dia, semana ou mês) — respeitando os filtros acima. Use "Exportar Excel" no topo para a evolução agregada, ou o botão dentro do detalhamento para exportar a lista de indisponíveis daquele período específico.</p>
       </div>
       <div id="evo-meta-banner" class="hidden card-executive p-4 flex items-center justify-between"></div>
       <div class="card-executive p-5">
@@ -782,7 +874,7 @@
           <p class="text-xs text-slate-500">Toda alteração de data exige motivo e fica registrada no histórico permanentemente</p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+        <div class="filter-grid">
           <select id="repro-filter-periodo" onchange="renderReprogramacaoPanel()" class="border border-slate-300 rounded-lg p-2 text-[11px] font-bold outline-none">
             <option value="TODOS">Período: Tudo</option>
             <option value="dia">Hoje</option>
@@ -922,7 +1014,7 @@
 
       <div class="card-executive p-4">
         <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="filter-grid">
           <select id="doc-filter-nome" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Documentos</option>
             <option value="CIV + CIPP">CIV + CIPP</option>
@@ -982,7 +1074,7 @@
                 <th class="p-4">Dias Restantes</th>
                 <th class="p-4">Situação</th>
                 <th class="p-4">Status</th>
-                <th class="p-4 text-center">Ações</th>
+                <th class="p-4 text-center sticky-col-right">Ações</th>
               </tr>
             </thead>
             <tbody id="docs-table-body" class="divide-y divide-slate-100"></tbody>
@@ -1018,7 +1110,7 @@
         <div class="card-executive p-4 border-l-4 border-l-red-400">
           <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-red-600"></i> Acompanhamento de Prazos de Vencimento</h3>
           <p class="text-xs text-slate-500 mb-3">Aplica a mesma regra já usada no sistema: até 60 dias para o vencimento = programação obrigatória; de 61 a 90 dias = programação opcional; acima de 90 dias = situação boa. Assim que um documento entra nessas faixas, o sistema já disponibiliza aqui a ação de programar a renovação.</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div class="filter-grid">
             <select id="venc-filter-unidade" onchange="renderDocVencimentos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
               <option value="TODAS">Todas Unidades</option>
               <option value="AM">AM</option>
@@ -1054,7 +1146,7 @@
       <div class="card-executive p-4">
         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-check-2" class="w-5 h-5 text-emerald-600"></i> Controle de Planejamento — Preventivas & Documentação</h2>
         <p class="text-xs text-slate-500 mb-3">Visão consolidada do que está planejado, agrupada por semana (nº ISO) — inclui atrasados</p>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div class="filter-grid">
           <select id="plan-filter-unidade" onchange="renderPlanejamento()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM</option>
@@ -1077,7 +1169,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div class="filter-grid">
         <div class="card-executive p-4 border-l-4 border-l-red-500 text-center"><p class="text-[11px] font-bold text-red-700 uppercase">Atrasados</p><h3 class="text-2xl font-black text-red-600" id="plan-kpi-atrasados">0</h3></div>
         <div class="card-executive p-4 border-l-4 border-l-amber-500 text-center"><p class="text-[11px] font-bold text-amber-700 uppercase">Esta Semana</p><h3 class="text-2xl font-black text-amber-600" id="plan-kpi-esta-semana">0</h3></div>
         <div class="card-executive p-4 border-l-4 border-l-blue-500 text-center"><p class="text-[11px] font-bold text-blue-700 uppercase">Próxima Semana</p><h3 class="text-2xl font-black text-blue-600" id="plan-kpi-proxima-semana">0</h3></div>
@@ -1128,7 +1220,7 @@
       <div class="card-executive p-4">
         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="bar-chart-4" class="w-5 h-5 text-emerald-600"></i> Programado x Realizado — Histórico e Aderência</h2>
         <p class="text-xs text-slate-500 mb-3">Compare o que foi programado com o que realmente foi realizado, semana a semana, mês a mês e ano a ano — separado por Cavalo e Carreta, Preventiva e Documentação. Clique em qualquer linha da tabela para ver o detalhe por frota (TAG, placa, data da realização e status).</p>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div class="filter-grid">
           <select id="pr-filter-agrupamento" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="semana">Agrupar por Semana</option>
             <option value="mes" selected>Agrupar por Mês</option>
@@ -1238,7 +1330,7 @@
 
       <div class="card-executive p-4">
         <h3 class="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1"><i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+        <div class="filter-grid">
           <select id="history-tag-filter" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Ativos</option></select>
           <select id="history-filter-usuario" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os Usuários</option></select>
           <select id="history-filter-unidade" onchange="renderHistoryTable()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
@@ -1369,7 +1461,7 @@
                 <th class="p-3">Função</th>
                 <th class="p-3">Unidade</th>
                 <th class="p-3">Status</th>
-                <th class="p-3 text-center">Ações</th>
+                <th class="p-3 text-center sticky-col-right">Ações</th>
               </tr>
             </thead>
             <tbody id="users-table-body" class="divide-y divide-slate-100"></tbody>
@@ -1807,10 +1899,16 @@
   <!-- MODAL DETALHAMENTO DE INDISPONIBILIDADE (CLIQUE NA EVOLUÇÃO) -->
   <div id="modal-evo-drilldown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
+      <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
         <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="octagon-alert" class="w-5 h-5 text-red-600"></i> Indisponibilidade em <span id="evo-drilldown-label" class="text-red-600"></span></h3>
-        <button onclick="closeEvoDrillDown()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+        <div class="flex items-center gap-2">
+          <button onclick="exportEvoDrillDownToExcel()" class="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Exportar Excel
+          </button>
+          <button onclick="closeEvoDrillDown()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+        </div>
       </div>
+      <p class="text-[11px] text-slate-400 -mt-2">Lista já considera os filtros ativos na tela de Evolução (operação, unidade, marca, modelo, tipo e TAG).</p>
       <div>
         <h4 class="text-xs font-bold text-slate-600 uppercase mb-2">Ativos Indisponíveis (base: Gestão de Ativos / Snapshots)</h4>
         <div class="overflow-x-auto">
@@ -2257,13 +2355,13 @@
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'documents', 'history'],
       'Analista Planejamento': ['dashboard', 'calendar', 'documents', 'planning', 'progrealizado', 'evolution', 'history'],
-      'Controlador de Manutenção': ['dashboard', 'assets', 'paradasdetalhado', 'calendar', 'planning', 'progrealizado', 'history'],
-      'Supervisor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
-      'Gerente': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
-      'Diretor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
-      'Desenvolvedor': ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
+      'Controlador de Manutenção': ['dashboard', 'assets', 'status', 'paradasdetalhado', 'calendar', 'planning', 'progrealizado', 'history'],
+      'Supervisor': ['dashboard', 'assets', 'status', 'availability', 'paradasdetalhado', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Gerente': ['dashboard', 'assets', 'status', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Diretor': ['dashboard', 'assets', 'status', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
+      'Desenvolvedor': ['dashboard', 'assets', 'status', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
     };
-    const ALL_TABS = ['dashboard', 'assets', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'];
+    const ALL_TABS = ['dashboard', 'assets', 'status', 'availability', 'paradasdetalhado', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -2344,16 +2442,10 @@
     window.renderPermissionsOverview = function() {
       const tbody = document.getElementById('permissions-overview');
       if (!tbody) return;
-      const tabLabels = {
-        dashboard: 'Visão Geral', assets: 'Ativos & Status', availability: 'Disponibilidade',
-        paradasdetalhado: 'Paradas Detalhado', evolution: 'Evolução', executive: 'Painel Diretoria',
-        calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria',
-        history: 'Histórico Consolidado', users: 'Usuários & Permissões'
-      };
       tbody.innerHTML = Object.keys(ROLE_PERMISSIONS).map(role => `
         <tr>
           <td class="p-2 font-bold text-slate-800">${role}</td>
-          <td class="p-2 text-slate-600">${ROLE_PERMISSIONS[role].map(t => tabLabels[t] || t).join(' • ')}</td>
+          <td class="p-2 text-slate-600">${ROLE_PERMISSIONS[role].map(t => TAB_LABELS_MAP[t] || t).join(' • ')}</td>
         </tr>
       `).join('');
     };
@@ -2441,7 +2533,7 @@
           <td class="p-3">
             <button onclick="toggleUserStatus(${u.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${u.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${u.status}</button>
           </td>
-          <td class="p-3 text-center flex items-center justify-center gap-2">
+          <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
             ${window.currentLoggedUser && window.currentLoggedUser.funcao === 'Desenvolvedor' ? `<button onclick="openUserPermissionsModal(${u.id})" class="text-slate-400 hover:text-purple-600 transition" title="Permissões Individuais"><i data-lucide="shield" class="w-4 h-4"></i></button>` : ''}
             <button onclick="editUser(${u.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
             <button onclick="deleteUser(${u.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -2453,7 +2545,7 @@
 
     // ===================== PERMISSÕES INDIVIDUAIS (SOMENTE CONTA DESENVOLVEDOR) =====================
     const TAB_LABELS_MAP = {
-      dashboard: 'Visão Geral', assets: 'Ativos & Status', availability: 'Disponibilidade',
+      dashboard: 'Visão Geral', assets: 'Cadastro de Ativos', status: 'Status & Paradas', availability: 'Disponibilidade',
       paradasdetalhado: 'Paradas Detalhado', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento',
       progrealizado: 'Programado x Realizado',
@@ -2552,8 +2644,12 @@
     window.renderParadasDetalhado = function() {
       if (!assetsLoaded) return;
       populateParadasLocalFilter();
+      populateOperacaoFilters();
+      populateMarcaFilters();
 
       const unidadeFilter = document.getElementById('pd-filter-unidade')?.value || 'TODAS';
+      const operacaoFilter = document.getElementById('pd-filter-operacao')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('pd-filter-marca')?.value || 'TODAS';
       const tipoFilter = document.getElementById('pd-filter-tipo')?.value || 'TODOS';
       const statusFilter = document.getElementById('pd-filter-status')?.value || 'TODOS';
       const localFilter = document.getElementById('pd-filter-local')?.value || 'TODOS';
@@ -2561,7 +2657,10 @@
       const tagBusca = (document.getElementById('pd-filter-tag')?.value || '').trim().toUpperCase();
 
       let list = getActiveAssets();
+      if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
       if (unidadeFilter !== 'TODAS') list = list.filter(a => a.unidade === unidadeFilter);
+      if (operacaoFilter !== 'TODAS') list = list.filter(a => a.operacao === operacaoFilter);
+      if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
       if (tagBusca) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagBusca));
 
@@ -3037,7 +3136,7 @@
       }
       const dataProg = origem === 'Preventiva' ? item.date : item.expDate;
       const atividade = origem === 'Preventiva' ? item.service : item.docName;
-      switchTab('assets');
+      switchTab('status');
       openEventModal();
       window.pendingEventLink = { origem, id: item.id };
       document.getElementById('modal-event-title').innerHTML = `Registrar Parada — <span class="text-emerald-600">${origem}: ${atividade}</span>`;
@@ -3153,7 +3252,7 @@
     window.abrirParadaParaTag = function(tag, tipoSugerido) {
       const asset = getAssetByTag(tag);
       if (!asset) { alert('Ativo não encontrado na base.'); return; }
-      switchTab('assets');
+      switchTab('status');
       openEventModal();
       setTimeout(() => {
         const sel = document.getElementById('event-asset');
@@ -3186,6 +3285,21 @@
       if (openEvent) return { status: 'Indisponivel', event: openEvent };
       return { status: 'Disponivel', event: null };
     };
+    // Status do ativo dentro de um período (data inicial/final) — usa a mesma base de eventos (assetEvents)
+    // que alimenta Gestão de Ativos, Evolução e Histórico, garantindo que o filtro de data da aba Disponibilidade
+    // reflita dados reais e não uma cópia paralela. Sem datas informadas, cai no status atual (hoje).
+    window.getAssetStatusInRange = function(assetId, startDate, endDate) {
+      if (!startDate && !endDate) return window.getAssetCurrentStatus(assetId);
+      const start = startDate || endDate;
+      const end = endDate || startDate;
+      const events = (window.assetEvents || []).filter(e => String(e.assetId) === String(assetId) && e.inicio);
+      // Evento se sobrepõe ao período quando começou até o fim do período e (ainda está aberto ou terminou depois do início do período)
+      const overlapping = events.filter(e => e.inicio <= end && (!e.fim || e.fim >= start));
+      if (overlapping.length === 0) return { status: 'Disponivel', event: null, isHistorico: false };
+      const aberto = overlapping.find(e => e.status === 'Aberto');
+      const chosen = aberto || overlapping.slice().sort((a, b) => new Date(b.inicio) - new Date(a.inicio))[0];
+      return { status: 'Indisponivel', event: chosen, isHistorico: !aberto };
+    };
     // Último evento encerrado (última liberação) — mantém histórico visível da data de saída mesmo após o ativo voltar a operar
     window.getLastClosedEventForAsset = function(assetId) {
       const closed = (window.assetEvents || []).filter(e => String(e.assetId) === String(assetId) && e.status === 'Encerrado' && e.fim);
@@ -3213,7 +3327,7 @@
 
     function populateOperacaoFilters() {
       const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
-      ['avail-filter-operacao', 'evo-filter-operacao', 'repro-filter-operacao'].forEach(id => {
+      ['avail-filter-operacao', 'evo-filter-operacao', 'repro-filter-operacao', 'pd-filter-operacao', 'cad-filter-operacao', 'st-filter-operacao'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
@@ -3225,7 +3339,7 @@
 
     function populateModeloFilters() {
       const modelos = Array.from(new Set((window.assets || []).map(a => a.modelo).filter(Boolean))).sort();
-      ['avail-filter-modelo', 'repro-filter-modelo', 'evo-filter-modelo'].forEach(id => {
+      ['avail-filter-modelo', 'repro-filter-modelo', 'evo-filter-modelo', 'cad-filter-modelo', 'st-filter-modelo'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
@@ -3298,7 +3412,8 @@
       if (tabId === 'history') { renderHistoryTable(); refreshHistoryTagFilter(); }
       if (tabId === 'availability') renderAvailability();
       if (tabId === 'evolution') renderEvolutionChart();
-      if (tabId === 'assets') { renderAssets(); renderStatusTable(); }
+      if (tabId === 'assets') renderAssets();
+      if (tabId === 'status') renderStatusTable();
       if (tabId === 'documents') renderDocCalendar();
       if (tabId === 'paradasdetalhado') renderParadasDetalhado();
       if (tabId === 'planning') renderPlanejamento();
@@ -3879,7 +3994,30 @@
     window.renderAssets = function() {
       const tbody = document.getElementById('assets-table-body');
       if (!tbody) return;
-      const list = getFilteredAssetsByUnit().slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+      populateOperacaoFilters();
+      populateMarcaFilters();
+      populateModeloFilters();
+
+      const tagFilter = (document.getElementById('cad-filter-tag')?.value || '').trim().toUpperCase();
+      const placaFilter = (document.getElementById('cad-filter-placa')?.value || '').trim().toUpperCase();
+      const tipoFilter = document.getElementById('cad-filter-tipo')?.value || 'TODOS';
+      const operacaoFilter = document.getElementById('cad-filter-operacao')?.value || 'TODAS';
+      const situacaoFilter = document.getElementById('cad-filter-situacao')?.value || 'TODAS';
+      const unidadeFilter = document.getElementById('cad-filter-unidade')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('cad-filter-marca')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('cad-filter-modelo')?.value || 'TODOS';
+
+      let list = getFilteredAssetsByUnit();
+      if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
+      if (placaFilter) list = list.filter(a => (a.placa || '').toUpperCase().includes(placaFilter));
+      if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
+      if (operacaoFilter !== 'TODAS') list = list.filter(a => a.operacao === operacaoFilter);
+      if (situacaoFilter !== 'TODAS') list = list.filter(a => a.status === situacaoFilter);
+      if (unidadeFilter !== 'TODAS') list = list.filter(a => a.unidade === unidadeFilter);
+      if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
+      if (modeloFilter !== 'TODOS') list = list.filter(a => a.modelo === modeloFilter);
+      list = list.slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+
       tbody.innerHTML = list.map(a => `
         <tr class="hover:bg-emerald-50/30 transition">
           <td class="p-3 font-black text-slate-900">${a.tag}</td>
@@ -3895,13 +4033,13 @@
             <button onclick="toggleAssetActive(${a.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${a.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${a.status}</button>
           </td>
           <td class="p-3 text-xs text-slate-500">${formatDateBR(a.dataCadastro)}</td>
-          <td class="p-3 text-center flex items-center justify-center gap-2">
+          <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
             <button onclick="openAssetHistory(${a.id})" class="text-slate-400 hover:text-blue-600 transition" title="Histórico do Ativo"><i data-lucide="history" class="w-4 h-4"></i></button>
             <button onclick="editAsset(${a.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
             <button onclick="deleteAsset(${a.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </td>
         </tr>
-      `).join('');
+      `).join('') || `<tr><td colspan="12" class="p-4 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
       lucide.createIcons();
     };
 
@@ -4078,10 +4216,37 @@
     window.renderStatusTable = function() {
       const tbody = document.getElementById('status-table-body');
       if (!tbody) return;
-      const list = getFilteredAssetsByUnit().slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+      populateOperacaoFilters();
+      populateMarcaFilters();
+      populateModeloFilters();
 
-      tbody.innerHTML = list.map(a => {
-        const current = getAssetCurrentStatus(a.id);
+      const tagFilter = (document.getElementById('st-filter-tag')?.value || '').trim().toUpperCase();
+      const placaFilter = (document.getElementById('st-filter-placa')?.value || '').trim().toUpperCase();
+      const tipoFilter = document.getElementById('st-filter-tipo')?.value || 'TODOS';
+      const operacaoFilter = document.getElementById('st-filter-operacao')?.value || 'TODAS';
+      const statusFilter = document.getElementById('st-filter-status')?.value || 'TODOS';
+      const situacaoFilter = document.getElementById('st-filter-situacao')?.value || 'TODAS';
+      const tipoParadaFilter = document.getElementById('st-filter-tipo-parada')?.value || 'TODOS';
+      const unidadeFilter = document.getElementById('st-filter-unidade')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('st-filter-marca')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('st-filter-modelo')?.value || 'TODOS';
+
+      let list = getFilteredAssetsByUnit();
+      if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
+      if (placaFilter) list = list.filter(a => (a.placa || '').toUpperCase().includes(placaFilter));
+      if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
+      if (operacaoFilter !== 'TODAS') list = list.filter(a => a.operacao === operacaoFilter);
+      if (unidadeFilter !== 'TODAS') list = list.filter(a => a.unidade === unidadeFilter);
+      if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
+      if (modeloFilter !== 'TODOS') list = list.filter(a => a.modelo === modeloFilter);
+      list = list.slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+
+      let rows = list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      if (statusFilter !== 'TODOS') rows = rows.filter(r => r.current.status === statusFilter);
+      if (situacaoFilter !== 'TODAS') rows = rows.filter(r => r.current.status === 'Indisponivel' && r.current.event.situacao === situacaoFilter);
+      if (tipoParadaFilter !== 'TODOS') rows = rows.filter(r => r.current.status === 'Indisponivel' && r.current.event.tipoParada === tipoParadaFilter);
+
+      tbody.innerHTML = rows.map(({ asset: a, current }) => {
         const evt = current.event;
         const isIndisp = current.status === 'Indisponivel';
         const dias = isIndisp ? calcDiasParado(evt.inicio, null) : 0;
@@ -4105,7 +4270,7 @@
             <td class="p-3 text-xs ${lastClosed ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${lastClosed ? formatDateBR(lastClosed.fim) : '-'}</td>
             <td class="p-3 text-xs">${isIndisp ? `${evt.local || '-'} / ${evt.responsavel || '-'}` : '-'}</td>
             <td class="p-3 text-xs max-w-[220px]">${isIndisp ? (evt.acoesRealizadas || '-') : (lastClosed ? (lastClosed.acoesRealizadas || '-') : '-')}</td>
-            <td class="p-3 text-center flex items-center justify-center gap-2">
+            <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
               ${isIndisp
                 ? `<button onclick="editOpenEvent(${evt.id})" class="text-slate-400 hover:text-blue-600 transition" title="Atualizar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                    <button onclick="liberarEvento(${evt.id})" class="text-[10px] font-black px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition" title="Liberar">Liberar</button>`
@@ -4114,7 +4279,7 @@
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') || `<tr><td colspan="13" class="p-4 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
       lucide.createIcons();
     };
 
@@ -4127,6 +4292,8 @@
       const tipoFilter = document.getElementById('avail-filter-tipo')?.value || 'TODOS';
       const statusFilter = document.getElementById('avail-filter-status')?.value || 'TODOS';
       const tagFilter = (document.getElementById('avail-filter-tag')?.value || '').trim().toUpperCase();
+      const startFilter = document.getElementById('avail-filter-start')?.value || '';
+      const endFilter = document.getElementById('avail-filter-end')?.value || '';
 
       let list = getActiveAssets();
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
@@ -4137,15 +4304,15 @@
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
       if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
 
-      const withStatus = list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      const withStatus = list.map(a => ({ asset: a, current: window.getAssetStatusInRange(a.id, startFilter, endFilter) }));
       const filteredWithStatus = statusFilter !== 'TODOS' ? withStatus.filter(x => x.current.status === statusFilter) : withStatus;
-      return { list, withStatus, filteredWithStatus, opFilter };
+      return { list, withStatus, filteredWithStatus, opFilter, startFilter, endFilter };
     }
 
     window.renderAvailability = function() {
       if (!assetsLoaded) return;
       populateMarcaFilters();
-      const { list, filteredWithStatus, opFilter } = getFilteredAvailabilityList();
+      const { list, withStatus, filteredWithStatus, opFilter, startFilter, endFilter } = getFilteredAvailabilityList();
 
       const total = filteredWithStatus.length;
       const disp = filteredWithStatus.filter(x => x.current.status === 'Disponivel').length;
@@ -4160,7 +4327,11 @@
       document.getElementById('avail-kpi-pct-indisp').innerText = `${pctIndisp}%`;
 
       // listas
-      document.getElementById('avail-list-context').innerText = opFilter !== 'TODAS' ? `(Operação: ${opFilter})` : '';
+      const contextParts = [];
+      if (opFilter !== 'TODAS') contextParts.push(`Operação: ${opFilter}`);
+      if (startFilter && endFilter && startFilter !== endFilter) contextParts.push(`Período: ${formatDateBR(startFilter)} a ${formatDateBR(endFilter)}`);
+      else if (startFilter || endFilter) contextParts.push(`Data: ${formatDateBR(startFilter || endFilter)}`);
+      document.getElementById('avail-list-context').innerText = contextParts.length ? `(${contextParts.join(' · ')})` : '';
       document.getElementById('avail-list-disponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Disponivel').map(x => `
         <div class="flex items-center gap-2 text-xs p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
           ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.asset.marca || ''} ${x.asset.modelo || ''}</span>
@@ -4169,9 +4340,10 @@
       document.getElementById('avail-list-indisponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').map(x => `
         <div class="flex items-center gap-2 text-xs p-2 bg-red-50 border border-red-200 rounded-lg">
           ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.current.event.tipoParada} — ${x.current.event.motivo || ''}</span>
+          ${x.current.isHistorico ? '<span class="text-[10px] font-bold text-slate-400 ml-auto">(já liberado)</span>' : ''}
         </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo indisponível no filtro.</p>';
 
-      renderAvailabilityCharts(list.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) })));
+      renderAvailabilityCharts(withStatus);
       renderMetasMarcaPanel();
       renderDashboardKPIs();
     };
@@ -4198,7 +4370,7 @@
           isIndisp ? (evt.tipoParada || '') : '',
           isIndisp ? (evt.motivo || '') : '',
           isIndisp ? formatDateBR(evt.inicio) : '',
-          isIndisp ? calcDiasParado(evt.inicio, null) : 0,
+          isIndisp ? calcDiasParado(evt.inicio, evt.fim || null) : 0,
           isIndisp ? formatDateBR(evt.previsao) : '',
           isIndisp ? (evt.local || '') : ''
         ];
@@ -4267,7 +4439,7 @@
 
     function populateMarcaFilters() {
       const marcas = Array.from(new Set((window.assets || []).map(a => a.marca).filter(Boolean))).sort();
-      ['avail-filter-marca', 'evo-filter-marca', 'doc-filter-marca'].forEach(id => {
+      ['avail-filter-marca', 'evo-filter-marca', 'doc-filter-marca', 'pd-filter-marca', 'cad-filter-marca', 'st-filter-marca'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         const current = el.value;
@@ -4663,18 +4835,35 @@
     };
 
     // Detalhamento: o que estava indisponível no período clicado, cruzando snapshots (Gestão de Ativos) e Histórico
+    // Respeita os mesmos filtros ativos na tela de Evolução (operação, unidade, marca, modelo, tipo, TAG).
     window.showEvoDrillDown = function(dateList, label) {
       if (!dateList || dateList.length === 0) { alert('Sem dados de snapshot para este período.'); return; }
       document.getElementById('evo-drilldown-label').innerText = label || '';
 
-      // Agrega indisponibilidades por ativo ao longo dos dias do período
+      const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
+      const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
+      const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
+
+      // Agrega indisponibilidades por ativo ao longo dos dias do período, aplicando os mesmos filtros da tela
       const byAsset = {};
       dateList.forEach(date => {
-        (window.dailySnapshots[date] || []).filter(e => e.status === 'Indisponivel').forEach(e => {
-          if (!byAsset[e.tag]) byAsset[e.tag] = { operacao: e.operacao, unidade: e.unidade, tipoParada: e.tipoParada, motivo: e.motivo, dias: 0 };
+        let entries = (window.dailySnapshots[date] || []).filter(e => e.status === 'Indisponivel');
+        if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
+        if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
+        if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
+        if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        entries.forEach(e => {
+          if (!byAsset[e.tag]) byAsset[e.tag] = { tag: e.tag, operacao: e.operacao, unidade: e.unidade, tipo: e.tipo, marca: e.marca, modelo: e.modelo, tipoParada: e.tipoParada, motivo: e.motivo, dias: 0, primeiraData: date, ultimaData: date };
           byAsset[e.tag].dias += 1;
           byAsset[e.tag].tipoParada = e.tipoParada;
           byAsset[e.tag].motivo = e.motivo;
+          if (date < byAsset[e.tag].primeiraData) byAsset[e.tag].primeiraData = date;
+          if (date > byAsset[e.tag].ultimaData) byAsset[e.tag].ultimaData = date;
         });
       });
 
@@ -4683,7 +4872,11 @@
       tbody.innerHTML = rows.map(tag => {
         const a = byAsset[tag];
         return `<tr><td class="p-2 font-bold text-slate-900">${tag}</td><td class="p-2">${a.operacao || '-'}</td><td class="p-2">${getUnitBadge(a.unidade)}</td><td class="p-2">${a.tipoParada || '-'}</td><td class="p-2">${a.motivo || '-'}</td><td class="p-2 font-bold text-red-600">${a.dias}</td></tr>`;
-      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum ativo indisponível neste período.</td></tr>`;
+      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum ativo indisponível neste período com os filtros atuais.</td></tr>`;
+
+      // Guarda para exportação em Excel (mantém exatamente o que está sendo exibido, já filtrado)
+      window.lastEvoDrillDownLabel = label || '';
+      window.lastEvoDrillDownRows = rows.map(tag => byAsset[tag]);
 
       // Cruza com o Histórico Consolidado: eventos de Parada/Manutenção com data alvo ou saída dentro do período
       const minDate = dateList.slice().sort()[0];
@@ -4706,6 +4899,17 @@
         `).join('');
 
       document.getElementById('modal-evo-drilldown').classList.replace('hidden', 'flex');
+    };
+
+    window.exportEvoDrillDownToExcel = function() {
+      const rows = window.lastEvoDrillDownRows || [];
+      if (rows.length === 0) { alert('Nenhum ativo indisponível neste período (com os filtros atuais) para exportar.'); return; }
+      const dataRows = rows.map(a => [a.tag, a.operacao || '', a.unidade || '', a.tipo || '', a.marca || '', a.modelo || '', a.tipoParada || '', a.motivo || '', a.dias, formatDateBR(a.primeiraData), formatDateBR(a.ultimaData)]);
+      exportRowsToExcel(
+        `Indisponiveis_${(window.lastEvoDrillDownLabel || '').replace(/[\\/\s]+/g, '_')}_${getTodayStr()}.xlsx`, 'Indisponíveis',
+        ['TAG', 'Operação', 'Unidade', 'Tipo', 'Marca', 'Modelo', 'Tipo de Parada', 'Motivo', 'Dias Indisponível no Período', 'Primeira Data no Período', 'Última Data no Período'],
+        dataRows
+      );
     };
 
     window.closeEvoDrillDown = function() {
@@ -4989,7 +5193,7 @@
               </select>
               <div class="mt-1">${window.vincBadgeHTML('Documento', item)}${window.vincAcoesHTML('Documento', item)}</div>
             </td>
-            <td class="p-4 text-center">
+            <td class="p-4 text-center sticky-col-right">
               <button onclick="deleteDocument(${item.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir Documento"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </td>
           </tr>
