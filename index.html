@@ -215,6 +215,12 @@
           </select>
         </div>
 
+        <label class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-xl cursor-pointer" title="Quando marcado, ativos com parada aberta do tipo Reforma saem da conta de disponibilidade (não contam nem como disponível, nem como indisponível) em todo o sistema: Visão Geral, Disponibilidade, Evolução e Painel Diretoria.">
+          <input type="checkbox" class="reforma-toggle-checkbox w-3.5 h-3.5 accent-amber-600" onchange="toggleExcludeReforma(this.checked)">
+          <i data-lucide="hammer" class="w-4 h-4 text-amber-700"></i>
+          <span class="text-xs font-bold text-amber-900">Desconsiderar Reforma</span>
+        </label>
+
         <div class="flex items-center gap-3">
           <div id="logged-user-badge" class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
             <i data-lucide="user-circle" class="w-4 h-4 text-slate-500"></i>
@@ -297,7 +303,7 @@
 
         <div class="card-executive p-5 flex items-center justify-between">
           <div>
-            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Disponibilidade</p>
+            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">Disponibilidade <i id="kpi-reforma-icon" data-lucide="hammer" class="w-3 h-3 text-amber-600 hidden" title="Reforma desconsiderada da conta"></i></p>
             <h3 class="text-3xl font-black text-emerald-600 mt-1" id="kpi-availability-pct">0%</h3>
             <p class="text-[11px] text-slate-400 mt-0.5"><span id="kpi-available-count">0</span> disponíveis | <span id="kpi-unavailable-count">0</span> parados</p>
           </div>
@@ -330,19 +336,6 @@
           </div>
           <div class="p-3 bg-amber-50 rounded-lg text-amber-600 border border-amber-100"><i data-lucide="alert-triangle"></i></div>
         </div>
-      </div>
-
-      <!-- PAINEL DE DIVERGÊNCIAS: cruza Preventiva/Documentação programada com paradas reais registradas em Disponibilidade -->
-      <div class="card-executive p-6 border-l-4 border-l-red-400">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="git-compare-arrows" class="w-5 h-5 text-red-600"></i> Divergências: Programação x Execução Real
-            <span id="dashboard-divergencias-count" class="bg-red-100 text-red-800 border border-red-300 text-xs font-black px-2 py-0.5 rounded-full">0</span>
-          </h2>
-          <button onclick="switchTab('planning')" class="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline">Ver painel completo de Planejamento →</button>
-        </div>
-        <p class="text-xs text-slate-500 mb-4">Check automático por TAG e data: programações de hoje e vencidas (preventivas e documentos) sem parada real correspondente em Gestão de Ativos/Disponibilidade. Para cada uma: registre a parada (já vinculada) ou reprograme com motivo.</p>
-        <div id="dashboard-divergencias-list" class="space-y-2"></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -543,6 +536,13 @@
             <button onclick="document.getElementById('avail-filter-start').value='';document.getElementById('avail-filter-end').value='';renderAvailability();" title="Limpar período (voltar para hoje)" class="text-slate-400 hover:text-red-600 shrink-0"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
           </div>
         </div>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <span class="text-[11px] font-bold text-slate-500 self-center">Atalho rápido de período:</span>
+          <button onclick="setAvailQuickPeriod('dia')" class="text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 transition">Hoje</button>
+          <button onclick="setAvailQuickPeriod('semana')" class="text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 transition">Esta Semana</button>
+          <button onclick="setAvailQuickPeriod('mes')" class="text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 transition">Este Mês</button>
+          <button onclick="setAvailQuickPeriod('ano')" class="text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 transition">Este Ano</button>
+        </div>
         <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> O filtro de data mostra o status real do ativo no período escolhido (com base nos mesmos eventos de parada usados em Gestão de Ativos, Evolução e Histórico). Sem data, mostra a situação de hoje.</p>
       </div>
 
@@ -553,6 +553,7 @@
         <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">% Disponibilidade</p><h3 class="text-2xl font-black text-emerald-600" id="avail-kpi-pct-disp">0%</h3></div>
         <div class="card-executive p-4"><p class="text-xs font-bold text-slate-500 uppercase">% Indisponibilidade</p><h3 class="text-2xl font-black text-red-600" id="avail-kpi-pct-indisp">0%</h3></div>
       </div>
+      <p id="avail-reforma-note" class="hidden text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-1.5"><i data-lucide="hammer" class="w-3.5 h-3.5"></i> Carretas/ativos em Reforma estão sendo desconsiderados destes números (filtro global "Desconsiderar Reforma" ativo).</p>
 
       <p class="text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-2">
         <span class="flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em uma barra para ver os veículos daquela categoria (disponíveis, indisponíveis, dias parados, previsão e local).</span>
@@ -726,6 +727,23 @@
       <div id="evo-meta-banner" class="hidden card-executive p-4 flex items-center justify-between"></div>
       <div class="card-executive p-5">
         <div class="h-80"><canvas id="chartEvolution"></canvas></div>
+      </div>
+      <div class="card-executive p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Disponibilidade por Marca (%)</h3>
+            <p class="text-[11px] text-slate-400">Coluna com a % de disponibilidade de cada marca no período escolhido — usa os mesmos filtros de operação/unidade/tipo/TAG acima (o filtro de Marca é ignorado aqui, já que a marca é o próprio eixo do gráfico).</p>
+          </div>
+          <select id="evo-marca-chart-periodo" onchange="renderEvoMarcaChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none shrink-0">
+            <option value="dia">Hoje</option>
+            <option value="mes" selected>Este Mês</option>
+            <option value="ano">Este Ano</option>
+          </select>
+        </div>
+        <div class="h-72 relative">
+          <canvas id="chartEvoMarca"></canvas>
+          <p id="evo-marca-chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-xs text-slate-400 italic">Nenhum dado de marca no período/filtros selecionados.</p>
+        </div>
       </div>
       <div class="card-executive overflow-hidden">
         <div class="overflow-x-auto">
@@ -1034,10 +1052,11 @@
           <select id="doc-filter-situacao" onchange="onDocFiltersChange()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Situações</option>
             <option value="vencido">Vencido</option>
-            <option value="obrigatorio">Obrigatório (≤ 60 dias)</option>
+            <option value="urgente">Urgente (≤ 30 dias)</option>
+            <option value="obrigatorio">Obrigatório (31-60 dias)</option>
             <option value="opcional">Opcional (61-90 dias)</option>
             <option value="boa">Situação Boa (&gt; 90 dias)</option>
-            <option value="renovado">Renovado</option>
+            <option value="renovado">Renovado (Situação Boa)</option>
           </select>
         </div>
       </div>
@@ -1105,11 +1124,11 @@
         <div id="doc-calendar-grid"></div>
       </div>
 
-      <!-- SUBABA: ACOMPANHAMENTO DE VENCIMENTOS (SEGUE A REGRA DE 60/90 DIAS JÁ EXISTENTE) -->
+      <!-- SUBABA: ACOMPANHAMENTO DE VENCIMENTOS (REGRA DE 30/60/90 DIAS + RENOVAÇÃO AUTOMÁTICA CIV/CIPP) -->
       <div id="doc-view-vencimentos-wrap" class="hidden space-y-4">
         <div class="card-executive p-4 border-l-4 border-l-red-400">
           <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-red-600"></i> Acompanhamento de Prazos de Vencimento</h3>
-          <p class="text-xs text-slate-500 mb-3">Aplica a mesma regra já usada no sistema: até 60 dias para o vencimento = programação obrigatória; de 61 a 90 dias = programação opcional; acima de 90 dias = situação boa. Assim que um documento entra nessas faixas, o sistema já disponibiliza aqui a ação de programar a renovação.</p>
+          <p class="text-xs text-slate-500 mb-3">Alerta por proximidade do vencimento: até 30 dias = urgente; 31 a 60 dias = programação obrigatória; 61 a 90 dias = programação opcional; acima de 90 dias = situação boa. Ao marcar CIV ou CIPP como "Realizado", o sistema já conta automaticamente o novo prazo (CIV: 365 dias / CIPP: 730 dias, conforme a norma) e volta a alertar sozinho quando esse novo vencimento entrar nas faixas acima.</p>
           <div class="filter-grid">
             <select id="venc-filter-unidade" onchange="renderDocVencimentos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
               <option value="TODAS">Todas Unidades</option>
@@ -1130,9 +1149,10 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div class="card-executive p-3 border-l-4 border-l-red-700 text-center"><p class="text-[10px] font-bold text-red-700 uppercase">Vencidos</p><h4 class="text-xl font-black text-red-700" id="venc-kpi-vencido">0</h4></div>
-          <div class="card-executive p-3 border-l-4 border-l-red-400 text-center"><p class="text-[10px] font-bold text-red-600 uppercase">Obrigatório &le;60d</p><h4 class="text-xl font-black text-red-600" id="venc-kpi-obrigatorio">0</h4></div>
+          <div class="card-executive p-3 border-l-4 border-l-red-500 text-center"><p class="text-[10px] font-bold text-red-700 uppercase">Urgente &le;30d</p><h4 class="text-xl font-black text-red-700" id="venc-kpi-urgente">0</h4></div>
+          <div class="card-executive p-3 border-l-4 border-l-red-400 text-center"><p class="text-[10px] font-bold text-red-600 uppercase">Obrigatório 31-60d</p><h4 class="text-xl font-black text-red-600" id="venc-kpi-obrigatorio">0</h4></div>
           <div class="card-executive p-3 border-l-4 border-l-amber-400 text-center"><p class="text-[10px] font-bold text-amber-600 uppercase">Opcional 61-90d</p><h4 class="text-xl font-black text-amber-600" id="venc-kpi-opcional">0</h4></div>
           <div class="card-executive p-3 border-l-4 border-l-emerald-400 text-center"><p class="text-[10px] font-bold text-emerald-600 uppercase">Situação Boa</p><h4 class="text-xl font-black text-emerald-600" id="venc-kpi-boa">0</h4></div>
         </div>
@@ -1277,7 +1297,8 @@
       </div>
 
       <div class="card-executive p-5">
-        <h3 class="font-bold text-slate-900 text-sm mb-3">Evolução da Aderência (% Realizado / Programado) por período</h3>
+        <h3 class="font-bold text-slate-900 text-sm mb-3">Aderência por Mês (% Realizado / Programado)</h3>
+        <p class="text-[11px] text-slate-400 -mt-2 mb-3">Sempre agrupado por mês, com base nos meses que realmente têm dados alimentados no sistema (independe do agrupamento escolhido acima, que serve para a tabela).</p>
         <div class="h-80"><canvas id="chartProgRealizado"></canvas></div>
       </div>
 
@@ -1928,6 +1949,35 @@
   </div>
 
   <!-- MODAL DETALHAMENTO POR FROTA (CLIQUE NA TABELA PROGRAMADO X REALIZADO) -->
+  <!-- MODAL JUSTIFICATIVA DE DOCUMENTAÇÃO VENCIDA/EM ALERTA -->
+  <div id="modal-doc-justificativa" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="message-square-text" class="w-5 h-5 text-amber-600"></i> Justificar Documentação</h3>
+        <button onclick="closeDocJustificativaModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p id="just-doc-label" class="text-sm font-bold text-slate-700"></p>
+      <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">Motivo</label>
+        <select id="just-doc-motivo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none">
+          <option value="Carreta em reforma">Carreta em reforma</option>
+          <option value="Aguardando peça">Aguardando peça</option>
+          <option value="Aguardando fornecedor/terceiros">Aguardando fornecedor/terceiros</option>
+          <option value="Veículo em local de difícil acesso">Veículo em local de difícil acesso</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">Observação (opcional)</label>
+        <textarea id="just-doc-obs" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none" placeholder="Detalhes adicionais..."></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="salvarJustificativaDoc()" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm">Salvar Justificativa</button>
+        <button onclick="removerJustificativaDoc()" id="btn-remover-justificativa" class="hidden px-3 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-lg text-xs font-bold">Remover</button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-pr-drilldown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-4xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
@@ -2876,19 +2926,23 @@
       renderDivergenciasPanel();
     };
 
-    // Painel de Divergências (Visão Geral): lista preventivas/documentos vencidos sem parada real vinculada
+    // Painel de Divergências: cruza Preventiva/Documentação programada com paradas reais. O quadro visual foi
+    // retirado da Visão Geral (ficava dando falsa impressão de pendência com itens já em situação boa) — o
+    // painel completo, com as ações de Registrar Parada/Reprogramar, vive na aba Planejamento. Mantemos aqui
+    // apenas o aviso (toast) único ao carregar o sistema.
     window.renderDivergenciasPanel = function() {
-      const countEl = document.getElementById('dashboard-divergencias-count');
-      const listEl = document.getElementById('dashboard-divergencias-list');
-      if (!countEl || !listEl) return;
       const divergencias = window.getDivergencias();
-      countEl.innerText = divergencias.length;
       if (!window.checkExecucaoAvisado && eventsLoaded && (window.maintenanceSchedule || []).length + (window.fleetDocs || []).length > 0) {
         window.checkExecucaoAvisado = true;
         const vencidas = divergencias.filter(x => x.vinculo.situacao === 'divergente').length;
         const hoje = divergencias.filter(x => x.vinculo.situacao === 'pendente').length;
-        if (vencidas + hoje > 0) showToast(`Check de execução: ${vencidas} programação(ões) venceu(ram) sem parada registrada e ${hoje} está(ão) programada(s) para hoje. Veja o painel de Divergências.`, vencidas > 0 ? 'warning' : 'info');
+        if (vencidas + hoje > 0) showToast(`Check de execução: ${vencidas} programação(ões) venceu(ram) sem parada registrada e ${hoje} está(ão) programada(s) para hoje. Veja o painel de Divergências em Planejamento.`, vencidas > 0 ? 'warning' : 'info');
       }
+
+      const countEl = document.getElementById('dashboard-divergencias-count');
+      const listEl = document.getElementById('dashboard-divergencias-list');
+      if (!countEl || !listEl) return;
+      countEl.innerText = divergencias.length;
       countEl.className = divergencias.length > 0
         ? 'bg-red-100 text-red-800 border border-red-300 text-xs font-black px-2 py-0.5 rounded-full'
         : 'bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-black px-2 py-0.5 rounded-full';
@@ -2948,12 +3002,17 @@
 
     // Classificação de Situação do documento conforme prazo de vencimento:
     // até 60 dias -> programação obrigatória | 61-90 dias -> programação opcional | acima de 90 dias -> situação boa (dentro do prazo)
+    // Regra de alerta por proximidade do vencimento: até 30 dias = urgente | 31-60 dias -> programação obrigatória
+    // | 61-90 dias -> programação opcional | acima de 90 dias -> situação boa (dentro do prazo).
+    // IMPORTANTE: o status "Realizado" NÃO congela mais a situação para sempre — ele só qualifica o rótulo quando
+    // o documento já está em dia (>90 dias). Assim que o vencimento (já recalculado pela renovação de CIV/CIPP)
+    // reentrar nas faixas de alerta, o sistema volta a cobrar a programação normalmente, usando só a métrica de dias.
     window.getDocSituacao = function(days, status) {
-      if (status === 'Realizado') {
-        return { tier: 'renovado', label: 'Renovado', shortLabel: 'Renovado', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
-      }
       if (days < 0) {
         return { tier: 'vencido', label: 'Vencido — Situação Crítica', shortLabel: 'Vencido', badge: 'bg-red-200 text-red-900 border-red-400' };
+      }
+      if (days <= 30) {
+        return { tier: 'urgente', label: 'Urgente — Vence em até 30 dias', shortLabel: 'Urgente', badge: 'bg-red-200 text-red-900 border-red-400' };
       }
       if (days <= 60) {
         return { tier: 'obrigatorio', label: 'Programação Obrigatória', shortLabel: 'Obrigatório', badge: 'bg-red-100 text-red-800 border-red-300' };
@@ -2961,7 +3020,26 @@
       if (days <= 90) {
         return { tier: 'opcional', label: 'Programação Opcional', shortLabel: 'Opcional', badge: 'bg-amber-100 text-amber-800 border-amber-300' };
       }
+      if (status === 'Realizado') {
+        return { tier: 'renovado', label: 'Renovado — Situação Boa', shortLabel: 'Renovado', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+      }
       return { tier: 'boa', label: 'Dentro do Prazo — Situação Boa', shortLabel: 'Situação Boa', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+    };
+
+    // Renovação automática de CIV/CIPP: soma os dias de validade previstos em norma a partir da data de realização.
+    // CIV + CIPP (atrelados) usa o ciclo do CIV (mais curto) para não deixar o alerta "dormir" além da conta.
+    const DOC_RENEWAL_DAYS = { 'CIV': 365, 'CIPP': 730, 'CIV + CIPP': 365 };
+    window.addDaysToDateStr = function(dateStr, days) {
+      const p = (dateStr || getTodayStr()).split('-');
+      const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      d.setDate(d.getDate() + days);
+      return formatDateISO(d);
+    };
+    window.applyDocRenewalIfApplicable = function(doc, realizationDateStr) {
+      const dias = DOC_RENEWAL_DAYS[doc.docName];
+      if (!dias) return; // regra só se aplica a CIV, CIPP e CIV + CIPP
+      const baseDate = realizationDateStr || getTodayStr();
+      doc.expDate = window.addDaysToDateStr(baseDate, dias);
     };
 
     window.calcDiasParado = function(inicioStr, fimStr) {
@@ -3157,7 +3235,11 @@
       } else {
         const doc = (window.fleetDocs || []).find(d => String(d.id) === String(id));
         if (!doc) return;
-        if (doc.status === 'Realizado') { alert('Este documento já foi realizado/renovado e não pode ser reprogramado.'); return; }
+        // Bloqueia reprogramação apenas quando o vencimento realmente está em dia (>90 dias) — não pelo rótulo
+        // "Realizado" isolado, pois após a renovação de CIV/CIPP o mesmo documento pode voltar a precisar de
+        // programação quando o novo prazo reentrar nas faixas de alerta (30/60/90 dias).
+        const situacaoAtual = window.getDocSituacao(calculateDaysRemaining(doc.expDate), doc.status);
+        if (situacaoAtual.tier === 'boa' || situacaoAtual.tier === 'renovado') { alert('Este documento está com o vencimento em dia (situação boa) e não precisa de reprogramação no momento.'); return; }
         openReprogramacaoModal({ kind: 'doc', id: doc.id, label: `${doc.tag} — ${doc.docName}`, dataAnterior: doc.expDate, dataNova: '' });
       }
     };
@@ -3179,7 +3261,16 @@
         ...(window.fleetDocs || []).map(d => ({ origem: 'Documento', id: d.id, tag: d.tag, unit: d.unit, atividade: d.docName, date: d.expDate, status: d.status, raw: d }))
       ];
       let list = items.map(x => ({ ...x, vinculo: window.getSituacaoVinculo(x.origem, x.raw) }))
-        .filter(x => x.vinculo.situacao === 'divergente' || x.vinculo.situacao === 'semregistro' || x.vinculo.precisaCheck);
+        .filter(x => x.vinculo.situacao === 'divergente' || x.vinculo.situacao === 'semregistro' || x.vinculo.precisaCheck)
+        // Um item "sem parada vinculada" (Realizado, mas sem evento físico registrado) só é uma divergência de
+        // fato enquanto o prazo (já recalculado, no caso de CIV/CIPP renovados) ainda estiver em alguma faixa de
+        // alerta. Uma vez em situação boa/renovado (prazo novo longe de vencer), sinalizar isso para sempre
+        // passaria a falsa impressão de pendência para quem está olhando o painel.
+        .filter(x => {
+          if (x.vinculo.situacao !== 'semregistro') return true;
+          const situacaoAtual = window.getDocSituacao(window.calculateDaysRemaining(x.date), x.status);
+          return situacaoAtual.tier !== 'boa' && situacaoAtual.tier !== 'renovado';
+        });
       if (window.selectedUnit !== 'TODAS') list = list.filter(x => x.unit === window.selectedUnit);
       return list.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     };
@@ -3215,7 +3306,12 @@
         confirmados.push(m);
       });
       (window.fleetDocs || []).forEach(doc => {
-        if (doc.tag !== evt.tag || doc.status === 'Realizado') return;
+        if (doc.tag !== evt.tag) return;
+        // Só pula se o documento realmente está em dia (situação boa/renovado) — não pelo rótulo "Realizado"
+        // isolado, já que após a renovação de CIV/CIPP o mesmo documento pode voltar a precisar de confirmação
+        // quando o novo prazo reentrar nas faixas de alerta (30/60/90 dias).
+        const situacaoAtualDoc = window.getDocSituacao(calculateDaysRemaining(doc.expDate), doc.status);
+        if (situacaoAtualDoc.tier === 'boa' || situacaoAtualDoc.tier === 'renovado') return;
         const explicito = vinculoExplicito('Documento', doc.id) || String(doc.eventoId) === String(evt.id);
         if (!explicito) {
           if (doc.status === 'Reprogramado') return;
@@ -3227,14 +3323,19 @@
         // Parada do tipo "Documentação" (ou vinculada explicitamente a este documento) = documento renovado.
         // Parada de outro tipo apenas registra o vínculo — a renovação continua sendo confirmada manualmente.
         if (evt.tipoParada === 'Documentação' || explicito) {
+          const wasAlreadyRealizado = doc.status === 'Realizado';
           doc.status = 'Realizado';
           doc.dataRealizada = evt.fim || getTodayStr();
+          // Mesma regra de renovação usada na troca manual de status: CIV soma 365 dias, CIPP soma 730 dias
+          // (conforme a norma), a partir da data real de liberação da parada.
+          if (wasAlreadyRealizado || !doc.dataOriginal) doc.dataOriginal = doc.expDate;
+          window.applyDocRenewalIfApplicable(doc, doc.dataRealizada);
           doc.historico.push({
-            dataAnterior: doc.expDate, dataNova: doc.expDate, responsavel: 'Sistema (automático)',
+            dataAnterior: doc.dataOriginal, dataNova: doc.expDate, responsavel: 'Sistema (automático)',
             motivo: `Renovação confirmada automaticamente — parada de ${evt.tipoParada} #${evt.id} (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`,
             timestamp: getNowFormatted()
           });
-          addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} renovado — confirmado pela parada real registrada (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})`, doc.expDate, 'Realizado', evt.fim);
+          addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} renovado — confirmado pela parada real registrada (${formatDateBR(evt.inicio)} a ${formatDateBR(evt.fim)})${DOC_RENEWAL_DAYS[doc.docName] ? ` — novo vencimento: ${formatDateBR(doc.expDate)}` : ''}`, doc.expDate, 'Realizado', evt.fim);
           confirmados.push(doc);
         } else {
           doc.historico.push({
@@ -3274,6 +3375,20 @@
     window.getFilteredAssetsByUnit = function() {
       if (window.selectedUnit === 'TODAS') return window.assets || [];
       return (window.assets || []).filter(a => a.unidade === window.selectedUnit);
+    };
+    // Filtro global "Desconsiderar Reforma": quando ativo, ativos com parada aberta do tipo Reforma são
+    // retirados da conta de disponibilidade (não contam nem como disponível, nem como indisponível) em
+    // todo o sistema — Visão Geral, Disponibilidade, Evolução e Painel Diretoria. Persistido no navegador.
+    window.excludeReformaFromAvailability = localStorage.getItem('pcm_exclude_reforma') === '1';
+    window.toggleExcludeReforma = function(checked) {
+      window.excludeReformaFromAvailability = !!checked;
+      localStorage.setItem('pcm_exclude_reforma', window.excludeReformaFromAvailability ? '1' : '0');
+      document.querySelectorAll('.reforma-toggle-checkbox').forEach(cb => { cb.checked = window.excludeReformaFromAvailability; });
+      renderAll();
+    };
+    window.isAssetEmReforma = function(assetId) {
+      const evt = window.getOpenEventForAsset(assetId);
+      return !!(evt && evt.tipoParada === 'Reforma');
     };
     // Evento aberto (parada em andamento) para um ativo
     window.getOpenEventForAsset = function(assetId) {
@@ -4284,6 +4399,29 @@
     };
 
     // ===================== DISPONIBILIDADE =====================
+    window.setAvailQuickPeriod = function(kind) {
+      const today = getToday();
+      let start, end;
+      if (kind === 'dia') {
+        start = end = getTodayStr();
+      } else if (kind === 'semana') {
+        const dow = today.getDay(); // 0=domingo
+        const diffToMonday = dow === 0 ? -6 : 1 - dow;
+        const monday = new Date(today); monday.setDate(today.getDate() + diffToMonday);
+        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+        start = formatDateISO(monday); end = formatDateISO(sunday);
+      } else if (kind === 'mes') {
+        const first = new Date(today.getFullYear(), today.getMonth(), 1);
+        const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        start = formatDateISO(first); end = formatDateISO(last);
+      } else if (kind === 'ano') {
+        start = `${today.getFullYear()}-01-01`; end = `${today.getFullYear()}-12-31`;
+      }
+      document.getElementById('avail-filter-start').value = start;
+      document.getElementById('avail-filter-end').value = end;
+      renderAvailability();
+    };
+
     function getFilteredAvailabilityList() {
       const opFilter = document.getElementById('avail-filter-operacao')?.value || 'TODAS';
       const unitFilter = document.getElementById('avail-filter-unidade')?.value || 'TODAS';
@@ -4304,7 +4442,12 @@
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
       if (tagFilter) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagFilter));
 
-      const withStatus = list.map(a => ({ asset: a, current: window.getAssetStatusInRange(a.id, startFilter, endFilter) }));
+      const withStatus0 = list.map(a => ({ asset: a, current: window.getAssetStatusInRange(a.id, startFilter, endFilter) }));
+      // Filtro global "Desconsiderar Reforma": retira da conta (nem disponível, nem indisponível) os ativos
+      // cuja parada no período analisado é do tipo Reforma.
+      const withStatus = window.excludeReformaFromAvailability
+        ? withStatus0.filter(x => !(x.current.status === 'Indisponivel' && x.current.event && x.current.event.tipoParada === 'Reforma'))
+        : withStatus0;
       const filteredWithStatus = statusFilter !== 'TODOS' ? withStatus.filter(x => x.current.status === statusFilter) : withStatus;
       return { list, withStatus, filteredWithStatus, opFilter, startFilter, endFilter };
     }
@@ -4325,6 +4468,7 @@
       document.getElementById('avail-kpi-indisp').innerText = indisp;
       document.getElementById('avail-kpi-pct-disp').innerText = `${pctDisp}%`;
       document.getElementById('avail-kpi-pct-indisp').innerText = `${pctIndisp}%`;
+      document.getElementById('avail-reforma-note')?.classList.toggle('hidden', !window.excludeReformaFromAvailability);
 
       // listas
       const contextParts = [];
@@ -4337,11 +4481,25 @@
           ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.asset.marca || ''} ${x.asset.modelo || ''}</span>
         </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo disponível no filtro.</p>';
 
-      document.getElementById('avail-list-indisponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').map(x => `
-        <div class="flex items-center gap-2 text-xs p-2 bg-red-50 border border-red-200 rounded-lg">
-          ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span> <span class="text-slate-500">${x.current.event.tipoParada} — ${x.current.event.motivo || ''}</span>
-          ${x.current.isHistorico ? '<span class="text-[10px] font-bold text-slate-400 ml-auto">(já liberado)</span>' : ''}
-        </div>`).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo indisponível no filtro.</p>';
+      document.getElementById('avail-list-indisponiveis').innerHTML = filteredWithStatus.filter(x => x.current.status === 'Indisponivel').map(x => {
+        const evt = x.current.event;
+        const dias = calcDiasParado(evt.inicio, evt.fim || null);
+        return `
+        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs p-2 bg-red-50 border border-red-200 rounded-lg">
+          <div class="flex items-center gap-2 flex-wrap flex-1">
+            ${getUnitBadge(x.asset.unidade)} <span class="font-bold">${x.asset.tag}</span>
+            <span class="text-slate-500">${x.asset.marca || ''} ${x.asset.modelo || ''}</span>
+            <span class="text-slate-400">· ${x.asset.operacao || '-'}</span>
+            <span class="text-slate-600 font-semibold">${evt.tipoParada}${evt.motivo ? ' — ' + evt.motivo : ''}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-red-100 text-red-800 border-red-300">${dias} dia${dias === 1 ? '' : 's'} parado</span>
+            ${x.current.isHistorico
+              ? `<span class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Liberado em ${formatDateBR(evt.fim)}</span>`
+              : `<span class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-amber-100 text-amber-800 border-amber-300">Ainda indisponível</span>`}
+          </div>
+        </div>`;
+      }).join('') || '<p class="text-xs text-slate-400 italic">Nenhum ativo indisponível no filtro.</p>';
 
       renderAvailabilityCharts(withStatus);
       renderMetasMarcaPanel();
@@ -4682,6 +4840,9 @@
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        // Filtro global "Desconsiderar Reforma": remove da conta do dia os ativos parados por Reforma
+        // (nem disponível, nem indisponível) — consistente com o mesmo filtro em Disponibilidade/Dashboard.
+        if (window.excludeReformaFromAvailability) entries = entries.filter(e => !(e.status === 'Indisponivel' && e.tipoParada === 'Reforma'));
         const total = entries.length;
         const disp = entries.filter(e => e.status === 'Disponivel').length;
         perDay.push({ date, total, disp, indisp: total - disp, weekKey: getISOWeekInfo(date).weekKey });
@@ -4832,6 +4993,80 @@
       const dailyLabels = allDaily.map(r => formatDateBR(r.date));
       const dailyPct = allDaily.map(r => r.total > 0 ? Math.round((r.disp / r.total) * 100) : 0);
       renderEvolutionMini(dailyLabels.slice(-30), dailyPct.slice(-30));
+
+      renderEvoMarcaChart();
+    };
+
+    window.chartEvoMarcaInstance = null;
+    // Coluna com a % de disponibilidade de cada marca, para o período (dia/mês/ano) escolhido — usa os mesmos
+    // snapshots diários e os filtros de operação/unidade/tipo/TAG da tela de Evolução.
+    window.renderEvoMarcaChart = function() {
+      const el = document.getElementById('chartEvoMarca');
+      if (!el) return;
+      if (window.chartEvoMarcaInstance) window.chartEvoMarcaInstance.destroy();
+
+      const periodo = document.getElementById('evo-marca-chart-periodo')?.value || 'mes';
+      const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
+      const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
+
+      const today = getToday();
+      let rangeStart, rangeEnd;
+      if (periodo === 'dia') { rangeStart = rangeEnd = getTodayStr(); }
+      else if (periodo === 'ano') { rangeStart = `${today.getFullYear()}-01-01`; rangeEnd = `${today.getFullYear()}-12-31`; }
+      else { rangeStart = formatDateISO(new Date(today.getFullYear(), today.getMonth(), 1)); rangeEnd = formatDateISO(new Date(today.getFullYear(), today.getMonth() + 1, 0)); }
+
+      const dates = Object.keys(window.dailySnapshots || {}).filter(d => d >= rangeStart && d <= rangeEnd);
+      const porMarca = {}; // marca -> { total, disp }
+      dates.forEach(date => {
+        let entries = window.dailySnapshots[date] || [];
+        if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
+        if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        if (window.excludeReformaFromAvailability) entries = entries.filter(e => !(e.status === 'Indisponivel' && e.tipoParada === 'Reforma'));
+        entries.forEach(e => {
+          const marca = e.marca || 'Sem marca';
+          if (!porMarca[marca]) porMarca[marca] = { total: 0, disp: 0 };
+          porMarca[marca].total++;
+          if (e.status === 'Disponivel') porMarca[marca].disp++;
+        });
+      });
+
+      const marcas = Object.keys(porMarca).sort();
+      document.getElementById('evo-marca-chart-empty')?.classList.toggle('hidden', marcas.length > 0);
+      if (marcas.length === 0) {
+        el.getContext('2d').clearRect(0, 0, el.width, el.height);
+        return;
+      }
+      const pcts = marcas.map(m => Math.round((porMarca[m].disp / porMarca[m].total) * 100));
+      const cores = marcas.map(m => porMarca[m].disp / porMarca[m].total >= 0.9 ? '#059669' : porMarca[m].disp / porMarca[m].total >= 0.7 ? '#d97706' : '#dc2626');
+
+      window.chartEvoMarcaInstance = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels: marcas, datasets: [{ label: '% Disponibilidade', data: pcts, backgroundColor: cores, borderRadius: 4, maxBarThickness: 46 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 108, ticks: { callback: v => v + '%' } } },
+          plugins: {
+            datalabels: {
+              display: true, anchor: 'end', align: 'top', offset: 2,
+              color: '#334155', font: { weight: 'bold', size: 11 },
+              formatter: (v) => v + '%'
+            },
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const m = marcas[ctx.dataIndex];
+                  return `${m}: ${ctx.formattedValue}% (${porMarca[m].disp} de ${porMarca[m].total} registros disponíveis no período)`;
+                }
+              }
+            }
+          }
+        }
+      });
     };
 
     // Detalhamento: o que estava indisponível no período clicado, cruzando snapshots (Gestão de Ativos) e Histórico
@@ -4857,6 +5092,7 @@
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        if (window.excludeReformaFromAvailability) entries = entries.filter(e => e.tipoParada !== 'Reforma');
         entries.forEach(e => {
           if (!byAsset[e.tag]) byAsset[e.tag] = { tag: e.tag, operacao: e.operacao, unidade: e.unidade, tipo: e.tipo, marca: e.marca, modelo: e.modelo, tipoParada: e.tipoParada, motivo: e.motivo, dias: 0, primeiraData: date, ultimaData: date };
           byAsset[e.tag].dias += 1;
@@ -4930,18 +5166,23 @@
     // ===================== DASHBOARD (VISÃO GERAL) =====================
     window.renderDashboardKPIs = function() {
       const assetsInUnit = getFilteredAssetsByUnit().filter(a => a.status === 'Ativo');
-      const withStatus = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      const withStatus0 = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      // Filtro global "Desconsiderar Reforma": retira da conta de disponibilidade os ativos parados por Reforma.
+      const withStatus = window.excludeReformaFromAvailability
+        ? withStatus0.filter(x => !(x.current.status === 'Indisponivel' && x.current.event && x.current.event.tipoParada === 'Reforma'))
+        : withStatus0;
       const total = withStatus.length;
       const disp = withStatus.filter(x => x.current.status === 'Disponivel').length;
       const indisp = total - disp;
       const pct = total > 0 ? Math.round((disp / total) * 100) : 0;
 
-      document.getElementById('kpi-total-fleet').innerText = total;
+      document.getElementById('kpi-total-fleet').innerText = assetsInUnit.length;
       document.getElementById('kpi-cavalos-count').innerText = assetsInUnit.filter(a => a.tipo === 'Cavalo').length;
       document.getElementById('kpi-carretas-count').innerText = assetsInUnit.filter(a => a.tipo === 'Carreta').length;
       document.getElementById('kpi-availability-pct').innerText = `${pct}%`;
       document.getElementById('kpi-available-count').innerText = disp;
       document.getElementById('kpi-unavailable-count').innerText = indisp;
+      document.getElementById('kpi-reforma-icon')?.classList.toggle('hidden', !window.excludeReformaFromAvailability);
 
       const unavailContainer = document.getElementById('dashboard-unavailable-assets');
       if (unavailContainer) {
@@ -5054,10 +5295,22 @@
     window.toggleDocStatus = function(id, newStatus) {
       const doc = window.fleetDocs.find(d => d.id === id);
       if (doc) {
+        const wasAlreadyRealizado = doc.status === 'Realizado';
         doc.status = newStatus;
-        if (newStatus === 'Realizado' && !doc.dataRealizada) doc.dataRealizada = getTodayStr();
-        if (newStatus !== 'Realizado') doc.dataRealizada = null;
-        addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado`, doc.expDate, newStatus);
+        if (newStatus === 'Realizado') {
+          // Cada transição para "Realizado" é um novo evento de conclusão. Para CIV/CIPP, já soma o novo prazo
+          // de vencimento (365 / 730 dias) a partir de hoje, conforme a norma.
+          // "dataOriginal" define em qual período essa realização conta no painel Programado x Realizado.
+          // Se o documento já vinha de um ciclo anterior renovado, o vencimento atual É a nova data devida
+          // (novo ciclo) — reatribuímos a ele. Se é a 1ª conclusão (pode ter sofrido reprogramações/atrasos
+          // antes), preservamos a data original já registrada, para não perder o histórico de atraso.
+          if (wasAlreadyRealizado || !doc.dataOriginal) doc.dataOriginal = doc.expDate;
+          doc.dataRealizada = getTodayStr();
+          window.applyDocRenewalIfApplicable(doc, doc.dataRealizada);
+        } else {
+          doc.dataRealizada = null;
+        }
+        addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado${DOC_RENEWAL_DAYS[doc.docName] ? ` (novo vencimento: ${formatDateBR(doc.expDate)})` : ''}`, doc.expDate, newStatus);
         saveData();
       }
     };
@@ -5225,23 +5478,28 @@
         return { d, days, situacao };
       });
 
-      const counts = { vencido: 0, obrigatorio: 0, opcional: 0, boa: 0, renovado: 0 };
+      const counts = { vencido: 0, urgente: 0, obrigatorio: 0, opcional: 0, boa: 0, renovado: 0 };
       enriched.forEach(x => { if (counts[x.situacao.tier] !== undefined) counts[x.situacao.tier]++; });
       document.getElementById('venc-kpi-vencido').innerText = counts.vencido;
+      document.getElementById('venc-kpi-urgente').innerText = counts.urgente;
       document.getElementById('venc-kpi-obrigatorio').innerText = counts.obrigatorio;
       document.getElementById('venc-kpi-opcional').innerText = counts.opcional;
-      document.getElementById('venc-kpi-boa').innerText = counts.boa;
+      // "Situação Boa" agrupa dentro-do-prazo (boa) e recém-renovados (renovado) — para o negócio ambos
+      // significam a mesma coisa: nenhuma ação necessária agora.
+      document.getElementById('venc-kpi-boa').innerText = counts.boa + counts.renovado;
 
-      let visible = enriched.filter(x => x.situacao.tier === 'vencido' || x.situacao.tier === 'obrigatorio' || x.situacao.tier === 'opcional');
+      let visible = enriched.filter(x => ['vencido', 'urgente', 'obrigatorio', 'opcional'].includes(x.situacao.tier));
       if (incluirBoa) visible = visible.concat(enriched.filter(x => x.situacao.tier === 'boa'));
       if (incluirRenovados) visible = visible.concat(enriched.filter(x => x.situacao.tier === 'renovado'));
       visible.sort((a, b) => a.days - b.days);
 
       list.innerHTML = visible.map(({ d, days, situacao }) => {
         const isAtrelado = d.docName === 'CIV + CIPP';
-        const podeProgramar = d.status !== 'Realizado';
+        // O botão de programar aparece sempre que a situação REAL (pelos dias até o vencimento) pede ação —
+        // mesmo que o status ainda esteja marcado como "Realizado" de um ciclo anterior (CIV/CIPP renovado).
+        const podeProgramar = situacao.tier !== 'boa' && situacao.tier !== 'renovado';
         return `
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border ${situacao.tier === 'vencido' ? 'border-red-300' : situacao.tier === 'obrigatorio' ? 'border-red-200' : situacao.tier === 'opcional' ? 'border-amber-200' : 'border-slate-200'} shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-lg border ${situacao.tier === 'vencido' ? 'border-red-300' : situacao.tier === 'urgente' ? 'border-red-300' : situacao.tier === 'obrigatorio' ? 'border-red-200' : situacao.tier === 'opcional' ? 'border-amber-200' : 'border-slate-200'} shadow-sm">
             <div class="flex items-center gap-3 flex-wrap">
               ${getUnitBadge(d.unit)}
               <span class="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs border">${d.tag}</span>
@@ -5252,6 +5510,7 @@
                   ${isAtrelado ? '<span class="bg-purple-100 text-purple-800 font-black text-[10px] px-2 py-0.5 rounded-full border border-purple-200">CIV + CIPP</span>' : ''}
                 </p>
                 <p class="text-xs text-slate-500">Vencimento: ${formatDateBR(d.expDate)} · Status: ${d.status}</p>
+                ${d.justificativa ? `<p class="text-[11px] text-amber-700 font-bold mt-1 flex items-center gap-1"><i data-lucide="message-square-text" class="w-3 h-3"></i> ${d.justificativa}${d.justificativaObs ? ': ' + d.justificativaObs : ''}</p>` : ''}
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
@@ -5261,12 +5520,54 @@
                 </span>
                 <span class="text-[10px] font-bold text-slate-500">${situacao.label}</span>
               </div>
+              ${podeProgramar ? `<button type="button" onclick="openDocJustificativaModal(${d.id})" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border ${d.justificativa ? 'bg-amber-100 border-amber-400 text-amber-900' : 'bg-slate-50 border-slate-300 text-slate-700'} hover:bg-slate-100 transition" title="Registrar o motivo do atraso/pendência (ex: carreta em reforma)"><i data-lucide="message-square-text" class="w-3 h-3"></i> ${d.justificativa ? 'Editar Justificativa' : 'Justificar'}</button>` : ''}
               ${podeProgramar ? `<button type="button" onclick="reprogramarProgramacao('Documento', ${d.id})" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 transition" title="Programar a data de realização da renovação"><i data-lucide="calendar-clock" class="w-3 h-3"></i> Programar Renovação</button>` : ''}
             </div>
           </div>`;
       }).join('') || `<p class="text-xs text-slate-400 italic text-center py-6 empty-state">Nenhum documento nas faixas de atenção com os filtros atuais. 🎉</p>`;
 
       lucide.createIcons();
+    };
+
+    // Justificativa de documentação vencida/em alerta: anotação de contexto (ex: "carreta em reforma") que não
+    // altera a situação/prazo — apenas registra o motivo para quem for consultar o painel entender a pendência.
+    window.currentJustDocId = null;
+    window.openDocJustificativaModal = function(id) {
+      const doc = (window.fleetDocs || []).find(d => d.id === id);
+      if (!doc) return;
+      window.currentJustDocId = id;
+      document.getElementById('just-doc-label').innerText = `${doc.tag} — ${doc.docName} (vencimento: ${formatDateBR(doc.expDate)})`;
+      document.getElementById('just-doc-motivo').value = doc.justificativa || 'Carreta em reforma';
+      document.getElementById('just-doc-obs').value = doc.justificativaObs || '';
+      document.getElementById('btn-remover-justificativa').classList.toggle('hidden', !doc.justificativa);
+      document.getElementById('modal-doc-justificativa').classList.replace('hidden', 'flex');
+      lucide.createIcons();
+    };
+    window.closeDocJustificativaModal = function() {
+      document.getElementById('modal-doc-justificativa').classList.replace('flex', 'hidden');
+    };
+    window.salvarJustificativaDoc = function() {
+      const doc = (window.fleetDocs || []).find(d => d.id === window.currentJustDocId);
+      if (!doc) return;
+      doc.justificativa = document.getElementById('just-doc-motivo').value;
+      doc.justificativaObs = document.getElementById('just-doc-obs').value.trim();
+      doc.justificativaData = getTodayStr();
+      addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} pendente — justificativa registrada: ${doc.justificativa}${doc.justificativaObs ? ' — ' + doc.justificativaObs : ''}`, doc.expDate, doc.status);
+      saveData();
+      closeDocJustificativaModal();
+      renderDocVencimentos();
+      showToast('Justificativa registrada.', 'success');
+    };
+    window.removerJustificativaDoc = function() {
+      const doc = (window.fleetDocs || []).find(d => d.id === window.currentJustDocId);
+      if (!doc) return;
+      doc.justificativa = null;
+      doc.justificativaObs = null;
+      doc.justificativaData = null;
+      saveData();
+      closeDocJustificativaModal();
+      renderDocVencimentos();
+      showToast('Justificativa removida.', 'info');
     };
 
     // --- Calendário de Documentos (Semanal + Mensal, com Drag & Drop) ---
@@ -5499,7 +5800,8 @@
       const doc = window.fleetDocs.find(d => d.id === id);
       if (!doc) return;
       if (doc.expDate === dateStr) return;
-      if (doc.status === 'Realizado') { alert('Este documento já foi realizado/renovado e não pode ser reprogramado.'); return; }
+      const situacaoAtual = window.getDocSituacao(calculateDaysRemaining(doc.expDate), doc.status);
+      if (situacaoAtual.tier === 'boa' || situacaoAtual.tier === 'renovado') { alert('Este documento está com o vencimento em dia (situação boa) e não precisa de reprogramação no momento.'); return; }
       openReprogramacaoModal({ kind: 'doc', id: doc.id, label: `${doc.tag} — ${doc.docName}`, dataAnterior: doc.expDate, dataNova: dateStr });
     };
 
@@ -5808,7 +6110,11 @@
       const activeMaint = window.selectedUnit === 'TODAS' ? window.maintenanceSchedule : window.maintenanceSchedule.filter(m => m.unit === window.selectedUnit);
       const activeDocs = getFilteredDocs();
       const assetsInUnit = getFilteredAssetsByUnit().filter(a => a.status === 'Ativo');
-      const withStatus = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      const withStatus0 = assetsInUnit.map(a => ({ asset: a, current: getAssetCurrentStatus(a.id) }));
+      // Filtro global "Desconsiderar Reforma": retira da conta de disponibilidade os ativos parados por Reforma.
+      const withStatus = window.excludeReformaFromAvailability
+        ? withStatus0.filter(x => !(x.current.status === 'Indisponivel' && x.current.event && x.current.event.tipoParada === 'Reforma'))
+        : withStatus0;
 
       // Disponibilidade geral
       const totalAtivos = withStatus.length;
@@ -6311,6 +6617,11 @@
     };
 
     // Dataset unificado (Preventivas + Documentos), enriquecido com Placa e Tipo vindos do cadastro único de ativos
+    // Dataset unificado (Preventivas + Documentos), enriquecido com Placa e Tipo vindos do cadastro único de ativos.
+    // "progDate" usa a data ORIGINAL de programação (dataOriginal quando existir, senão a data atual) — assim o
+    // item continua contando no período em que foi originalmente previsto, mesmo depois de reprogramado ou
+    // renovado (CIV/CIPP) para uma data muito mais à frente. Isso evita que uma renovação "suma" da aderência
+    // do período em que a ação realmente era devida.
     window.buildProgRealizadoDataset = function() {
       const assetByTag = {};
       (window.assets || []).forEach(a => { assetByTag[a.tag] = a; });
@@ -6319,7 +6630,7 @@
         return {
           origem: 'Preventiva', tag: m.tag, unit: m.unit, tipo: m.type || (a && a.tipo) || '-',
           placa: (a && a.placa) || '-', atividade: m.service,
-          progDate: m.date, realDate: m.dataRealizada || (m.status === 'Realizado' ? m.date : null),
+          progDate: m.dataOriginal || m.date, realDate: m.dataRealizada || (m.status === 'Realizado' ? m.date : null),
           status: m.status, raw: m
         };
       });
@@ -6328,7 +6639,7 @@
         return {
           origem: 'Documento', tag: d.tag, unit: d.unit, tipo: d.type || (a && a.tipo) || '-',
           placa: (a && a.placa) || '-', atividade: d.docName,
-          progDate: d.expDate, realDate: d.dataRealizada || (d.status === 'Realizado' ? d.expDate : null),
+          progDate: d.dataOriginal || d.expDate, realDate: d.dataRealizada || (d.status === 'Realizado' ? d.expDate : null),
           status: d.status, raw: d
         };
       });
@@ -6352,9 +6663,11 @@
       if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
       if (tagFiltro) items = items.filter(x => (x.tag || '').toUpperCase().includes(tagFiltro) || (x.placa || '').toUpperCase().includes(tagFiltro));
 
-      // Agrupa por período + tipo + origem. "Programado" conta pela data programada atual; "Realizado" conta
-      // pela data em que a atividade realmente foi concluída — permitindo comparar, por período, o que estava
-      // previsto com o que de fato foi executado naquele período (mesmo que programado em outro momento).
+      // Agrupa por período + tipo + origem usando SEMPRE a data originalmente programada (progDate).
+      // "Programado" = quantos itens eram devidos naquele período. "Realizado" = quantos DESSES MESMOS itens
+      // já foram concluídos (status Realizado), independente de quando a conclusão ocorreu. Isso evita o
+      // problema de um item "sumir" do período em que era devido e "aparecer do nada" em outro período —
+      // cada item conta só uma vez, sempre no período em que estava previsto, e a % de aderência nunca passa de 100%.
       const groups = {};
       function ensureGroup(periodInfo, tipo, origem) {
         const key = `${periodInfo.key}|${tipo}|${origem}`;
@@ -6365,18 +6678,12 @@
       }
 
       items.forEach(x => {
-        if (x.progDate) {
-          const pInfo = window.getPeriodInfoPR(x.progDate, agrupamento);
-          const g = ensureGroup(pInfo, x.tipo, x.origem);
-          g.programado++;
-          g.itens.push(x);
-        }
-        if (x.realDate) {
-          const rInfo = window.getPeriodInfoPR(x.realDate, agrupamento);
-          const g = ensureGroup(rInfo, x.tipo, x.origem);
-          g.realizado++;
-          if (!g.itens.includes(x)) g.itens.push(x);
-        }
+        if (!x.progDate) return;
+        const pInfo = window.getPeriodInfoPR(x.progDate, agrupamento);
+        const g = ensureGroup(pInfo, x.tipo, x.origem);
+        g.programado++;
+        g.itens.push(x);
+        if (x.status === 'Realizado') g.realizado++;
       });
 
       window.currentPrGroups = groups;
@@ -6406,7 +6713,7 @@
       const tbody = document.getElementById('pr-consolidado-tbody');
       if (tbody) {
         tbody.innerHTML = sortedGroups.map(g => {
-          const pct = g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : (g.realizado > 0 ? 100 : 0);
+          const pct = g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : 0;
           const pctColor = pct >= 90 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600';
           const origemBadge = g.origem === 'Documento' ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-blue-100 text-blue-800 border-blue-300';
           return `
@@ -6421,7 +6728,24 @@
         }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum dado encontrado no filtro atual.</td></tr>`;
       }
 
-      renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro);
+      // O gráfico é SEMPRE agrupado por mês (independente do agrupamento escolhido acima, que é só para a
+      // tabela) — usa somente os meses que realmente têm itens programados alimentados no sistema.
+      const monthGroups = {};
+      function ensureMonthGroup(periodInfo, tipo, origem) {
+        const key = `${periodInfo.key}|${tipo}|${origem}`;
+        if (!monthGroups[key]) monthGroups[key] = { key, periodLabel: periodInfo.label, sortKey: periodInfo.sortKey, tipo, origem, programado: 0, realizado: 0 };
+        return monthGroups[key];
+      }
+      items.forEach(x => {
+        if (!x.progDate) return;
+        const pInfo = window.getPeriodInfoPR(x.progDate, 'mes');
+        const g = ensureMonthGroup(pInfo, x.tipo, x.origem);
+        g.programado++;
+        if (x.status === 'Realizado') g.realizado++;
+      });
+      const sortedMonthGroups = Object.values(monthGroups).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+      renderProgRealizadoChart(sortedMonthGroups, tipoFiltro, origemFiltro);
       lucide.createIcons();
     };
 
@@ -6448,22 +6772,47 @@
         { tipo: 'Carreta', origem: 'Documento', label: 'Carreta — Documentação', color: '#d97706' }
       ].filter(c => (tipoFiltro === 'TODOS' || c.tipo === tipoFiltro) && (origemFiltro === 'TODOS' || c.origem === origemFiltro));
 
+      // guarda programado/realizado por ponto para o tooltip mostrar "X de Y realizados" e não só o %
+      const rawByCombo = {};
       const datasets = combos.map(c => {
+        const raw = [];
         const data = periodOrder.map(pKey => {
           const g = sortedGroups.find(x => x.sortKey === pKey && x.tipo === c.tipo && x.origem === c.origem);
-          if (!g) return null;
-          return g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : (g.realizado > 0 ? 100 : null);
+          if (!g || g.programado === 0) { raw.push(null); return null; }
+          raw.push({ programado: g.programado, realizado: g.realizado });
+          return Math.round((g.realizado / g.programado) * 100);
         });
-        return { label: c.label, data, borderColor: c.color, backgroundColor: c.color, tension: 0.3, spanGaps: true };
+        rawByCombo[c.label] = raw;
+        return { label: c.label, data, backgroundColor: c.color, borderRadius: 4, maxBarThickness: 34 };
       });
 
       window.chartProgRealizadoInstance = new Chart(el.getContext('2d'), {
-        type: 'line',
+        type: 'bar',
         data: { labels, datasets },
         options: {
           responsive: true, maintainAspectRatio: false,
-          scales: { y: { min: 0, max: 110, ticks: { callback: v => v + '%' } } },
-          plugins: { datalabels: { display: false }, legend: { position: 'bottom' } }
+          scales: {
+            y: { min: 0, max: 108, ticks: { callback: v => v + '%' }, title: { display: true, text: '% Realizado do que estava Programado' } },
+            x: { title: { display: true, text: 'Mês' } }
+          },
+          plugins: {
+            datalabels: {
+              display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null,
+              anchor: 'end', align: 'top', offset: 2,
+              color: '#334155', font: { weight: 'bold', size: 10 },
+              formatter: (v) => v + '%'
+            },
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const raw = (rawByCombo[ctx.dataset.label] || [])[ctx.dataIndex];
+                  if (!raw) return `${ctx.dataset.label}: sem dados`;
+                  return `${ctx.dataset.label}: ${ctx.formattedValue}% (${raw.realizado} de ${raw.programado} realizados)`;
+                }
+              }
+            }
+          }
         }
       });
     }
@@ -6508,6 +6857,7 @@
       initFirebaseSync();
       watchConnection();
       if (localStorage.getItem('pcm_tv_mode') === '1') document.body.classList.add('tv-mode');
+      document.querySelectorAll('.reforma-toggle-checkbox').forEach(cb => { cb.checked = window.excludeReformaFromAvailability; });
       lucide.createIcons();
 
       // Reforça o snapshot diário periodicamente (cliente aberto durante virada de dia)
