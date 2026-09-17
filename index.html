@@ -529,6 +529,7 @@
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
+          <select id="avail-filter-fabricante" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todos Fabricantes</option></select>
           <select id="avail-filter-marca" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
           <select id="avail-filter-modelo" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
           <select id="avail-filter-tipo" onchange="renderAvailability()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
@@ -622,6 +623,7 @@
             <option value="MA">MA - Parnaíba</option>
           </select>
           <select id="pd-filter-operacao" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          <select id="pd-filter-fabricante" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todos Fabricantes</option></select>
           <select id="pd-filter-marca" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
           <select id="pd-filter-tipo" onchange="renderParadasDetalhado()" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODOS">Todos os Tipos</option>
@@ -728,6 +730,7 @@
             <option value="AM">AM</option>
             <option value="MA">MA</option>
           </select>
+          <select id="evo-filter-fabricante" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todos Fabricantes</option></select>
           <select id="evo-filter-marca" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Marcas</option></select>
           <select id="evo-filter-modelo" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Modelos</option></select>
           <select id="evo-filter-tipo" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
@@ -1523,7 +1526,11 @@
             <input type="text" id="asset-renavam" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Fabricante</label>
+            <input type="text" id="asset-fabricante" placeholder="Ex: Scania" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Marca</label>
             <input type="text" id="asset-marca" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
@@ -1599,7 +1606,7 @@
       <!-- PASSO 1: ARQUIVO E PADRÕES -->
       <div id="import-step-upload" class="space-y-4">
         <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
-          Aceita planilha <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong> com as colunas: <strong>TAG, Placa, Chassi, RENAVAM, Operação, Modelo, Marca</strong>. A leitura reconhece o cabeçalho mesmo com acentos ou nomes ligeiramente diferentes.
+          Aceita planilha <strong>.xlsx</strong>, <strong>.xls</strong> ou <strong>.csv</strong> com as colunas: <strong>TAG, Placa, Chassi, RENAVAM, Operação, Modelo, Fabricante, Marca</strong>. A leitura reconhece o cabeçalho mesmo com acentos ou nomes ligeiramente diferentes.
         </div>
         <div class="flex flex-wrap gap-3 items-end">
           <div class="flex-1 min-w-[220px]">
@@ -1649,7 +1656,7 @@
             <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200 sticky top-0">
               <tr>
                 <th class="p-2">Situação</th><th class="p-2">TAG</th><th class="p-2">Placa</th><th class="p-2">Chassi</th>
-                <th class="p-2">RENAVAM</th><th class="p-2">Operação</th><th class="p-2">Marca</th><th class="p-2">Modelo</th>
+                <th class="p-2">RENAVAM</th><th class="p-2">Operação</th><th class="p-2">Fabricante</th><th class="p-2">Marca</th><th class="p-2">Modelo</th>
                 <th class="p-2">Tipo</th><th class="p-2">Unidade</th><th class="p-2 text-center">Remover</th>
               </tr>
             </thead>
@@ -2138,10 +2145,10 @@
 
     // ===================== DADOS INICIAIS (SEED) =====================
     const initialAssetsDefault = [
-      { id: 1001, tag: 'CV010', placa: '', chassi: '', renavam: '', marca: 'Scania', modelo: 'R450', combustivel: 'Gás', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
-      { id: 1002, tag: 'CN002', placa: '', chassi: '', renavam: '', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
-      { id: 1003, tag: 'CV008', placa: '', chassi: '', renavam: '', marca: 'Scania', modelo: 'R450', combustivel: 'Diesel', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' },
-      { id: 1004, tag: 'CNC05', placa: '', chassi: '', renavam: '', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' }
+      { id: 1001, tag: 'CV010', placa: '', chassi: '', renavam: '', fabricante: 'Scania', marca: 'Scania', modelo: 'R450', combustivel: 'Gás', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1002, tag: 'CN002', placa: '', chassi: '', renavam: '', fabricante: 'Randon', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'AM', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1003, tag: 'CV008', placa: '', chassi: '', renavam: '', fabricante: 'Scania', marca: 'Scania', modelo: 'R450', combustivel: 'Diesel', tipo: 'Cavalo', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' },
+      { id: 1004, tag: 'CNC05', placa: '', chassi: '', renavam: '', fabricante: 'Randon', marca: 'Randon', modelo: 'Tanque Criogênico', tipo: 'Carreta', proprietario: 'GNL Brasil Logística', operacao: 'Transporte GNL', unidade: 'MA', status: 'Ativo', dataCadastro: '2026-01-01' }
     ];
 
     const initialDocsDefault = [
@@ -2680,9 +2687,11 @@
       populateParadasLocalFilter();
       populateOperacaoFilters();
       populateMarcaFilters();
+      populateFabricanteFilters();
 
       const unidadeFilter = document.getElementById('pd-filter-unidade')?.value || 'TODAS';
       const operacaoFilter = document.getElementById('pd-filter-operacao')?.value || 'TODAS';
+      const fabricanteFilter = document.getElementById('pd-filter-fabricante')?.value || 'TODAS';
       const marcaFilter = document.getElementById('pd-filter-marca')?.value || 'TODAS';
       const tipoFilter = document.getElementById('pd-filter-tipo')?.value || 'TODOS';
       const statusFilter = document.getElementById('pd-filter-status')?.value || 'TODOS';
@@ -2694,6 +2703,7 @@
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
       if (unidadeFilter !== 'TODAS') list = list.filter(a => a.unidade === unidadeFilter);
       if (operacaoFilter !== 'TODAS') list = list.filter(a => a.operacao === operacaoFilter);
+      if (fabricanteFilter !== 'TODAS') list = list.filter(a => a.fabricante === fabricanteFilter);
       if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
       if (tagBusca) list = list.filter(a => (a.tag || '').toUpperCase().includes(tagBusca));
@@ -3477,6 +3487,7 @@
       document.getElementById('asset-placa').value = asset.placa || '';
       document.getElementById('asset-chassi').value = asset.chassi || '';
       document.getElementById('asset-renavam').value = asset.renavam || '';
+      document.getElementById('asset-fabricante').value = asset.fabricante || '';
       document.getElementById('asset-marca').value = asset.marca || '';
       document.getElementById('asset-modelo').value = asset.modelo || '';
       document.getElementById('asset-tipo').value = asset.tipo || 'Cavalo';
@@ -3523,6 +3534,7 @@
         placa: document.getElementById('asset-placa').value.toUpperCase().trim(),
         chassi: document.getElementById('asset-chassi').value.toUpperCase().trim(),
         renavam: document.getElementById('asset-renavam').value.trim(),
+        fabricante: document.getElementById('asset-fabricante').value.trim(),
         marca: document.getElementById('asset-marca').value.trim(),
         modelo: document.getElementById('asset-modelo').value.trim(),
         tipo: document.getElementById('asset-tipo').value,
@@ -3601,9 +3613,9 @@
 
     window.downloadAssetTemplate = function() {
       const wsData = [
-        ['TAG', 'Placa', 'Chassi', 'RENAVAM', 'Operação', 'Modelo', 'Marca', 'Tipo (opcional)', 'Unidade (opcional)'],
-        ['CV020', 'ABC1D23', '9BWZZZ377VT004251', '12345678901', 'Transporte GNL', 'R450', 'Scania', 'Cavalo', 'AM'],
-        ['CN010', 'DEF4G56', '9BWZZZ377VT004999', '98765432109', 'Transporte GNL', 'Tanque Criogênico', 'Randon', 'Carreta', 'MA']
+        ['TAG', 'Placa', 'Chassi', 'RENAVAM', 'Operação', 'Modelo', 'Fabricante', 'Marca', 'Tipo (opcional)', 'Unidade (opcional)'],
+        ['CV020', 'ABC1D23', '9BWZZZ377VT004251', '12345678901', 'Transporte GNL', 'R450', 'Scania', 'Scania', 'Cavalo', 'AM'],
+        ['CN010', 'DEF4G56', '9BWZZZ377VT004999', '98765432109', 'Transporte GNL', 'Tanque Criogênico', 'Randon', 'Randon', 'Carreta', 'MA']
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       const wb = XLSX.utils.book_new();
@@ -3624,6 +3636,7 @@
       renavam: ['renavam'],
       operacao: ['operacao', 'operacao do ativo', 'operacao ativo'],
       modelo: ['modelo'],
+      fabricante: ['fabricante'],
       marca: ['marca'],
       tipo: ['tipo', 'tipo de veiculo', 'tipo veiculo', 'tipo de ativo'],
       unidade: ['unidade', 'base', 'unidade base', 'unidade/base']
@@ -3650,6 +3663,7 @@
         renavam: findValue('renavam'),
         operacao: findValue('operacao'),
         modelo: findValue('modelo'),
+        fabricante: findValue('fabricante'),
         marca: findValue('marca'),
         tipo: findValue('tipo'),
         unidade: findValue('unidade').toUpperCase()
@@ -3747,6 +3761,7 @@
             <td class="p-2"><input value="${row.chassi}" oninput="updateImportField(${idx},'chassi',this.value)" class="w-24 border border-slate-200 rounded p-1 text-xs outline-none"></td>
             <td class="p-2"><input value="${row.renavam}" oninput="updateImportField(${idx},'renavam',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
             <td class="p-2"><input value="${row.operacao}" oninput="updateImportField(${idx},'operacao',this.value)" class="w-28 border border-slate-200 rounded p-1 text-xs outline-none"></td>
+            <td class="p-2"><input value="${row.fabricante || ''}" oninput="updateImportField(${idx},'fabricante',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
             <td class="p-2"><input value="${row.marca}" oninput="updateImportField(${idx},'marca',this.value)" class="w-20 border border-slate-200 rounded p-1 text-xs outline-none"></td>
             <td class="p-2"><input value="${row.modelo}" oninput="updateImportField(${idx},'modelo',this.value)" class="w-24 border border-slate-200 rounded p-1 text-xs outline-none"></td>
             <td class="p-2">
@@ -3766,7 +3781,7 @@
         `;
       }).join('');
 
-      tbody.innerHTML = rowsHtml || `<tr><td colspan="11" class="p-4 text-center text-slate-400 italic">Nenhuma linha para importar.</td></tr>`;
+      tbody.innerHTML = rowsHtml || `<tr><td colspan="12" class="p-4 text-center text-slate-400 italic">Nenhuma linha para importar.</td></tr>`;
       document.getElementById('import-summary-count').innerText =
         `${validCount} pronto(s) para importar · ${duplicateCount} duplicado(s) ignorado(s) · ${errorCount} com erro · ${removedCount} removido(s) manualmente`;
 
@@ -3789,6 +3804,7 @@
             existing.renavam = row.renavam || existing.renavam;
             existing.operacao = row.operacao || existing.operacao;
             existing.modelo = row.modelo || existing.modelo;
+            existing.fabricante = row.fabricante || existing.fabricante;
             existing.marca = row.marca || existing.marca;
             existing.tipo = row.tipo || existing.tipo;
             existing.unidade = row.unidade || existing.unidade;
@@ -3798,7 +3814,7 @@
           window.assets.push({
             id: Date.now() + Math.floor(Math.random() * 10000),
             tag: row.tag, placa: row.placa, chassi: row.chassi, renavam: row.renavam,
-            marca: row.marca, modelo: row.modelo, tipo: row.tipo, unidade: row.unidade,
+            fabricante: row.fabricante, marca: row.marca, modelo: row.modelo, tipo: row.tipo, unidade: row.unidade,
             proprietario: proprietarioPadrao, operacao: row.operacao,
             status: 'Ativo', dataCadastro: getTodayStr()
           });
@@ -4326,6 +4342,7 @@
     function getFilteredAvailabilityList() {
       const opFilter = document.getElementById('avail-filter-operacao')?.value || 'TODAS';
       const unitFilter = document.getElementById('avail-filter-unidade')?.value || 'TODAS';
+      const fabricanteFilter = document.getElementById('avail-filter-fabricante')?.value || 'TODAS';
       const marcaFilter = document.getElementById('avail-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('avail-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('avail-filter-tipo')?.value || 'TODOS';
@@ -4340,6 +4357,7 @@
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
       if (opFilter !== 'TODAS') list = list.filter(a => a.operacao === opFilter);
       if (unitFilter !== 'TODAS') list = list.filter(a => a.unidade === unitFilter);
+      if (fabricanteFilter !== 'TODAS') list = list.filter(a => a.fabricante === fabricanteFilter);
       if (marcaFilter !== 'TODAS') list = list.filter(a => a.marca === marcaFilter);
       if (modeloFilter !== 'TODOS') list = list.filter(a => a.modelo === modeloFilter);
       if (tipoFilter !== 'TODOS') list = list.filter(a => a.tipo === tipoFilter);
@@ -4360,6 +4378,7 @@
     window.renderAvailability = function() {
       if (!assetsLoaded) return;
       populateMarcaFilters();
+      populateFabricanteFilters();
       const { list, withStatus, filteredWithStatus, opFilter, startFilter, endFilter } = getFilteredAvailabilityList();
 
       const total = filteredWithStatus.length;
@@ -4493,6 +4512,17 @@
         const current = el.value;
         el.innerHTML = `<option value="TODAS">Todas Marcas</option>` + marcas.map(m => `<option value="${m}">${m}</option>`).join('');
         if (marcas.includes(current)) el.value = current;
+      });
+    }
+
+    function populateFabricanteFilters() {
+      const fabricantes = Array.from(new Set((window.assets || []).map(a => a.fabricante).filter(Boolean))).sort();
+      ['avail-filter-fabricante', 'evo-filter-fabricante', 'pd-filter-fabricante'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        el.innerHTML = `<option value="TODAS">Todos Fabricantes</option>` + fabricantes.map(f => `<option value="${f}">${f}</option>`).join('');
+        if (fabricantes.includes(current)) el.value = current;
       });
     }
 
@@ -4688,6 +4718,7 @@
           unidade: a.unidade,
           modelo: a.modelo,
           marca: a.marca,
+          fabricante: a.fabricante,
           tipo: a.tipo,
           status: current.status,
           tipoParada: current.event ? current.event.tipoParada : null,
@@ -4709,6 +4740,7 @@
     window.renderEvolutionChart = function() {
       const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
       const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const fabricanteFilter = document.getElementById('evo-filter-fabricante')?.value || 'TODAS';
       const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
@@ -4717,6 +4749,7 @@
       const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
 
       populateMarcaFilters();
+      populateFabricanteFilters();
       const marcaSel = document.getElementById('evo-filter-marca');
       if (marcaSel) { const cur = marcaSel.value; if (cur) marcaSel.value = cur; }
 
@@ -4749,6 +4782,7 @@
         let entries = window.dailySnapshots[date] || [];
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
         if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (fabricanteFilter !== 'TODAS') entries = entries.filter(e => e.fabricante === fabricanteFilter);
         if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
@@ -4797,13 +4831,14 @@
       window.evoBucketDatesMap = {};
       perDay.forEach(r => {
         const key = bucketKey(r);
-        if (!buckets[key]) buckets[key] = { total: 0, disp: 0, cavaloTotal: 0, cavaloDisp: 0, carretaTotal: 0, carretaDisp: 0 };
+        if (!buckets[key]) buckets[key] = { total: 0, disp: 0, cavaloTotal: 0, cavaloDisp: 0, carretaTotal: 0, carretaDisp: 0, days: 0 };
         buckets[key].total += r.total;
         buckets[key].disp += r.disp;
         buckets[key].cavaloTotal += r.cavaloTotal;
         buckets[key].cavaloDisp += r.cavaloDisp;
         buckets[key].carretaTotal += r.carretaTotal;
         buckets[key].carretaDisp += r.carretaDisp;
+        buckets[key].days += 1;
         if (!window.evoBucketDatesMap[key]) window.evoBucketDatesMap[key] = [];
         window.evoBucketDatesMap[key].push(r.date);
       });
@@ -4813,12 +4848,21 @@
       const pctData = bucketKeys.map(k => buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0);
       const cavaloPctData = bucketKeys.map(k => buckets[k].cavaloTotal > 0 ? Math.round((buckets[k].cavaloDisp / buckets[k].cavaloTotal) * 100) : null);
       const carretaPctData = bucketKeys.map(k => buckets[k].carretaTotal > 0 ? Math.round((buckets[k].carretaDisp / buckets[k].carretaTotal) * 100) : null);
-      const tableRows = bucketKeys.map((k, i) => ({
-        key: k, label: bucketLabel(k), total: buckets[k].total, disp: buckets[k].disp,
-        indisp: buckets[k].total - buckets[k].disp,
-        pct: buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0,
-        cavaloPct: cavaloPctData[i], carretaPct: carretaPctData[i]
-      }));
+      // Total/Disponíveis/Indisponíveis exibidos no período são a MÉDIA diária (quantidade real de ativos
+      // cadastrados na unidade/filtro), não a SOMA dos dias do período — somar inflava o "Total" (ex.: 5 dias
+      // x 96 ativos = 480) quando na verdade a frota tem ~96 ativos. O % de disponibilidade continua sendo
+      // calculado a partir da soma de disp/total de todos os dias (equivalente a média ponderada por dia).
+      const tableRows = bucketKeys.map((k, i) => {
+        const days = buckets[k].days || 1;
+        const total = Math.round(buckets[k].total / days);
+        const disp = Math.round(buckets[k].disp / days);
+        return {
+          key: k, label: bucketLabel(k), total, disp,
+          indisp: total - disp,
+          pct: buckets[k].total > 0 ? Math.round((buckets[k].disp / buckets[k].total) * 100) : 0,
+          cavaloPct: cavaloPctData[i], carretaPct: carretaPctData[i]
+        };
+      });
 
       // Meta da marca selecionada (se houver)
       const metaAtiva = marcaFilter !== 'TODAS' ? getMetaForMarca(marcaFilter) : null;
@@ -4948,6 +4992,7 @@
 
       const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
       const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const fabricanteFilter = document.getElementById('evo-filter-fabricante')?.value || 'TODAS';
       const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
@@ -4959,6 +5004,7 @@
         let entries = (window.dailySnapshots[date] || []).filter(e => e.status === 'Indisponivel');
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
         if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (fabricanteFilter !== 'TODAS') entries = entries.filter(e => e.fabricante === fabricanteFilter);
         if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
