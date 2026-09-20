@@ -755,8 +755,8 @@
       <div class="card-executive p-5">
         <div class="flex items-start justify-between flex-wrap gap-3 mb-1">
           <div>
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i> % Disponibilidade por Marca / Fabricante</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Usa os mesmos filtros e período (dia/semana/mês/ano) selecionados acima. Cor de acordo com a Meta de Disponibilidade de cada marca/fabricante (definida em Painel Diretoria): <span class="text-emerald-600 font-bold">verde</span> = dentro da meta, <span class="text-amber-500 font-bold">amarelo</span> = perto da meta, <span class="text-red-600 font-bold">vermelho</span> = muito abaixo da meta.</p>
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i> % Disponibilidade por Marca / Fabricante <span id="evo-group-period-label" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"></span></h3>
+            <p class="text-xs text-slate-500 mt-0.5">A disponibilidade mostrada é a do período do "Agrupar por Dia/Semana/Mês/Ano" acima: Dia = só o dia mais recente; Semana = semana atual (ou a selecionada); Mês/Ano = o mês/ano do dia mais recente — não é mais uma média de todo o histórico. Cor de acordo com a Meta de Disponibilidade de cada marca/fabricante (definida em Painel Diretoria): <span class="text-emerald-600 font-bold">verde</span> = dentro da meta, <span class="text-amber-500 font-bold">amarelo</span> = perto da meta, <span class="text-red-600 font-bold">vermelho</span> = muito abaixo da meta.</p>
           </div>
           <select id="evo-group-by" onchange="renderEvoGroupChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none whitespace-nowrap">
             <option value="marca">Agrupar por Marca</option>
@@ -2338,12 +2338,38 @@
 
     // Todas as escritas passam por aqui — cada chamada confirma sucesso/erro visivelmente, com nova
     // tentativa automática em caso de falha, para garantir que nenhuma alteração se perca silenciosamente.
-    // "saveToken" identifica esta chamada específica: se uma chamada mais nova começar antes desta terminar,
-    // esta versão antiga não deve mais "vencer a corrida" e sobrescrever o badge com um status desatualizado.
-    let latestSaveToken = 0;
+    //
+    // Duas proteções importantes:
+    // 1) DEBOUNCE (400ms): várias chamadas seguidas (ex.: vários re-renders/ações em sequência) são agrupadas
+    //    em UMA única gravação real, em vez de disparar uma gravação de 7 nós por chamada — reduz tráfego e
+    //    deixa o sistema mais rápido. Um "maxWait" de 2s garante que uma sequência contínua de pequenas
+    //    alterações não atrase o salvamento indefinidamente.
+    // 2) CONTADOR DE PENDÊNCIAS (em vez de "token" descartável): o badge só volta para "online" quando TODAS
+    //    as gravações em voo terminaram — antes, se uma gravação mais nova começasse antes de uma mais velha
+    //    terminar, a mais velha desistia de atualizar o badge (e a mais nova podia sofrer o mesmo, em cadeia),
+    //    deixando "Salvando..." preso para sempre mesmo com os dados já salvos com sucesso no banco.
+    let pendingSaveCount = 0;
+    let saveDebounceTimer = null;
+    let saveMaxWaitTimer = null;
+
     window.saveData = function(retry) {
-      const myToken = ++latestSaveToken;
+      if (retry) { performSave(true); return; }
       setSyncStatus('saving');
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(() => {
+        clearTimeout(saveMaxWaitTimer); saveMaxWaitTimer = null;
+        performSave(false);
+      }, 400);
+      if (!saveMaxWaitTimer) {
+        saveMaxWaitTimer = setTimeout(() => {
+          clearTimeout(saveDebounceTimer); saveMaxWaitTimer = null;
+          performSave(false);
+        }, 2000);
+      }
+    };
+
+    function performSave(retry) {
+      pendingSaveCount++;
       // Proteção contra perda de dados: um nó só é gravado depois de ter sido carregado da nuvem.
       // (Antes, uma gravação disparada cedo podia sobrescrever preventivas/documentos/histórico com listas vazias.)
       const writes = [];
@@ -2357,23 +2383,23 @@
 
       // Watchdog: se as escritas não confirmarem (sucesso OU erro) dentro de 5s, para de mostrar "Salvando..."
       // para sempre — assume falha (provável perda de conexão) e libera o usuário para continuar trabalhando,
-      // com nova tentativa automática. Sem isso, uma promessa do Firebase que nunca resolve travava o badge.
+      // com nova tentativa automática.
       const watchdog = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
 
       Promise.race([Promise.all(writes).then(() => 'ok'), watchdog]).then((result) => {
-        if (myToken !== latestSaveToken) return; // uma gravação mais recente já assumiu o status
+        pendingSaveCount = Math.max(0, pendingSaveCount - 1);
         if (result === 'timeout') {
-          console.warn('Salvamento demorou demais e foi considerado falho (watchdog de 20s).');
-          setSyncStatus('error');
+          console.warn('Salvamento demorou demais e foi considerado falho (watchdog de 5s).');
+          if (pendingSaveCount === 0) setSyncStatus('error');
           if (!retry) setTimeout(() => saveData(true), 2500);
           else showToast('Não foi possível confirmar o salvamento das últimas alterações. Verifique sua conexão — o sistema tentará salvar automaticamente assim que possível.', 'error');
-        } else {
+        } else if (pendingSaveCount === 0) {
           setSyncStatus('online');
         }
       }).catch((err) => {
-        if (myToken !== latestSaveToken) return;
+        pendingSaveCount = Math.max(0, pendingSaveCount - 1);
         console.error('Erro ao salvar dados:', err);
-        setSyncStatus('error');
+        if (pendingSaveCount === 0) setSyncStatus('error');
         if (!retry) {
           setTimeout(() => saveData(true), 2500);
         } else {
@@ -2381,7 +2407,7 @@
         }
       });
       maybeRunDailyBackup();
-    };
+    }
 
     // Backup diário completo (assets, eventos, docs, preventivas, usuários, histórico) em nó separado —
     // garante um ponto de restauração além da base "ao vivo", mantendo os últimos 45 dias.
@@ -3031,8 +3057,14 @@
       renderDashboardKPIs();
       renderAvailability();
       renderParadasDetalhado();
-      renderExecutiveCharts();
-      renderEvolutionChart();
+      // Evolução e Painel Diretoria fazem contas mais pesadas (percorrem todo o histórico de snapshots diários) —
+      // só recalculam aqui se a aba estiver realmente visível; ao trocar de aba, switchTab() já as recalcula
+      // na hora de entrar. Isso evita recalcular gráficos que ninguém está vendo a cada pequena alteração,
+      // deixando o sistema mais rápido no dia a dia.
+      const activeTabEl = document.querySelector('.tab-content.active');
+      const activeTab = activeTabEl ? activeTabEl.id.replace('tab-', '') : null;
+      if (!activeTab || activeTab === 'executive') renderExecutiveCharts();
+      if (!activeTab || activeTab === 'evolution') renderEvolutionChart();
       renderPlanejamento();
       renderProgRealizado();
       if (docsLoaded) { renderDocuments(); renderDocVencimentos(); }
@@ -3720,7 +3752,7 @@
       }
 
       saveData();
-      refreshAllAssetSelects();
+      renderAll();
       closeAssetModal();
     };
 
@@ -3730,7 +3762,7 @@
       asset.status = asset.status === 'Ativo' ? 'Inativo' : 'Ativo';
       addAuditLog(asset.unidade, 'Ativo', asset.tag, `Situação do ativo alterada para ${asset.status}`, getTodayStr(), asset.status);
       saveData();
-      refreshAllAssetSelects();
+      renderAll();
     };
 
     window.deleteAsset = function(id) {
@@ -3744,7 +3776,7 @@
         addAuditLog(asset.unidade, 'Ativo', asset.tag, 'Ativo removido do cadastro', getTodayStr(), 'Excluído');
         window.assets = window.assets.filter(a => String(a.id) !== String(id));
         saveData();
-        refreshAllAssetSelects();
+        renderAll();
       }
     };
 
@@ -3983,8 +4015,7 @@
 
       addAuditLog('TODAS', 'Ativo', 'CARGA DE DADOS', `Importação em lote via planilha: ${importados} ativo(s) cadastrado(s), ${atualizados} atualizado(s), ${ignorados} ignorado(s)`, getTodayStr(), 'Importado');
       saveData();
-      refreshAllAssetSelects();
-      renderAssets();
+      renderAll();
       closeImportModal();
       alert(`Importação concluída!\n\n${importados} ativo(s) novo(s) cadastrado(s)\n${atualizados} ativo(s) atualizado(s)\n${ignorados} linha(s) ignorada(s)`);
     };
@@ -4325,9 +4356,12 @@
 
       saveData();
       closeEventModal();
-      renderPlanejamento();
+      // Atualiza TODAS as telas que dependem de Gestão de Ativos — antes só atualizava Planejamento/Calendário/
+      // Documentos, então a parada recém-registrada não aparecia em Status, Disponibilidade, Painel Detalhado
+      // de Paradas nem Evolução até o usuário trocar de aba manualmente.
+      renderAll();
       renderCalendar();
-      renderDocuments();
+      renderDocCalendar();
     };
 
     // ===================== LIBERAR ATIVO (com data real, podendo ser retroativa) =====================
@@ -4441,9 +4475,10 @@
 
       closeLiberarModal();
       saveData();
-      renderPlanejamento();
+      // Atualiza TODAS as telas dependentes — a liberação precisa refletir imediatamente em Status,
+      // Disponibilidade, Painel Detalhado de Paradas e Evolução, não só em Planejamento/Calendário.
+      renderAll();
       renderCalendar();
-      renderEvolutionChart();
     };
 
     window.editOpenEvent = function(eventId) {
@@ -4480,6 +4515,7 @@
         addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `Atualização de dados da parada — ${evt.motivo}`, evt.inicio, evt.situacao);
         saveData();
         closeEventModal();
+        renderAll();
         document.getElementById('event-asset').disabled = false;
         form.onsubmit = window.saveEvent;
       };
@@ -5311,6 +5347,7 @@
       const combustivelFilter = document.getElementById('evo-filter-combustivel')?.value || 'TODOS';
       const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
       const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
+      const agrupamento = document.getElementById('evo-filter-agrupamento')?.value || 'dia';
 
       // Marcas/Fabricantes válidos = os que existem em ativos cadastrados HOJE (não apenas o que sobrou em
       // snapshots antigos). Respeita TODOS os filtros já ativos na tela (Unidade global/local, Combustível,
@@ -5324,8 +5361,39 @@
       if (marcaFilter !== 'TODAS') assetsForValidGroups = assetsForValidGroups.filter(a => a.marca === marcaFilter);
       const validGroups = new Set(assetsForValidGroups.map(a => groupBy === 'fabricante' ? a.fabricante : a.marca).filter(Boolean));
 
-      let dates = Object.keys(window.dailySnapshots || {}).sort();
-      if (semanaFiltro !== 'TODAS') dates = dates.filter(d => getISOWeekInfo(d).weekKey === semanaFiltro);
+      // O período do gráfico acompanha o "Agrupar por Dia/Semana/Mês/Ano" da Evolução — não soma mais o
+      // histórico inteiro. "Todas as Semanas" filtra primeiro; a partir daí, o agrupamento decide a janela:
+      // Dia = só o dia mais recente disponível; Semana = a semana mais recente (ou a selecionada); Mês = o
+      // mês do dia mais recente; Ano = o ano do dia mais recente. Assim "% por Marca/Fabricante" sempre
+      // mostra a disponibilidade REAL daquele período, e não uma média de meses acumulados.
+      let baseDates = Object.keys(window.dailySnapshots || {}).sort();
+      if (semanaFiltro !== 'TODAS') baseDates = baseDates.filter(d => getISOWeekInfo(d).weekKey === semanaFiltro);
+
+      let dates = [];
+      let periodLabel = '';
+      if (baseDates.length > 0) {
+        const lastDate = baseDates[baseDates.length - 1];
+        if (agrupamento === 'dia') {
+          dates = [lastDate];
+          periodLabel = `Dia ${formatDateBR(lastDate)}`;
+        } else if (agrupamento === 'mes') {
+          const monthKey = lastDate.slice(0, 7);
+          dates = baseDates.filter(d => d.slice(0, 7) === monthKey);
+          const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+          const [yy, mm] = monthKey.split('-');
+          periodLabel = `${monthNames[parseInt(mm, 10) - 1]}/${yy}`;
+        } else if (agrupamento === 'ano') {
+          const yearKey = lastDate.slice(0, 4);
+          dates = baseDates.filter(d => d.slice(0, 4) === yearKey);
+          periodLabel = `Ano ${yearKey}`;
+        } else { // semana (padrão)
+          const wk = getISOWeekInfo(lastDate);
+          dates = baseDates.filter(d => getISOWeekInfo(d).weekKey === wk.weekKey);
+          periodLabel = wk.label;
+        }
+      }
+      const periodLabelEl = document.getElementById('evo-group-period-label');
+      if (periodLabelEl) periodLabelEl.innerText = periodLabel ? `Período: ${periodLabel}` : '';
 
       const totals = {};
       dates.forEach(date => {
@@ -5697,6 +5765,10 @@
       saveData();
       closeDocModal();
       document.getElementById('form-doc').reset();
+      renderDocuments();
+      renderDocCalendar();
+      renderDocVencimentos();
+      renderDivergenciasPanel();
     };
 
     window.toggleDocStatus = function(id, newStatus) {
@@ -5707,6 +5779,10 @@
         if (newStatus !== 'Realizado') doc.dataRealizada = null;
         addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} - Status alterado`, doc.expDate, newStatus);
         saveData();
+        renderDocuments();
+        renderDocCalendar();
+        renderDocVencimentos();
+        renderDivergenciasPanel();
       }
     };
 
@@ -5718,6 +5794,10 @@
         }
         window.fleetDocs = window.fleetDocs.filter(d => d.id !== id);
         saveData();
+        renderDocuments();
+        renderDocCalendar();
+        renderDocVencimentos();
+        renderDivergenciasPanel();
       }
     };
 
@@ -6168,6 +6248,10 @@
       saveData();
       closeMaintModal();
       document.getElementById('form-maint').reset();
+      renderCalendar();
+      renderPlanejamento();
+      renderProgRealizado();
+      renderDivergenciasPanel();
     };
 
     window.toggleStatus = function(id, newStatus) {
@@ -6178,6 +6262,10 @@
         if (newStatus !== 'Realizado') item.dataRealizada = null;
         addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status`, item.date, newStatus);
         saveData();
+        renderCalendar();
+        renderPlanejamento();
+        renderProgRealizado();
+        renderDivergenciasPanel();
       }
     };
 
@@ -6189,6 +6277,10 @@
         }
         window.maintenanceSchedule = window.maintenanceSchedule.filter(m => m.id !== id);
         saveData();
+        renderCalendar();
+        renderPlanejamento();
+        renderProgRealizado();
+        renderDivergenciasPanel();
       }
     };
 
