@@ -738,6 +738,7 @@
             <option value="Cavalo">Cavalo</option>
             <option value="Carreta">Carreta</option>
           </select>
+          <select id="evo-filter-combustivel" onchange="renderEvolutionChart()" class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos Combustíveis</option></select>
           <input id="evo-filter-tag" oninput="renderEvolutionChart()" placeholder="Filtrar por TAG..." class="flex-1 min-w-[140px] border border-slate-300 rounded-lg p-2 text-xs outline-none">
           <label class="flex items-center gap-1.5 font-bold text-purple-700 text-xs border border-purple-300 bg-purple-50 rounded-lg px-3 py-2 cursor-pointer flex-1 min-w-[200px]">
             <input type="checkbox" class="global-ignorar-reforma" onchange="toggleIgnorarReforma(this.checked)"> Desconsiderar Reforma no cálculo (filtro global)
@@ -749,6 +750,23 @@
       <div class="card-executive p-5">
         <div class="h-80"><canvas id="chartEvolution"></canvas></div>
       </div>
+
+      <!-- % DISPONIBILIDADE POR MARCA/FABRICANTE (segue os mesmos filtros e período da Evolução acima) -->
+      <div class="card-executive p-5">
+        <div class="flex items-start justify-between flex-wrap gap-3 mb-1">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i> % Disponibilidade por Marca / Fabricante</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Usa os mesmos filtros e período (dia/semana/mês/ano) selecionados acima. Cor de acordo com a Meta de Disponibilidade de cada marca/fabricante (definida em Painel Diretoria): <span class="text-emerald-600 font-bold">verde</span> = dentro da meta, <span class="text-amber-500 font-bold">amarelo</span> = perto da meta, <span class="text-red-600 font-bold">vermelho</span> = muito abaixo da meta.</p>
+          </div>
+          <select id="evo-group-by" onchange="renderEvoGroupChart()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none whitespace-nowrap">
+            <option value="marca">Agrupar por Marca</option>
+            <option value="fabricante">Agrupar por Fabricante</option>
+          </select>
+        </div>
+        <div class="h-72 mt-3"><canvas id="chartEvoGroup"></canvas></div>
+        <p id="evo-group-empty" class="hidden text-center text-xs text-slate-400 italic py-6">Nenhum dado disponível para esse agrupamento no período/filtros selecionados.</p>
+      </div>
+
       <div class="card-executive overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
@@ -1743,6 +1761,7 @@
         <input type="hidden" id="event-editing-id" value="">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Ativo</label>
+          <input type="text" id="event-asset-search" oninput="filterAssetSelectOptions('event-asset-search','event-asset')" placeholder="🔎 Buscar TAG ou modelo..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none mb-1.5 focus:ring-2 focus:ring-emerald-500">
           <select id="event-asset" required onchange="onEventAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -1826,6 +1845,7 @@
       <form id="form-doc" onsubmit="saveDocument(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Ativo (TAG)</label>
+          <input type="text" id="doc-tag-search" oninput="filterAssetSelectOptions('doc-tag-search','doc-tag')" placeholder="🔎 Buscar TAG ou modelo..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none mb-1.5 focus:ring-2 focus:ring-emerald-500">
           <select id="doc-tag" required onchange="onDocAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></select>
         </div>
         <div>
@@ -1873,6 +1893,34 @@
     </div>
   </div>
 
+  <!-- MODAL LIBERAR ATIVO — pergunta a data real de liberação, permitindo retroagir (ex.: ativo liberado no
+       sábado/domingo mas só registrado na segunda), para a disponibilidade refletir a realidade. -->
+  <div id="modal-liberar" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Liberar Ativo <span id="liberar-tag" class="text-emerald-700"></span></h3>
+        <button onclick="closeLiberarModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="liberar-event-id" value="">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-2">O ativo foi liberado hoje (<span id="liberar-hoje-label"></span>)?</label>
+        <div class="flex gap-2">
+          <button type="button" id="liberar-btn-hoje" onclick="setLiberarModo('hoje')" class="flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition"></button>
+          <button type="button" id="liberar-btn-outra" onclick="setLiberarModo('outra')" class="flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition"></button>
+        </div>
+      </div>
+      <div id="liberar-data-wrap" class="hidden">
+        <label class="block text-xs font-bold text-slate-700 mb-1">Data real da liberação</label>
+        <input type="date" id="liberar-data-custom" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        <p class="text-[11px] text-slate-400 mt-1">Ex.: liberado no sábado ou domingo, mesmo sem ninguém ter registrado naquele dia — isso corrige a disponibilidade retroativamente na Evolução, Disponibilidade e no Painel Detalhado de Paradas.</p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="closeLiberarModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="button" onclick="confirmLiberarEvento()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar Liberação</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL MANUTENÇÃO -->
   <div id="modal-maint" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
@@ -1883,6 +1931,7 @@
       <form id="form-maint" onsubmit="saveMaintenance(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Ativo (TAG)</label>
+          <input type="text" id="maint-tag-search" oninput="filterAssetSelectOptions('maint-tag-search','maint-tag')" placeholder="🔎 Buscar TAG ou modelo..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none mb-1.5 focus:ring-2 focus:ring-emerald-500">
           <select id="maint-tag" required onchange="onMaintAssetChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></select>
         </div>
         <div>
@@ -1951,7 +2000,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
-              <tr><th class="p-2">TAG</th><th class="p-2">Operação</th><th class="p-2">Unidade</th><th class="p-2">Tipo de Parada</th><th class="p-2">Motivo</th><th class="p-2">Dias no Período</th></tr>
+              <tr><th class="p-2">TAG</th><th class="p-2">Operação</th><th class="p-2">Unidade</th><th class="p-2">Tipo de Parada</th><th class="p-2">Motivo</th><th class="p-2">Data da Parada</th><th class="p-2">Dias Parado</th><th class="p-2">Liberado?</th><th class="p-2">Previsão de Liberação</th></tr>
             </thead>
             <tbody id="evo-drilldown-assets-tbody" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -2289,7 +2338,11 @@
 
     // Todas as escritas passam por aqui — cada chamada confirma sucesso/erro visivelmente, com nova
     // tentativa automática em caso de falha, para garantir que nenhuma alteração se perca silenciosamente.
+    // "saveToken" identifica esta chamada específica: se uma chamada mais nova começar antes desta terminar,
+    // esta versão antiga não deve mais "vencer a corrida" e sobrescrever o badge com um status desatualizado.
+    let latestSaveToken = 0;
     window.saveData = function(retry) {
+      const myToken = ++latestSaveToken;
       setSyncStatus('saving');
       // Proteção contra perda de dados: um nó só é gravado depois de ter sido carregado da nuvem.
       // (Antes, uma gravação disparada cedo podia sobrescrever preventivas/documentos/histórico com listas vazias.)
@@ -2301,9 +2354,24 @@
       if (docsLoaded) writes.push(set(ref(db, 'fleetDocs'), window.fleetDocs || []));
       if (maintLoaded) writes.push(set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []));
       if (auditLoaded) writes.push(set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []));
-      Promise.all(writes).then(() => {
-        setSyncStatus('online');
+
+      // Watchdog: se as escritas não confirmarem (sucesso OU erro) dentro de 5s, para de mostrar "Salvando..."
+      // para sempre — assume falha (provável perda de conexão) e libera o usuário para continuar trabalhando,
+      // com nova tentativa automática. Sem isso, uma promessa do Firebase que nunca resolve travava o badge.
+      const watchdog = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
+
+      Promise.race([Promise.all(writes).then(() => 'ok'), watchdog]).then((result) => {
+        if (myToken !== latestSaveToken) return; // uma gravação mais recente já assumiu o status
+        if (result === 'timeout') {
+          console.warn('Salvamento demorou demais e foi considerado falho (watchdog de 20s).');
+          setSyncStatus('error');
+          if (!retry) setTimeout(() => saveData(true), 2500);
+          else showToast('Não foi possível confirmar o salvamento das últimas alterações. Verifique sua conexão — o sistema tentará salvar automaticamente assim que possível.', 'error');
+        } else {
+          setSyncStatus('online');
+        }
       }).catch((err) => {
+        if (myToken !== latestSaveToken) return;
         console.error('Erro ao salvar dados:', err);
         setSyncStatus('error');
         if (!retry) {
@@ -2346,7 +2414,8 @@
         maintenanceSchedule: window.maintenanceSchedule || [],
         dailySnapshots: window.dailySnapshots || {},
         globalAuditHistory: window.globalAuditHistory || [],
-        metasMarca: window.metasMarca || {}
+        metasMarca: window.metasMarca || {},
+        metasFabricante: window.metasFabricante || {}
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -2377,6 +2446,7 @@
           if (data.dailySnapshots) window.dailySnapshots = data.dailySnapshots;
           if (data.globalAuditHistory) window.globalAuditHistory = data.globalAuditHistory;
           if (data.metasMarca) window.metasMarca = data.metasMarca;
+          if (data.metasFabricante) window.metasFabricante = data.metasFabricante;
           addAuditLog('TODAS', 'Ativo', '-', `Backup completo importado a partir de arquivo (${file.name})`, getTodayStr(), 'Importado');
           saveData();
           refreshAllAssetSelects();
@@ -2452,7 +2522,11 @@
     window.getMetaForMarca = function(marca) {
       if (!marca) return null;
       const meta = window.metasMarca ? window.metasMarca[marca] : undefined;
-      return typeof meta === 'number' ? meta : null;
+      if (typeof meta === 'number') return meta;
+      // Sem meta própria de Marca: usa a meta do Fabricante de mesmo nome, se existir (ex.: "Scania" costuma
+      // ser marca e fabricante ao mesmo tempo) — assim as duas telas de meta "se comunicam".
+      const metaFab = window.metasFabricante ? window.metasFabricante[marca] : undefined;
+      return typeof metaFab === 'number' ? metaFab : null;
     };
 
     window.saveMetaMarca = function(marca, inputId) {
@@ -2462,6 +2536,41 @@
       window.metasMarca[marca] = value;
       saveMetasMarcaToDb();
       addAuditLog('TODAS', 'Ativo', marca, `Meta de disponibilidade da marca ${marca} definida em ${value}%`, getTodayStr(), 'Meta Atualizada');
+    };
+
+    // ===================== METAS DE DISPONIBILIDADE POR FABRICANTE =====================
+    window.metasFabricante = {};
+    let metasFabricanteLoaded = false;
+
+    function syncMetasFabricante() {
+      onValue(ref(db, 'metasFabricante'), (snapshot) => {
+        const data = snapshot.val();
+        window.metasFabricante = data !== null ? data : {};
+        metasFabricanteLoaded = true;
+        renderEvoGroupChart();
+      });
+    }
+
+    function saveMetasFabricanteToDb() {
+      set(ref(db, 'metasFabricante'), window.metasFabricante || {});
+    }
+
+    window.getMetaForFabricante = function(fabricante) {
+      if (!fabricante) return null;
+      const meta = window.metasFabricante ? window.metasFabricante[fabricante] : undefined;
+      if (typeof meta === 'number') return meta;
+      // Sem meta própria de Fabricante: usa a meta da Marca de mesmo nome, se existir.
+      const metaMarca = window.metasMarca ? window.metasMarca[fabricante] : undefined;
+      return typeof metaMarca === 'number' ? metaMarca : null;
+    };
+
+    window.saveMetaFabricante = function(fabricante, inputId) {
+      const value = parseFloat(document.getElementById(inputId).value);
+      if (isNaN(value) || value < 0 || value > 100) { alert('Informe uma meta válida entre 0 e 100.'); return; }
+      if (!window.metasFabricante) window.metasFabricante = {};
+      window.metasFabricante[fabricante] = value;
+      saveMetasFabricanteToDb();
+      addAuditLog('TODAS', 'Ativo', fabricante, `Meta de disponibilidade do fabricante ${fabricante} definida em ${value}%`, getTodayStr(), 'Meta Atualizada');
     };
 
     window.applyRolePermissions = function(funcao, userObj) {
@@ -2916,6 +3025,7 @@
 
     window.renderAll = function() {
       if (!assetsLoaded) return;
+      refreshAllAssetSelects();
       renderAssets();
       renderStatusTable();
       renderDashboardKPIs();
@@ -2981,6 +3091,17 @@
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
+    };
+
+    // Soma (ou subtrai, com n negativo) dias a uma data no formato "YYYY-MM-DD", retornando no mesmo formato.
+    window.addDaysToDateStr = function(dateStr, n) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      date.setDate(date.getDate() + n);
+      const yy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yy}-${mm}-${dd}`;
     };
 
     window.calculateDaysRemaining = function(targetDateStr) {
@@ -3363,14 +3484,41 @@
       populateMarcaFilters();
     }
 
+    // Preenche o select de ativo destes 3 formulários (Registrar Parada, Documentação, Agendar Preventiva).
+    // Quando o filtro global de Unidade (topo da página) está travado numa unidade específica (ex.: Parnaíba - MA),
+    // só os ativos DAQUELA unidade aparecem — evita registrar parada/preventiva/documento na frota errada.
     function populateAssetSelect(selectId, activeOnly) {
       const el = document.getElementById(selectId);
       if (!el) return;
       const currentVal = el.value;
-      const list = activeOnly ? getActiveAssets() : (window.assets || []);
+      let list = activeOnly ? getActiveAssets() : (window.assets || []);
+      if (window.selectedUnit && window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
+      list = list.slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
       el.innerHTML = list.map(a => `<option value="${a.id}">${a.tag} — ${a.modelo || a.tipo} (${a.unidade})</option>`).join('');
       if (currentVal && list.some(a => String(a.id) === String(currentVal))) el.value = currentVal;
+      // Reaplica o filtro de busca (se houver texto digitado na caixa de pesquisa deste select)
+      const searchEl = document.getElementById(selectId + '-search');
+      if (searchEl && searchEl.value) window.filterAssetSelectOptions(selectId + '-search', selectId);
     }
+
+    // Filtro de busca por TAG/modelo nos selects de ativo (Registrar Parada, Documentação, Agendar Preventiva).
+    // Esconde (sem remover) as opções que não batem com o texto digitado, mantendo o <select> nativo intacto.
+    window.filterAssetSelectOptions = function(searchInputId, selectId) {
+      const term = (document.getElementById(searchInputId)?.value || '').trim().toUpperCase();
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      let firstVisible = null;
+      Array.from(select.options).forEach(opt => {
+        const match = !term || opt.text.toUpperCase().includes(term);
+        opt.hidden = !match;
+        if (match && firstVisible === null) firstVisible = opt;
+      });
+      // Se a opção selecionada ficou escondida pela busca, seleciona automaticamente a primeira visível
+      if (select.selectedOptions.length && select.selectedOptions[0].hidden && firstVisible) {
+        select.value = firstVisible.value;
+        select.dispatchEvent(new Event('change'));
+      }
+    };
 
     function populateOperacaoFilters() {
       const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
@@ -3505,6 +3653,8 @@
       document.getElementById('form-event').reset();
       document.getElementById('event-editing-id').value = '';
       document.getElementById('modal-event-title').innerText = 'Registrar Parada / Evento';
+      const eventSearch = document.getElementById('event-asset-search');
+      if (eventSearch) eventSearch.value = '';
       populateAssetSelect('event-asset', true);
       document.getElementById('event-inicio').value = getTodayStr();
       document.getElementById('modal-event').classList.replace('hidden', 'flex');
@@ -3512,11 +3662,15 @@
     window.closeEventModal = function() { window.pendingEventLink = null; document.getElementById('modal-event').classList.replace('flex', 'hidden'); };
 
     window.openDocModal = function() {
+      const docSearch = document.getElementById('doc-tag-search');
+      if (docSearch) docSearch.value = '';
       populateAssetSelect('doc-tag', true);
       document.getElementById('modal-doc').classList.replace('hidden', 'flex');
     };
     window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
     window.openMaintModal = function() {
+      const maintSearch = document.getElementById('maint-tag-search');
+      if (maintSearch) maintSearch.value = '';
       populateAssetSelect('maint-tag', true);
       document.getElementById('modal-maint').classList.replace('hidden', 'flex');
     };
@@ -4176,25 +4330,120 @@
       renderDocuments();
     };
 
-    window.liberarEvento = function(eventId) {
+    // ===================== LIBERAR ATIVO (com data real, podendo ser retroativa) =====================
+    // Pergunta se a liberação foi HOJE ou em outra data (ex.: sábado/domingo sem ninguém ter aberto o
+    // sistema). A data escolhida vira o "fim" do evento em Gestão de Ativos — a mesma base usada por
+    // Disponibilidade e Painel Detalhado de Paradas (calculados ao vivo a partir dos eventos, então já
+    // refletem a correção automaticamente). Para a Evolução (que usa snapshots diários imutáveis), os
+    // snapshots já existentes entre a data de liberação e hoje são corrigidos pontualmente para esse
+    // ativo, garantindo disponibilidade real também no histórico dia a dia.
+    window.openLiberarModal = function(eventId) {
       const evt = (window.assetEvents || []).find(ev => String(ev.id) === String(eventId));
       if (!evt) return;
-      if (!confirm(`Confirmar liberação do ativo ${evt.tag}? O evento será encerrado automaticamente.`)) return;
-      evt.fim = getTodayStr();
+      document.getElementById('liberar-event-id').value = eventId;
+      document.getElementById('liberar-tag').innerText = evt.tag;
+      document.getElementById('liberar-hoje-label').innerText = formatDateBR(getTodayStr());
+      document.getElementById('liberar-data-custom').max = getTodayStr();
+      document.getElementById('liberar-data-custom').min = evt.inicio || '';
+      document.getElementById('liberar-data-custom').value = '';
+      setLiberarModo('hoje');
+      document.getElementById('modal-liberar').classList.replace('hidden', 'flex');
+    };
+
+    window.closeLiberarModal = function() {
+      document.getElementById('modal-liberar').classList.replace('flex', 'hidden');
+    };
+
+    window.setLiberarModo = function(modo) {
+      window.liberarModoAtual = modo;
+      const btnHoje = document.getElementById('liberar-btn-hoje');
+      const btnOutra = document.getElementById('liberar-btn-outra');
+      const wrap = document.getElementById('liberar-data-wrap');
+      btnHoje.innerText = 'Sim, hoje';
+      btnOutra.innerText = 'Não, outra data';
+      if (modo === 'hoje') {
+        btnHoje.className = 'flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition bg-emerald-600 text-white border-emerald-600';
+        btnOutra.className = 'flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
+        wrap.classList.add('hidden');
+      } else {
+        btnOutra.className = 'flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition bg-amber-500 text-white border-amber-500';
+        btnHoje.className = 'flex-1 px-3 py-2 rounded-lg text-xs font-bold border transition bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
+        wrap.classList.remove('hidden');
+      }
+    };
+
+    // Corrige a entrada de UM ativo em snapshots diários já existentes entre "fromExclusive" (exclusive) e
+    // "toInclusive" (inclusive), recalculando o status real a partir dos eventos — usado só na liberação
+    // retroativa, para não deixar dias já "fechados" com um status que não aconteceu de fato.
+    function reconcileSnapshotsForAsset(asset, fromExclusive, toInclusive) {
+      if (!window.dailySnapshots || !fromExclusive || !toInclusive) return 0;
+      let corrigidos = 0;
+      let d = addDaysToDateStr(fromExclusive, 1);
+      while (d <= toInclusive) {
+        if (window.dailySnapshots[d]) {
+          const info = window.getAssetStatusInRange(asset.id, d, d);
+          const correctedEntry = {
+            assetId: asset.id, tag: asset.tag, operacao: asset.operacao, unidade: asset.unidade, modelo: asset.modelo,
+            marca: asset.marca, fabricante: asset.fabricante, tipo: asset.tipo, combustivel: asset.combustivel,
+            status: info.status,
+            tipoParada: info.event ? info.event.tipoParada : null,
+            motivo: info.event ? info.event.motivo : null,
+            tempoParado: info.event ? calcDiasParado(info.event.inicio, info.event.fim || d) : 0
+          };
+          const idx = window.dailySnapshots[d].findIndex(e => String(e.assetId) === String(asset.id));
+          if (idx >= 0) window.dailySnapshots[d][idx] = correctedEntry;
+          else window.dailySnapshots[d].push(correctedEntry);
+          corrigidos++;
+        }
+        d = addDaysToDateStr(d, 1);
+      }
+      return corrigidos;
+    }
+
+    window.confirmLiberarEvento = function() {
+      const eventId = document.getElementById('liberar-event-id').value;
+      const evt = (window.assetEvents || []).find(ev => String(ev.id) === String(eventId));
+      if (!evt) { closeLiberarModal(); return; }
+
+      const modo = window.liberarModoAtual || 'hoje';
+      let dataLiberacao = getTodayStr();
+      if (modo === 'outra') {
+        const custom = document.getElementById('liberar-data-custom').value;
+        if (!custom) { alert('Informe a data real em que o ativo foi liberado.'); return; }
+        if (custom > getTodayStr()) { alert('A data de liberação não pode ser no futuro.'); return; }
+        if (evt.inicio && custom < evt.inicio) { alert('A data de liberação não pode ser antes do início da parada (' + formatDateBR(evt.inicio) + ').'); return; }
+        dataLiberacao = custom;
+      }
+
+      evt.fim = dataLiberacao;
       evt.status = 'Encerrado';
       evt.situacao = 'Concluído';
       evt.diasParado = calcDiasParado(evt.inicio, evt.fim);
-      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado`, evt.fim, 'Encerrado', evt.fim);
+      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado${dataLiberacao !== getTodayStr() ? ` — data informada retroativamente: ${formatDateBR(dataLiberacao)}` : ''}`, evt.fim, 'Encerrado', evt.fim);
+
+      // Se a liberação foi retroativa, corrige os snapshots diários já existentes entre a data de liberação e
+      // hoje, para esse ativo — assim a Evolução também reflete a disponibilidade real, não apenas
+      // Disponibilidade/Paradas (que já são calculadas ao vivo a partir do evento).
+      let diasCorrigidos = 0;
+      if (dataLiberacao < getTodayStr()) {
+        const assetLive = getAssetByTag(evt.tag);
+        if (assetLive) diasCorrigidos = reconcileSnapshotsForAsset(assetLive, dataLiberacao, getTodayStr());
+      }
 
       // Comunicação com Planejamento: confirma automaticamente preventivas cuja data caiu dentro desta parada real
       const confirmados = autoConfirmarProgramacoesPorEvento(evt);
       if (confirmados.length > 0) {
         showToast(`${evt.tag}: ${confirmados.length} programação(ões) (preventiva/documento) confirmada(s) automaticamente como Realizada(s), com base nesta parada real.`, 'success');
       }
+      if (diasCorrigidos > 0) {
+        showToast(`${evt.tag}: liberado em ${formatDateBR(dataLiberacao)}. ${diasCorrigidos} dia(s) de histórico já registrado(s) foram corrigidos na Evolução para refletir a disponibilidade real.`, 'success');
+      }
 
+      closeLiberarModal();
       saveData();
       renderPlanejamento();
       renderCalendar();
+      renderEvolutionChart();
     };
 
     window.editOpenEvent = function(eventId) {
@@ -4328,7 +4577,7 @@
             <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
               ${isIndisp
                 ? `<button onclick="editOpenEvent(${evt.id})" class="text-slate-400 hover:text-blue-600 transition" title="Atualizar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                   <button onclick="liberarEvento(${evt.id})" class="text-[10px] font-black px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition" title="Liberar">Liberar</button>`
+                   <button onclick="openLiberarModal(${evt.id})" class="text-[10px] font-black px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition" title="Liberar">Liberar</button>`
                 : `<span class="text-[10px] text-slate-400 italic">Operacional</span>`}
               <button onclick="openAssetHistory(${a.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Histórico"><i data-lucide="history" class="w-4 h-4"></i></button>
             </td>
@@ -4526,6 +4775,19 @@
       });
     }
 
+    // Filtro de Combustível — usado apenas na Evolução (e, por consequência, no gráfico de Marca/Fabricante,
+    // que lê os mesmos filtros da tela de Evolução).
+    function populateCombustivelFilters() {
+      const combustiveis = Array.from(new Set((window.assets || []).map(a => a.combustivel).filter(Boolean))).sort();
+      ['evo-filter-combustivel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        el.innerHTML = `<option value="TODOS">Todos Combustíveis</option>` + combustiveis.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (combustiveis.includes(current)) el.value = current;
+      });
+    }
+
     // ===================== METAS DE DISPONIBILIDADE POR MARCA: RENDER =====================
     window.renderMetasMarcaPanel = function(startFilter, endFilter) {
       if (!assetsLoaded || !metasLoaded) return;
@@ -4701,13 +4963,45 @@
       runDailySnapshotIfNeeded(false);
     }
 
+    // Snapshot diário — imutável uma vez criado. Além de fechar o dia de hoje, preenche retroativamente
+    // qualquer dia sem snapshot entre o último registrado e ontem (ex.: ninguém abriu o sistema no fim de
+    // semana). Para os dias retroativos, reconstrói o status real de cada ativo NAQUELE dia a partir dos
+    // eventos de Gestão de Ativos (início/fim) — não copia o status de hoje — para nunca ficar sem dado
+    // no histórico e, ao mesmo tempo, nunca inventar um status que o ativo não teve de fato.
     window.runDailySnapshotIfNeeded = function(force) {
       const today = getTodayStr();
-      if (!force && window.snapshotMeta && window.snapshotMeta.lastDate === today) return;
-      if (!force && window.dailySnapshots && window.dailySnapshots[today]) return;
+      let changedByBackfill = false;
 
-      // Snapshot é IMUTÁVEL: uma vez criado para uma data, nunca é sobrescrito (exceto forçado manualmente pelo operador)
-      if (window.dailySnapshots && window.dailySnapshots[today] && !force) return;
+      const lastDate = window.snapshotMeta && window.snapshotMeta.lastDate;
+      if (lastDate && lastDate < today) {
+        let d = addDaysToDateStr(lastDate, 1);
+        while (d < today) {
+          if (!window.dailySnapshots || !window.dailySnapshots[d]) {
+            const entries = getActiveAssets().map(a => {
+              const info = window.getAssetStatusInRange(a.id, d, d);
+              return {
+                assetId: a.id, tag: a.tag, operacao: a.operacao, unidade: a.unidade, modelo: a.modelo,
+                marca: a.marca, fabricante: a.fabricante, tipo: a.tipo, combustivel: a.combustivel,
+                status: info.status,
+                tipoParada: info.event ? info.event.tipoParada : null,
+                motivo: info.event ? info.event.motivo : null,
+                tempoParado: info.event ? calcDiasParado(info.event.inicio, info.event.fim || d) : 0
+              };
+            });
+            if (!window.dailySnapshots) window.dailySnapshots = {};
+            window.dailySnapshots[d] = entries;
+            changedByBackfill = true;
+          }
+          d = addDaysToDateStr(d, 1);
+        }
+      }
+
+      const alreadyHasToday = window.dailySnapshots && window.dailySnapshots[today];
+      if (!force && (lastDate === today || alreadyHasToday)) {
+        // Nada novo para hoje, mas se o backfill preencheu dias retroativos, ainda precisa salvar/atualizar a tela
+        if (changedByBackfill) { saveData(); renderEvolutionChart(); renderExecutiveCharts(); }
+        return;
+      }
 
       const entries = getActiveAssets().map(a => {
         const current = getAssetCurrentStatus(a.id);
@@ -4720,6 +5014,7 @@
           marca: a.marca,
           fabricante: a.fabricante,
           tipo: a.tipo,
+          combustivel: a.combustivel,
           status: current.status,
           tipoParada: current.event ? current.event.tipoParada : null,
           motivo: current.event ? current.event.motivo : null,
@@ -4744,12 +5039,14 @@
       const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const combustivelFilter = document.getElementById('evo-filter-combustivel')?.value || 'TODOS';
       const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
       const agrupamento = document.getElementById('evo-filter-agrupamento')?.value || 'dia';
       const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
 
       populateMarcaFilters();
       populateFabricanteFilters();
+      populateCombustivelFilters();
       const marcaSel = document.getElementById('evo-filter-marca');
       if (marcaSel) { const cur = marcaSel.value; if (cur) marcaSel.value = cur; }
 
@@ -4781,10 +5078,13 @@
       dates.forEach(date => {
         let entries = window.dailySnapshots[date] || [];
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        // Filtro global de Unidade (topo da página) + filtro local de Unidade da Evolução — os dois se aplicam.
+        if (window.selectedUnit && window.selectedUnit !== 'TODAS') entries = entries.filter(e => e.unidade === window.selectedUnit);
         if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
         if (fabricanteFilter !== 'TODAS') entries = entries.filter(e => e.fabricante === fabricanteFilter);
         if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
+        if (combustivelFilter !== 'TODOS') entries = entries.filter(e => e.combustivel === combustivelFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
         // "Desconsiderar Reforma" (filtro global): remove do total os ativos que estavam parados por Reforma naquele dia
         if (window.ignorarReforma) entries = entries.filter(e => !(e.status === 'Indisponivel' && e.tipoParada === 'Reforma'));
@@ -4982,11 +5282,155 @@
       const dailyLabels = allDaily.map(r => formatDateBR(r.date));
       const dailyPct = allDaily.map(r => r.total > 0 ? Math.round((r.disp / r.total) * 100) : 0);
       renderEvolutionMini(dailyLabels.slice(-30), dailyPct.slice(-30));
+
+      renderEvoGroupChart();
+    };
+
+    // ===================== % DISPONIBILIDADE POR MARCA/FABRICANTE (Evolução) =====================
+    // Usa os mesmos filtros/período da tela de Evolução (dia/semana/mês/ano via "semana-num" + demais filtros),
+    // além do filtro global de Unidade (topo da página) — se estiver travado numa unidade, o gráfico só usa
+    // os dados daquela unidade; em "Todas as Unidades" (padrão), soma os dados das duas unidades (AM + MA).
+    // Ignora o filtro de Marca (quando agrupando por Marca) ou de Fabricante (quando agrupando por
+    // Fabricante), já que esse campo vira o eixo do gráfico. Cor de cada barra segue a Meta cadastrada em
+    // Painel Diretoria: verde = dentro da meta, amarelo = perto (até 10 pontos abaixo), vermelho = muito abaixo.
+    // Só aparecem marcas/fabricantes que existem de fato em ativos cadastrados atualmente (evita "fantasmas"
+    // de marcas antigas que possam ter ficado em snapshots de dias passados mas já não têm ativo cadastrado).
+    const META_ALERT_MARGIN = 10;
+    window.renderEvoGroupChart = function() {
+      const canvas = document.getElementById('chartEvoGroup');
+      const emptyMsg = document.getElementById('evo-group-empty');
+      if (!canvas) return;
+
+      const groupBy = document.getElementById('evo-group-by')?.value || 'marca';
+      const opFilter = document.getElementById('evo-filter-operacao')?.value || 'TODAS';
+      const unidadeFilter = document.getElementById('evo-filter-unidade')?.value || 'TODAS';
+      const fabricanteFilter = document.getElementById('evo-filter-fabricante')?.value || 'TODAS';
+      const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
+      const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
+      const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const combustivelFilter = document.getElementById('evo-filter-combustivel')?.value || 'TODOS';
+      const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
+      const semanaFiltro = document.getElementById('evo-filter-semana-num')?.value || 'TODAS';
+
+      // Marcas/Fabricantes válidos = os que existem em ativos cadastrados HOJE (não apenas o que sobrou em
+      // snapshots antigos). Respeita TODOS os filtros já ativos na tela (Unidade global/local, Combustível,
+      // e também Marca/Fabricante — se o usuário já filtrou "Scania", o gráfico deve mostrar só Scania,
+      // mesmo agrupando por Marca).
+      let assetsForValidGroups = window.assets || [];
+      if (window.selectedUnit && window.selectedUnit !== 'TODAS') assetsForValidGroups = assetsForValidGroups.filter(a => a.unidade === window.selectedUnit);
+      if (unidadeFilter !== 'TODAS') assetsForValidGroups = assetsForValidGroups.filter(a => a.unidade === unidadeFilter);
+      if (combustivelFilter !== 'TODOS') assetsForValidGroups = assetsForValidGroups.filter(a => a.combustivel === combustivelFilter);
+      if (fabricanteFilter !== 'TODAS') assetsForValidGroups = assetsForValidGroups.filter(a => a.fabricante === fabricanteFilter);
+      if (marcaFilter !== 'TODAS') assetsForValidGroups = assetsForValidGroups.filter(a => a.marca === marcaFilter);
+      const validGroups = new Set(assetsForValidGroups.map(a => groupBy === 'fabricante' ? a.fabricante : a.marca).filter(Boolean));
+
+      let dates = Object.keys(window.dailySnapshots || {}).sort();
+      if (semanaFiltro !== 'TODAS') dates = dates.filter(d => getISOWeekInfo(d).weekKey === semanaFiltro);
+
+      const totals = {};
+      dates.forEach(date => {
+        let entries = window.dailySnapshots[date] || [];
+        if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        // Filtro global de Unidade (topo da página) + filtro local de Unidade da Evolução — os dois se aplicam.
+        if (window.selectedUnit && window.selectedUnit !== 'TODAS') entries = entries.filter(e => e.unidade === window.selectedUnit);
+        if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
+        if (fabricanteFilter !== 'TODAS') entries = entries.filter(e => e.fabricante === fabricanteFilter);
+        if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
+        if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
+        if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
+        if (combustivelFilter !== 'TODOS') entries = entries.filter(e => e.combustivel === combustivelFilter);
+        if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        if (window.ignorarReforma) entries = entries.filter(e => !(e.status === 'Indisponivel' && e.tipoParada === 'Reforma'));
+
+        entries.forEach(e => {
+          const group = groupBy === 'fabricante' ? e.fabricante : e.marca;
+          if (!group || !validGroups.has(group)) return;
+          if (!totals[group]) totals[group] = { total: 0, disp: 0 };
+          totals[group].total++;
+          if (e.status === 'Disponivel') totals[group].disp++;
+        });
+      });
+
+      const groups = Object.keys(totals).sort();
+
+      if (window.chartEvoGroupInstance) { window.chartEvoGroupInstance.destroy(); window.chartEvoGroupInstance = null; }
+
+      if (groups.length === 0) {
+        canvas.classList.add('hidden');
+        if (emptyMsg) emptyMsg.classList.remove('hidden');
+        return;
+      }
+      canvas.classList.remove('hidden');
+      if (emptyMsg) emptyMsg.classList.add('hidden');
+
+      const getMetaFn = groupBy === 'fabricante' ? window.getMetaForFabricante : window.getMetaForMarca;
+      const pctByGroup = groups.map(g => totals[g].total > 0 ? Math.round((totals[g].disp / totals[g].total) * 100) : 0);
+      const colors = groups.map((g, i) => {
+        const meta = getMetaFn(g);
+        if (meta === null) return '#94a3b8'; // sem meta definida: cinza neutro
+        const pct = pctByGroup[i];
+        if (pct >= meta) return '#10b981'; // dentro da meta: verde
+        if (pct >= meta - META_ALERT_MARGIN) return '#f59e0b'; // perto da meta: amarelo
+        return '#ef4444'; // muito abaixo da meta: vermelho
+      });
+
+      window.chartEvoGroupInstance = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: groups,
+          datasets: [{
+            label: '% Disponibilidade',
+            data: pctByGroup,
+            backgroundColor: colors,
+            borderRadius: 4,
+            maxBarThickness: 60
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          // Espaço extra no topo para o rótulo de % nunca ficar cortado, mesmo em barras de 95-100%
+          layout: { padding: { top: 26 } },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end', align: 'top', offset: 4, clamp: true, clip: false,
+              color: '#1e293b', font: { weight: 'bold', size: 12 },
+              formatter: v => v + '%'
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const g = groups[ctx.dataIndex];
+                  const meta = getMetaFn(g);
+                  const base = `${ctx.parsed.y}% de disponibilidade (${totals[g].disp}/${totals[g].total})`;
+                  if (meta === null) return base + ' • sem meta definida';
+                  return base + ` • Meta: ${meta}% ${ctx.parsed.y >= meta ? '(dentro ✓)' : ctx.parsed.y >= meta - META_ALERT_MARGIN ? '(perto da meta ⚠)' : '(fora da meta ✗)'}`;
+                }
+              }
+            }
+          },
+          scales: {
+            // Máximo um pouco acima de 100 só para abrir espaço vertical ao rótulo; o eixo continua lido como 0-100%
+            y: { min: 0, max: 112, ticks: { callback: v => (v > 100 ? '' : v + '%'), font: { size: 11 }, stepSize: 20 }, grid: { color: 'rgba(148,163,184,0.15)' } },
+            x: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+          },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            const g = groups[elements[0].index];
+            const field = groupBy === 'fabricante' ? 'fabricante' : 'marca';
+            showEvoDrillDown(dates, `${groupBy === 'fabricante' ? 'Fabricante' : 'Marca'}: ${g}`, { field, value: g });
+          },
+          onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+        }
+      });
     };
 
     // Detalhamento: o que estava indisponível no período clicado, cruzando snapshots (Gestão de Ativos) e Histórico
     // Respeita os mesmos filtros ativos na tela de Evolução (operação, unidade, marca, modelo, tipo, TAG).
-    window.showEvoDrillDown = function(dateList, label) {
+    // dateList: dias a considerar. label: texto do cabeçalho do modal. groupFilter (opcional): { field: 'marca'|'fabricante', value }
+    // usado quando o clique parte do gráfico "% Disponibilidade por Marca/Fabricante", para restringir a lista
+    // apenas aos ativos daquela marca/fabricante específica — combinando com os demais filtros já ativos na tela.
+    window.showEvoDrillDown = function(dateList, label, groupFilter) {
       if (!dateList || dateList.length === 0) { alert('Sem dados de snapshot para este período.'); return; }
       document.getElementById('evo-drilldown-label').innerText = label || '';
 
@@ -4996,6 +5440,7 @@
       const marcaFilter = document.getElementById('evo-filter-marca')?.value || 'TODAS';
       const modeloFilter = document.getElementById('evo-filter-modelo')?.value || 'TODOS';
       const tipoFilter = document.getElementById('evo-filter-tipo')?.value || 'TODOS';
+      const combustivelFilter = document.getElementById('evo-filter-combustivel')?.value || 'TODOS';
       const tagFilter = (document.getElementById('evo-filter-tag')?.value || '').trim().toUpperCase();
 
       // Agrega indisponibilidades por ativo ao longo dos dias do período, aplicando os mesmos filtros da tela
@@ -5003,12 +5448,15 @@
       dateList.forEach(date => {
         let entries = (window.dailySnapshots[date] || []).filter(e => e.status === 'Indisponivel');
         if (opFilter !== 'TODAS') entries = entries.filter(e => e.operacao === opFilter);
+        if (window.selectedUnit && window.selectedUnit !== 'TODAS') entries = entries.filter(e => e.unidade === window.selectedUnit);
         if (unidadeFilter !== 'TODAS') entries = entries.filter(e => e.unidade === unidadeFilter);
         if (fabricanteFilter !== 'TODAS') entries = entries.filter(e => e.fabricante === fabricanteFilter);
         if (marcaFilter !== 'TODAS') entries = entries.filter(e => e.marca === marcaFilter);
         if (modeloFilter !== 'TODOS') entries = entries.filter(e => e.modelo === modeloFilter);
         if (tipoFilter !== 'TODOS') entries = entries.filter(e => e.tipo === tipoFilter);
+        if (combustivelFilter !== 'TODOS') entries = entries.filter(e => e.combustivel === combustivelFilter);
         if (tagFilter) entries = entries.filter(e => (e.tag || '').toUpperCase().includes(tagFilter));
+        if (groupFilter && groupFilter.field) entries = entries.filter(e => e[groupFilter.field] === groupFilter.value);
         entries.forEach(e => {
           if (!byAsset[e.tag]) byAsset[e.tag] = { tag: e.tag, operacao: e.operacao, unidade: e.unidade, tipo: e.tipo, marca: e.marca, modelo: e.modelo, tipoParada: e.tipoParada, motivo: e.motivo, dias: 0, primeiraData: date, ultimaData: date };
           byAsset[e.tag].dias += 1;
@@ -5021,20 +5469,62 @@
 
       const tbody = document.getElementById('evo-drilldown-assets-tbody');
       const rows = Object.keys(byAsset).sort();
+      // Para cada ativo da lista, cruza com o status ATUAL (ao vivo) de Gestão de Ativos — não apenas o
+      // snapshot histórico do período — para mostrar corretamente a data em que a parada começou, se já foi
+      // liberado e, se não, a previsão.
       tbody.innerHTML = rows.map(tag => {
         const a = byAsset[tag];
-        return `<tr><td class="p-2 font-bold text-slate-900">${tag}</td><td class="p-2">${a.operacao || '-'}</td><td class="p-2">${getUnitBadge(a.unidade)}</td><td class="p-2">${a.tipoParada || '-'}</td><td class="p-2">${a.motivo || '-'}</td><td class="p-2 font-bold text-red-600">${a.dias}</td></tr>`;
-      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhum ativo indisponível neste período com os filtros atuais.</td></tr>`;
+        const assetLive = getAssetByTag(tag);
+        const openEvent = assetLive ? getOpenEventForAsset(assetLive.id) : null;
+        const liberado = !openEvent; // sem evento em aberto hoje = já foi liberado
+        let diasParado, previsaoCell, dataParada;
+        if (openEvent) {
+          diasParado = calcDiasParado(openEvent.inicio, null);
+          previsaoCell = openEvent.previsao ? formatDateBR(openEvent.previsao) : '<span class="text-amber-600 font-bold">Não informada</span>';
+          dataParada = openEvent.inicio ? formatDateBR(openEvent.inicio) : '-';
+        } else {
+          const lastClosed = assetLive ? getLastClosedEventForAsset(assetLive.id) : null;
+          diasParado = lastClosed ? calcDiasParado(lastClosed.inicio, lastClosed.fim) : a.dias;
+          previsaoCell = '<span class="text-slate-300">-</span>';
+          dataParada = lastClosed && lastClosed.inicio ? formatDateBR(lastClosed.inicio) : (a.primeiraData ? formatDateBR(a.primeiraData) : '-');
+        }
+        const liberadoBadge = liberado
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300">✓ Sim</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-red-100 text-red-800 border-red-300">✗ Não</span>';
+        return `<tr><td class="p-2 font-bold text-slate-900">${tag}</td><td class="p-2">${a.operacao || '-'}</td><td class="p-2">${getUnitBadge(a.unidade)}</td><td class="p-2">${a.tipoParada || '-'}</td><td class="p-2">${a.motivo || '-'}</td><td class="p-2 font-bold text-slate-700">${dataParada}</td><td class="p-2 font-bold text-red-600">${diasParado}</td><td class="p-2">${liberadoBadge}</td><td class="p-2">${previsaoCell}</td></tr>`;
+      }).join('') || `<tr><td colspan="9" class="p-3 text-center text-slate-400 italic">Nenhum ativo indisponível neste período com os filtros atuais.</td></tr>`;
 
       // Guarda para exportação em Excel (mantém exatamente o que está sendo exibido, já filtrado)
       window.lastEvoDrillDownLabel = label || '';
-      window.lastEvoDrillDownRows = rows.map(tag => byAsset[tag]);
+      window.lastEvoDrillDownRows = rows.map(tag => {
+        const a = byAsset[tag];
+        const assetLive = getAssetByTag(tag);
+        const openEvent = assetLive ? getOpenEventForAsset(assetLive.id) : null;
+        const liberado = !openEvent;
+        let diasParado, previsao, dataParada;
+        if (openEvent) {
+          diasParado = calcDiasParado(openEvent.inicio, null);
+          previsao = openEvent.previsao ? formatDateBR(openEvent.previsao) : 'Não informada';
+          dataParada = openEvent.inicio ? formatDateBR(openEvent.inicio) : '-';
+        } else {
+          const lastClosed = assetLive ? getLastClosedEventForAsset(assetLive.id) : null;
+          diasParado = lastClosed ? calcDiasParado(lastClosed.inicio, lastClosed.fim) : a.dias;
+          previsao = '-';
+          dataParada = lastClosed && lastClosed.inicio ? formatDateBR(lastClosed.inicio) : (a.primeiraData ? formatDateBR(a.primeiraData) : '-');
+        }
+        return { ...a, dias: diasParado, liberado: liberado ? 'Sim' : 'Não', previsao, dataParada };
+      });
 
-      // Cruza com o Histórico Consolidado: eventos de Parada/Manutenção com data alvo ou saída dentro do período
+      // Cruza com o Histórico Consolidado: eventos de Parada/Manutenção com data alvo ou saída dentro do
+      // período E cujo TAG esteja na lista já filtrada acima (mesma marca/fabricante/demais filtros da tela) —
+      // antes mostrava TODOS os eventos do período, mesmo de outras marcas, o que confundia (ex.: clicar em
+      // "Iso-Tanque" mostrava eventos de ativos Scania na trilha de auditoria).
+      const filteredTags = new Set(rows);
       const minDate = dateList.slice().sort()[0];
       const maxDate = dateList.slice().sort().slice(-1)[0];
       const historyMatches = (window.globalAuditHistory || []).filter(h => {
         if (h.category !== 'Parada/Manutenção') return false;
+        if (!filteredTags.has(h.tag)) return false;
         const ref = h.dataSaida || h.targetDate;
         return ref && ref >= minDate && ref <= maxDate;
       });
@@ -5056,13 +5546,14 @@
     window.exportEvoDrillDownToExcel = function() {
       const rows = window.lastEvoDrillDownRows || [];
       if (rows.length === 0) { alert('Nenhum ativo indisponível neste período (com os filtros atuais) para exportar.'); return; }
-      const dataRows = rows.map(a => [a.tag, a.operacao || '', a.unidade || '', a.tipo || '', a.marca || '', a.modelo || '', a.tipoParada || '', a.motivo || '', a.dias, formatDateBR(a.primeiraData), formatDateBR(a.ultimaData)]);
+      const dataRows = rows.map(a => [a.tag, a.operacao || '', a.unidade || '', a.tipo || '', a.marca || '', a.modelo || '', a.tipoParada || '', a.motivo || '', a.dataParada || '', a.dias, a.liberado || '', a.previsao || '', formatDateBR(a.primeiraData), formatDateBR(a.ultimaData)]);
       exportRowsToExcel(
         `Indisponiveis_${(window.lastEvoDrillDownLabel || '').replace(/[\\/\s]+/g, '_')}_${getTodayStr()}.xlsx`, 'Indisponíveis',
-        ['TAG', 'Operação', 'Unidade', 'Tipo', 'Marca', 'Modelo', 'Tipo de Parada', 'Motivo', 'Dias Indisponível no Período', 'Primeira Data no Período', 'Última Data no Período'],
+        ['TAG', 'Operação', 'Unidade', 'Tipo', 'Marca', 'Modelo', 'Tipo de Parada', 'Motivo', 'Data da Parada', 'Dias Parado (atual)', 'Liberado?', 'Previsão de Liberação', 'Primeira Data no Período', 'Última Data no Período'],
         dataRows
       );
     };
+
 
     window.closeEvoDrillDown = function() {
       document.getElementById('modal-evo-drilldown').classList.replace('flex', 'hidden');
@@ -6670,6 +7161,7 @@
       checkAuth();
       syncUsers();
       syncMetasMarca();
+      syncMetasFabricante();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       watchConnection();
