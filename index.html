@@ -1786,8 +1786,14 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Local da Manutenção</label>
-          <input type="text" id="event-local" placeholder="Ex: Oficina Interna, Concessionária X" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Local da Manutenção</label>
+            <button type="button" onclick="openFornecedorModal()" class="text-[10px] font-bold text-emerald-600 hover:underline">+ Gerenciar Fornecedores</button>
+          </div>
+          <select id="event-local" onchange="onFornecedorSelectChange('event-local')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="event-local-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="event-local-outro" placeholder="Digite o local/fornecedor" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -1804,8 +1810,14 @@
           <input type="text" id="event-motivo" placeholder="Ex: Troca de pastilhas de freio" required class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Responsável</label>
-          <input type="text" id="event-responsavel" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Responsável</label>
+            <button type="button" onclick="openFornecedorModal()" class="text-[10px] font-bold text-emerald-600 hover:underline">+ Gerenciar Fornecedores</button>
+          </div>
+          <select id="event-responsavel" onchange="onFornecedorSelectChange('event-responsavel')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="event-responsavel-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="event-responsavel-outro" placeholder="Digite o responsável" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Ações Realizadas</label>
@@ -1885,6 +1897,23 @@
             <option value="Reprogramado">Reprogramado</option>
           </select>
         </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Local / Despachante</label>
+            <button type="button" onclick="openFornecedorModal()" class="text-[10px] font-bold text-emerald-600 hover:underline">+ Gerenciar Fornecedores</button>
+          </div>
+          <select id="doc-local" onchange="onFornecedorSelectChange('doc-local')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="doc-local-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="doc-local-outro" placeholder="Digite o local/despachante" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Responsável</label>
+          <select id="doc-responsavel" onchange="onFornecedorSelectChange('doc-responsavel')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="doc-responsavel-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="doc-responsavel-outro" placeholder="Digite o responsável" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
           <button type="button" onclick="closeDocModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
           <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Documento</button>
@@ -1917,6 +1946,53 @@
       <div class="flex justify-end gap-2 pt-2 border-t">
         <button type="button" onclick="closeLiberarModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
         <button type="button" onclick="confirmLiberarEvento()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar Liberação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GERENCIAR FORNECEDORES — cadastro de locais de manutenção/despachantes e responsáveis, usados
+       como lista suspensa em Registrar Parada, Novo Documento e Agendar Preventiva. -->
+  <div id="modal-fornecedor" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Gerenciar Fornecedores</h3>
+        <button onclick="closeFornecedorModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p class="text-xs text-slate-500">Cadastre aqui oficinas, concessionárias, despachantes e responsáveis. Eles aparecerão como opção de lista suspensa em "Local da Manutenção" e "Responsável" no Registrar Parada, Novo Documento e Agendar Preventiva.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+        <div class="sm:col-span-2">
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome</label>
+          <input type="text" id="fornecedor-nome-novo" placeholder="Ex: Oficina Central, João da Silva" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Tipo</label>
+          <select id="fornecedor-tipo-novo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="Oficina Interna">Oficina Interna</option>
+            <option value="Concessionária">Concessionária</option>
+            <option value="Oficina Terceirizada">Oficina Terceirizada</option>
+            <option value="Despachante">Despachante</option>
+            <option value="Responsável Interno">Responsável Interno</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Contato (opcional)</label>
+          <input type="text" id="fornecedor-contato-novo" placeholder="Telefone / e-mail" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div class="sm:col-span-2 flex justify-end">
+          <button type="button" onclick="addFornecedor()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">+ Adicionar Fornecedor</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto border border-slate-200 rounded-lg">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+            <tr><th class="p-2">Nome</th><th class="p-2">Tipo</th><th class="p-2">Contato</th><th class="p-2 text-center">Remover</th></tr>
+          </thead>
+          <tbody id="fornecedores-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-end pt-2 border-t">
+        <button type="button" onclick="closeFornecedorModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Fechar</button>
       </div>
     </div>
   </div>
@@ -1955,6 +2031,23 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Data da Programação</label>
           <input type="date" id="maint-date" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Local da Manutenção</label>
+            <button type="button" onclick="openFornecedorModal()" class="text-[10px] font-bold text-emerald-600 hover:underline">+ Gerenciar Fornecedores</button>
+          </div>
+          <select id="maint-local" onchange="onFornecedorSelectChange('maint-local')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="maint-local-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="maint-local-outro" placeholder="Digite o local/fornecedor" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Responsável</label>
+          <select id="maint-responsavel" onchange="onFornecedorSelectChange('maint-responsavel')" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></select>
+          <div id="maint-responsavel-outro-wrap" class="hidden mt-1.5">
+            <input type="text" id="maint-responsavel-outro" placeholder="Digite o responsável" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
           <button type="button" onclick="closeMaintModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
@@ -2307,9 +2400,11 @@
       });
     }
 
-    // ===================== STATUS DE SINCRONIZAÇÃO E CONFIABILIDADE DE SALVAMENTO =====================
-    // Reflete a conexão real com o banco (Firebase .info/connected) — não apenas se a última escrita
-    // funcionou — para que a equipe saiba, a qualquer momento, se os dados estão realmente salvos na nuvem.
+    // ===================== STATUS DE CONEXÃO =====================
+    // A badge reflete SÓ a conexão real com o banco (sinal ".info/connected" do Firebase, confiável) — não
+    // fica mais presa em "Salvando...", que dependia de várias gravações em voo terminarem certinho e podia
+    // ficar exibindo esse estado indefinidamente em certas condições de rede. Uma falha real ao salvar agora
+    // avisa por um toast pontual (ver performSave mais abaixo), sem depender de um estado preso na badge.
     window.setSyncStatus = function(state) {
       const badge = document.getElementById('sync-status-badge');
       const label = document.getElementById('sync-status-label');
@@ -2317,10 +2412,8 @@
       if (!badge || !label || !dot) return;
       const states = {
         connecting: { text: 'Conectando...', dotClass: 'bg-slate-300 pulse-dot', badgeClass: 'bg-slate-50 border-slate-200 text-slate-500' },
-        online: { text: 'Dados sincronizados', dotClass: 'bg-emerald-500', badgeClass: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-        saving: { text: 'Salvando...', dotClass: 'bg-amber-500 pulse-dot', badgeClass: 'bg-amber-50 border-amber-200 text-amber-700' },
-        offline: { text: 'Sem conexão — alterações serão salvas ao reconectar', dotClass: 'bg-red-500 pulse-dot', badgeClass: 'bg-red-50 border-red-200 text-red-700' },
-        error: { text: 'Falha ao salvar — tentando novamente...', dotClass: 'bg-red-500 pulse-dot', badgeClass: 'bg-red-50 border-red-200 text-red-700' }
+        online: { text: 'Conectado', dotClass: 'bg-emerald-500', badgeClass: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        offline: { text: 'Sem conexão — alterações serão salvas ao reconectar', dotClass: 'bg-red-500 pulse-dot', badgeClass: 'bg-red-50 border-red-200 text-red-700' }
       };
       const s = states[state] || states.connecting;
       label.innerText = s.text;
@@ -2336,25 +2429,19 @@
       });
     }
 
-    // Todas as escritas passam por aqui — cada chamada confirma sucesso/erro visivelmente, com nova
-    // tentativa automática em caso de falha, para garantir que nenhuma alteração se perca silenciosamente.
+    // Todas as escritas passam por aqui, com nova tentativa automática em caso de falha, para garantir que
+    // nenhuma alteração se perca silenciosamente.
     //
-    // Duas proteções importantes:
-    // 1) DEBOUNCE (400ms): várias chamadas seguidas (ex.: vários re-renders/ações em sequência) são agrupadas
-    //    em UMA única gravação real, em vez de disparar uma gravação de 7 nós por chamada — reduz tráfego e
-    //    deixa o sistema mais rápido. Um "maxWait" de 2s garante que uma sequência contínua de pequenas
-    //    alterações não atrase o salvamento indefinidamente.
-    // 2) CONTADOR DE PENDÊNCIAS (em vez de "token" descartável): o badge só volta para "online" quando TODAS
-    //    as gravações em voo terminaram — antes, se uma gravação mais nova começasse antes de uma mais velha
-    //    terminar, a mais velha desistia de atualizar o badge (e a mais nova podia sofrer o mesmo, em cadeia),
-    //    deixando "Salvando..." preso para sempre mesmo com os dados já salvos com sucesso no banco.
+    // DEBOUNCE (400ms): várias chamadas seguidas (ex.: vários re-renders/ações em sequência) são agrupadas
+    // em UMA única gravação real, em vez de disparar uma gravação de 7 nós por chamada — reduz tráfego e
+    // deixa o sistema mais rápido. Um "maxWait" de 2s garante que uma sequência contínua de pequenas
+    // alterações não atrase o salvamento indefinidamente.
     let pendingSaveCount = 0;
     let saveDebounceTimer = null;
     let saveMaxWaitTimer = null;
 
     window.saveData = function(retry) {
       if (retry) { performSave(true); return; }
-      setSyncStatus('saving');
       clearTimeout(saveDebounceTimer);
       saveDebounceTimer = setTimeout(() => {
         clearTimeout(saveMaxWaitTimer); saveMaxWaitTimer = null;
@@ -2380,26 +2467,22 @@
       if (docsLoaded) writes.push(set(ref(db, 'fleetDocs'), window.fleetDocs || []));
       if (maintLoaded) writes.push(set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []));
       if (auditLoaded) writes.push(set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []));
+      if (fornecedoresLoaded) writes.push(set(ref(db, 'fornecedores'), window.fornecedores || []));
 
-      // Watchdog: se as escritas não confirmarem (sucesso OU erro) dentro de 5s, para de mostrar "Salvando..."
-      // para sempre — assume falha (provável perda de conexão) e libera o usuário para continuar trabalhando,
-      // com nova tentativa automática.
+      // Watchdog: se as escritas não confirmarem (sucesso OU erro) dentro de 5s, considera a tentativa falha
+      // (provável perda de conexão) e libera o usuário para continuar trabalhando, com nova tentativa automática.
       const watchdog = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
 
       Promise.race([Promise.all(writes).then(() => 'ok'), watchdog]).then((result) => {
         pendingSaveCount = Math.max(0, pendingSaveCount - 1);
         if (result === 'timeout') {
           console.warn('Salvamento demorou demais e foi considerado falho (watchdog de 5s).');
-          if (pendingSaveCount === 0) setSyncStatus('error');
           if (!retry) setTimeout(() => saveData(true), 2500);
           else showToast('Não foi possível confirmar o salvamento das últimas alterações. Verifique sua conexão — o sistema tentará salvar automaticamente assim que possível.', 'error');
-        } else if (pendingSaveCount === 0) {
-          setSyncStatus('online');
         }
       }).catch((err) => {
         pendingSaveCount = Math.max(0, pendingSaveCount - 1);
         console.error('Erro ao salvar dados:', err);
-        if (pendingSaveCount === 0) setSyncStatus('error');
         if (!retry) {
           setTimeout(() => saveData(true), 2500);
         } else {
@@ -2441,7 +2524,8 @@
         dailySnapshots: window.dailySnapshots || {},
         globalAuditHistory: window.globalAuditHistory || [],
         metasMarca: window.metasMarca || {},
-        metasFabricante: window.metasFabricante || {}
+        metasFabricante: window.metasFabricante || {},
+        fornecedores: window.fornecedores || []
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -2473,6 +2557,7 @@
           if (data.globalAuditHistory) window.globalAuditHistory = data.globalAuditHistory;
           if (data.metasMarca) window.metasMarca = data.metasMarca;
           if (data.metasFabricante) window.metasFabricante = data.metasFabricante;
+          if (data.fornecedores) window.fornecedores = data.fornecedores;
           addAuditLog('TODAS', 'Ativo', '-', `Backup completo importado a partir de arquivo (${file.name})`, getTodayStr(), 'Importado');
           saveData();
           refreshAllAssetSelects();
@@ -2597,6 +2682,129 @@
       window.metasFabricante[fabricante] = value;
       saveMetasFabricanteToDb();
       addAuditLog('TODAS', 'Ativo', fabricante, `Meta de disponibilidade do fabricante ${fabricante} definida em ${value}%`, getTodayStr(), 'Meta Atualizada');
+    };
+
+    // ===================== FORNECEDORES (locais de manutenção / responsáveis) =====================
+    // Lista única, cadastrada uma vez, usada como lista suspensa em "Local da Manutenção" e "Responsável"
+    // no Registrar Parada, Novo Documento Veicular e Agendar Preventiva — evita erro de digitação e permite
+    // reaproveitar o mesmo fornecedor em qualquer um dos três formulários.
+    window.fornecedores = [];
+    let fornecedoresLoaded = false;
+
+    function syncFornecedores() {
+      onValue(ref(db, 'fornecedores'), (snapshot) => {
+        const data = snapshot.val();
+        window.fornecedores = data !== null ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        fornecedoresLoaded = true;
+        populateFornecedorSelects();
+        renderFornecedoresTable();
+      });
+    }
+
+    window.openFornecedorModal = function() {
+      renderFornecedoresTable();
+      document.getElementById('modal-fornecedor').classList.replace('hidden', 'flex');
+    };
+    window.closeFornecedorModal = function() {
+      document.getElementById('modal-fornecedor').classList.replace('flex', 'hidden');
+    };
+
+    window.addFornecedor = function() {
+      const nomeEl = document.getElementById('fornecedor-nome-novo');
+      const nome = nomeEl.value.trim();
+      if (!nome) { alert('Informe o nome do fornecedor/responsável.'); return; }
+      if ((window.fornecedores || []).some(f => f.nome.toLowerCase() === nome.toLowerCase())) {
+        alert('Já existe um fornecedor cadastrado com esse nome.');
+        return;
+      }
+      const tipo = document.getElementById('fornecedor-tipo-novo').value;
+      const contato = document.getElementById('fornecedor-contato-novo').value.trim();
+      if (!window.fornecedores) window.fornecedores = [];
+      window.fornecedores.push({ id: Date.now(), nome, tipo, contato });
+      addAuditLog('TODAS', 'Ativo', nome, `Fornecedor "${nome}" (${tipo}) cadastrado`, getTodayStr(), 'Cadastrado');
+      saveData();
+      nomeEl.value = '';
+      document.getElementById('fornecedor-contato-novo').value = '';
+      renderFornecedoresTable();
+      populateFornecedorSelects();
+    };
+
+    window.deleteFornecedor = function(id) {
+      const f = (window.fornecedores || []).find(x => String(x.id) === String(id));
+      if (!f) return;
+      if (!confirm(`Remover "${f.nome}" da lista de fornecedores? Paradas/documentos/preventivas já registrados com ele não são afetados.`)) return;
+      window.fornecedores = (window.fornecedores || []).filter(x => String(x.id) !== String(id));
+      saveData();
+      renderFornecedoresTable();
+      populateFornecedorSelects();
+    };
+
+    window.renderFornecedoresTable = function() {
+      const tbody = document.getElementById('fornecedores-tbody');
+      if (!tbody) return;
+      const list = (window.fornecedores || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      tbody.innerHTML = list.map(f => `
+        <tr>
+          <td class="p-2 font-bold text-slate-900">${f.nome}</td>
+          <td class="p-2 text-slate-600">${f.tipo || '-'}</td>
+          <td class="p-2 text-slate-600">${f.contato || '-'}</td>
+          <td class="p-2 text-center"><button type="button" onclick="deleteFornecedor(${f.id})" class="text-red-500 hover:text-red-700" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td>
+        </tr>`).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400 italic">Nenhum fornecedor cadastrado ainda.</td></tr>`;
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // Preenche todos os selects de Local/Responsável (Registrar Parada, Documento, Preventiva) com a lista de
+    // fornecedores cadastrados, mais a opção "Outro" para digitação livre quando o nome não estiver na lista.
+    const FORNECEDOR_SELECT_IDS = ['event-local', 'event-responsavel', 'doc-local', 'doc-responsavel', 'maint-local', 'maint-responsavel'];
+    function populateFornecedorSelects() {
+      const list = (window.fornecedores || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      const opts = list.map(f => `<option value="${f.nome}">${f.nome}${f.tipo ? ' — ' + f.tipo : ''}</option>`).join('');
+      FORNECEDOR_SELECT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = el.value;
+        el.innerHTML = `<option value="">Selecione...</option>` + opts + `<option value="__outro__">✏️ Outro (digitar manualmente)</option>`;
+        if (current && (list.some(f => f.nome === current) || current === '__outro__')) el.value = current;
+      });
+    }
+
+    // Mostra/esconde o campo de texto livre quando "Outro" é escolhido num select de fornecedor.
+    window.onFornecedorSelectChange = function(selectId) {
+      const sel = document.getElementById(selectId);
+      const wrap = document.getElementById(selectId + '-outro-wrap');
+      if (!sel || !wrap) return;
+      wrap.classList.toggle('hidden', sel.value !== '__outro__');
+    };
+
+    // Valor final a salvar: o nome do fornecedor selecionado, ou o texto digitado em "Outro".
+    window.getFornecedorValue = function(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return '';
+      if (sel.value === '__outro__') {
+        const outroInput = document.getElementById(selectId + '-outro');
+        return outroInput ? outroInput.value.trim() : '';
+      }
+      return sel.value;
+    };
+
+    // Ao editar um registro existente: seleciona o fornecedor se ele estiver cadastrado, ou cai em "Outro"
+    // com o texto original preenchido (preserva dados antigos, digitados antes deste cadastro existir).
+    window.setFornecedorValue = function(selectId, value) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      const existsAsOption = Array.from(sel.options).some(o => o.value === value);
+      if (value && existsAsOption) {
+        sel.value = value;
+      } else if (value) {
+        sel.value = '__outro__';
+        const outroInput = document.getElementById(selectId + '-outro');
+        if (outroInput) outroInput.value = value;
+      } else {
+        sel.value = '';
+        const outroInput = document.getElementById(selectId + '-outro');
+        if (outroInput) outroInput.value = '';
+      }
+      onFornecedorSelectChange(selectId);
     };
 
     window.applyRolePermissions = function(funcao, userObj) {
@@ -3688,6 +3896,9 @@
       const eventSearch = document.getElementById('event-asset-search');
       if (eventSearch) eventSearch.value = '';
       populateAssetSelect('event-asset', true);
+      populateFornecedorSelects();
+      setFornecedorValue('event-local', '');
+      setFornecedorValue('event-responsavel', '');
       document.getElementById('event-inicio').value = getTodayStr();
       document.getElementById('modal-event').classList.replace('hidden', 'flex');
     };
@@ -3697,6 +3908,9 @@
       const docSearch = document.getElementById('doc-tag-search');
       if (docSearch) docSearch.value = '';
       populateAssetSelect('doc-tag', true);
+      populateFornecedorSelects();
+      setFornecedorValue('doc-local', '');
+      setFornecedorValue('doc-responsavel', '');
       document.getElementById('modal-doc').classList.replace('hidden', 'flex');
     };
     window.closeDocModal = function() { document.getElementById('modal-doc').classList.replace('flex', 'hidden'); };
@@ -3704,6 +3918,9 @@
       const maintSearch = document.getElementById('maint-tag-search');
       if (maintSearch) maintSearch.value = '';
       populateAssetSelect('maint-tag', true);
+      populateFornecedorSelects();
+      setFornecedorValue('maint-local', '');
+      setFornecedorValue('maint-responsavel', '');
       document.getElementById('modal-maint').classList.replace('hidden', 'flex');
     };
     window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
@@ -4304,11 +4521,11 @@
         tipo: asset.tipo,
         tipoParada: document.getElementById('event-tipo-parada').value,
         situacao: document.getElementById('event-situacao').value,
-        local: document.getElementById('event-local').value,
+        local: getFornecedorValue('event-local'),
         inicio: document.getElementById('event-inicio').value,
         previsao: document.getElementById('event-previsao').value,
         motivo: document.getElementById('event-motivo').value,
-        responsavel: document.getElementById('event-responsavel').value,
+        responsavel: getFornecedorValue('event-responsavel'),
         acoesRealizadas: document.getElementById('event-acoes').value,
         observacoes: document.getElementById('event-observacoes').value,
         status: 'Aberto',
@@ -4491,11 +4708,12 @@
       document.getElementById('event-asset').disabled = true;
       document.getElementById('event-tipo-parada').value = evt.tipoParada;
       document.getElementById('event-situacao').value = evt.situacao || 'Em Execução';
-      document.getElementById('event-local').value = evt.local || '';
+      populateFornecedorSelects();
+      setFornecedorValue('event-local', evt.local || '');
       document.getElementById('event-inicio').value = evt.inicio;
       document.getElementById('event-previsao').value = evt.previsao || '';
       document.getElementById('event-motivo').value = evt.motivo || '';
-      document.getElementById('event-responsavel').value = evt.responsavel || '';
+      setFornecedorValue('event-responsavel', evt.responsavel || '');
       document.getElementById('event-acoes').value = evt.acoesRealizadas || '';
       document.getElementById('event-observacoes').value = evt.observacoes || '';
       document.getElementById('modal-event').classList.replace('hidden', 'flex');
@@ -4506,10 +4724,10 @@
         ev.preventDefault();
         evt.tipoParada = document.getElementById('event-tipo-parada').value;
         evt.situacao = document.getElementById('event-situacao').value;
-        evt.local = document.getElementById('event-local').value;
+        evt.local = getFornecedorValue('event-local');
         evt.previsao = document.getElementById('event-previsao').value;
         evt.motivo = document.getElementById('event-motivo').value;
-        evt.responsavel = document.getElementById('event-responsavel').value;
+        evt.responsavel = getFornecedorValue('event-responsavel');
         evt.acoesRealizadas = document.getElementById('event-acoes').value;
         evt.observacoes = document.getElementById('event-observacoes').value;
         addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `Atualização de dados da parada — ${evt.motivo}`, evt.inicio, evt.situacao);
@@ -5758,13 +5976,17 @@
       const docName = document.getElementById('doc-name').value;
       const expDate = document.getElementById('doc-exp').value;
       const status = document.getElementById('doc-status').value;
+      const local = getFornecedorValue('doc-local');
+      const responsavel = getFornecedorValue('doc-responsavel');
 
-      window.fleetDocs.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, docName, expDate, status, dataOriginal: expDate, dataRealizada: status === 'Realizado' ? getTodayStr() : null, historico: [] });
+      window.fleetDocs.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, docName, expDate, status, local, responsavel, dataOriginal: expDate, dataRealizada: status === 'Realizado' ? getTodayStr() : null, historico: [] });
       addAuditLog(unit, 'Documentação', asset.tag, `${docName} (${type}) cadastrado/atualizado`, expDate, status);
 
       saveData();
       closeDocModal();
       document.getElementById('form-doc').reset();
+      setFornecedorValue('doc-local', '');
+      setFornecedorValue('doc-responsavel', '');
       renderDocuments();
       renderDocCalendar();
       renderDocVencimentos();
@@ -6241,13 +6463,17 @@
       const type = document.getElementById('maint-type').value;
       const service = document.getElementById('maint-service').value;
       const date = document.getElementById('maint-date').value;
+      const local = getFornecedorValue('maint-local');
+      const responsavel = getFornecedorValue('maint-responsavel');
 
-      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, status: 'Programado', dataOriginal: date, dataRealizada: null, historico: [] });
+      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, local, responsavel, status: 'Programado', dataOriginal: date, dataRealizada: null, historico: [] });
       addAuditLog(unit, 'Preventiva', asset.tag, `${service} (${type})`, date, 'Programado');
 
       saveData();
       closeMaintModal();
       document.getElementById('form-maint').reset();
+      setFornecedorValue('maint-local', '');
+      setFornecedorValue('maint-responsavel', '');
       renderCalendar();
       renderPlanejamento();
       renderProgRealizado();
@@ -7254,6 +7480,7 @@
       syncUsers();
       syncMetasMarca();
       syncMetasFabricante();
+      syncFornecedores();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       watchConnection();
