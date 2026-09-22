@@ -1038,6 +1038,7 @@
         <div class="flex gap-2 flex-wrap">
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button onclick="setDocView('table')" id="btn-doc-view-table" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Tabela</button>
+            <button onclick="setDocView('matriz')" id="btn-doc-view-matriz" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Matriz</button>
             <button onclick="setDocView('calendar')" id="btn-doc-view-calendar" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Calendário</button>
             <button onclick="setDocView('vencimentos')" id="btn-doc-view-vencimentos" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Vencimentos</button>
           </div>
@@ -1120,6 +1121,29 @@
             </thead>
             <tbody id="docs-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
+        </div>
+      </div>
+
+      <div id="doc-view-matriz-wrap" class="hidden space-y-3">
+        <div class="card-executive p-4">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+            <h3 class="text-sm font-bold text-slate-700">Matriz de Vencimentos por Ativo</h3>
+            <div class="flex items-center gap-3 text-[11px] font-bold flex-wrap">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Vencido / ≤ 30 dias</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> 31-90 dias</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> &gt; 90 dias</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block"></span> Sem registro</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500">Uma coluna por tipo de documento cadastrado (gerencie em "+ Gerenciar Tipos" no formulário de novo documento). Mostra sempre o vencimento mais recente registrado para cada ativo/tipo. Clique numa célula para ver o histórico daquele documento.</p>
+        </div>
+        <div class="card-executive overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="doc-matriz-table">
+              <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200" id="doc-matriz-thead"></thead>
+              <tbody id="doc-matriz-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1263,6 +1287,7 @@
         <p class="text-xs text-slate-500 mb-3">Compare o que foi programado com o que realmente foi realizado, semana a semana, mês a mês e ano a ano — separado por Cavalo e Carreta, Preventiva e Documentação. Clique em qualquer linha da tabela para ver o detalhe por frota (TAG, placa, data da realização e status).</p>
         <div class="filter-grid">
           <select id="pr-filter-agrupamento" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+            <option value="dia">Agrupar por Dia</option>
             <option value="semana">Agrupar por Semana</option>
             <option value="mes" selected>Agrupar por Mês</option>
             <option value="ano">Agrupar por Ano</option>
@@ -1313,6 +1338,23 @@
           <div class="flex items-baseline gap-2 mt-1">
             <span class="text-2xl font-black text-amber-600" id="pr-kpi-carreta-doc-pct">0%</span>
             <span class="text-[11px] text-slate-500 font-bold" id="pr-kpi-carreta-doc-ratio">0/0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-executive p-5">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+          <h3 class="font-bold text-slate-900 text-sm">Programado x Realizado — Período Atual <span id="pr-bar-period-label" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 ml-1"></span></h3>
+        </div>
+        <p class="text-xs text-slate-500 mb-3">Acompanha o "Agrupar por Dia/Semana/Mês/Ano" escolhido acima. Clique numa barra para ver os ativos: <strong>Programado</strong> mostra tudo que foi previsto no período (feito ou não); <strong>Realizado</strong> mostra só o que foi concluído.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-xs font-bold text-blue-700 text-center mb-1">Cavalo</p>
+            <div class="h-64"><canvas id="chartPrBarCavalo"></canvas></div>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-purple-700 text-center mb-1">Carreta</p>
+            <div class="h-64"><canvas id="chartPrBarCarreta"></canvas></div>
           </div>
         </div>
       </div>
@@ -1875,15 +1917,19 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Documento</label>
-          <select id="doc-name" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-            <option value="CIV + CIPP">🔗 CIV + CIPP (Atrelados na Mesma Carreta)</option>
-            <option value="CRLV Anual">CRLV Anual</option>
-            <option value="CIPP">CIPP (Individual)</option>
-            <option value="CIV">CIV (Individual)</option>
-            <option value="Tacógrafo">Tacógrafo</option>
-            <option value="Calibração de Válvula">Calibração de Válvula (Carretas)</option>
-          </select>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700">Nome do Documento</label>
+            <button type="button" onclick="openTipoDocumentoModal()" class="text-[10px] font-bold text-emerald-600 hover:underline">+ Gerenciar Tipos</button>
+          </div>
+          <select id="doc-name" onchange="onDocTipoChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Data de Referência (opcional)</label>
+          <div class="flex gap-1.5">
+            <input type="date" id="doc-data-referencia" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <button type="button" onclick="calcularVencimentoDoc()" title="Calcular vencimento (Data de Referência + prazo do tipo)" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition whitespace-nowrap">Calcular</button>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1" id="doc-prazo-hint"></p>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Data de Vencimento</label>
@@ -1993,6 +2039,64 @@
       </div>
       <div class="flex justify-end pt-2 border-t">
         <button type="button" onclick="closeFornecedorModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GERENCIAR TIPOS DE DOCUMENTO — CIV, CIPP, Tacógrafo, Calibração de Válvula (nativos) + tipos
+       customizados, cada um com prazo padrão (em dias) usado para calcular o vencimento automaticamente. -->
+  <div id="modal-tipo-documento" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg">Gerenciar Tipos de Documento</h3>
+        <button onclick="closeTipoDocumentoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p class="text-xs text-slate-500">O prazo é usado para calcular a Data de Vencimento a partir de uma Data de Referência (ex.: data da calibração/inspeção), e também define as colunas da Matriz de Vencimentos.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+        <div class="sm:col-span-2">
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome do Tipo</label>
+          <input type="text" id="tipo-doc-nome-novo" placeholder="Ex: CIV, CIPP, Extintor..." class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Prazo Padrão (dias)</label>
+          <input type="number" min="1" id="tipo-doc-prazo-novo" value="365" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Aplicável a</label>
+          <select id="tipo-doc-aplicavel-novo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="Ambos">Cavalo + Carreta</option>
+            <option value="Cavalo">Só Cavalo</option>
+            <option value="Carreta">Só Carreta</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2 flex justify-end">
+          <button type="button" onclick="addTipoDocumento()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">+ Adicionar Tipo</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto border border-slate-200 rounded-lg">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+            <tr><th class="p-2">Nome</th><th class="p-2">Prazo</th><th class="p-2">Aplicável a</th><th class="p-2 text-center">Remover</th></tr>
+          </thead>
+          <tbody id="tipos-documento-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-end pt-2 border-t">
+        <button type="button" onclick="closeTipoDocumentoModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL HISTÓRICO DE DOCUMENTO — aberto ao clicar numa célula da Matriz de Vencimentos -->
+  <div id="modal-doc-historico" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg" id="doc-historico-title"></h3>
+        <button onclick="closeDocHistoricoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div id="doc-historico-body" class="space-y-2"></div>
+      <div class="flex justify-end pt-2 border-t">
+        <button type="button" onclick="closeDocHistoricoModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Fechar</button>
       </div>
     </div>
   </div>
@@ -2116,7 +2220,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
-            <tr><th class="p-2">TAG / Frota</th><th class="p-2">Placa</th><th class="p-2">Tipo</th><th class="p-2">Unidade</th><th class="p-2">Atividade</th><th class="p-2">Data Programada</th><th class="p-2">Data Realizada</th><th class="p-2">Status</th></tr>
+            <tr><th class="p-2">TAG / Frota</th><th class="p-2">Placa</th><th class="p-2">Tipo</th><th class="p-2">Unidade</th><th class="p-2">Atividade</th><th class="p-2">Data Programada</th><th class="p-2">Data Realizada</th><th class="p-2">Status</th><th class="p-2">Justificativa (se não realizado)</th></tr>
           </thead>
           <tbody id="pr-drilldown-tbody" class="divide-y divide-slate-100"></tbody>
         </table>
@@ -2468,6 +2572,7 @@
       if (maintLoaded) writes.push(set(ref(db, 'maintenanceSchedule'), window.maintenanceSchedule || []));
       if (auditLoaded) writes.push(set(ref(db, 'globalAuditHistory'), window.globalAuditHistory || []));
       if (fornecedoresLoaded) writes.push(set(ref(db, 'fornecedores'), window.fornecedores || []));
+      if (tiposDocumentoLoaded) writes.push(set(ref(db, 'tiposDocumento'), window.tiposDocumento || []));
 
       // Watchdog: se as escritas não confirmarem (sucesso OU erro) dentro de 5s, considera a tentativa falha
       // (provável perda de conexão) e libera o usuário para continuar trabalhando, com nova tentativa automática.
@@ -2525,7 +2630,8 @@
         globalAuditHistory: window.globalAuditHistory || [],
         metasMarca: window.metasMarca || {},
         metasFabricante: window.metasFabricante || {},
-        fornecedores: window.fornecedores || []
+        fornecedores: window.fornecedores || [],
+        tiposDocumento: window.tiposDocumento || []
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -2558,6 +2664,7 @@
           if (data.metasMarca) window.metasMarca = data.metasMarca;
           if (data.metasFabricante) window.metasFabricante = data.metasFabricante;
           if (data.fornecedores) window.fornecedores = data.fornecedores;
+          if (data.tiposDocumento) window.tiposDocumento = data.tiposDocumento;
           addAuditLog('TODAS', 'Ativo', '-', `Backup completo importado a partir de arquivo (${file.name})`, getTodayStr(), 'Importado');
           saveData();
           refreshAllAssetSelects();
@@ -2806,6 +2913,208 @@
       }
       onFornecedorSelectChange(selectId);
     };
+
+    // ===================== TIPOS DE DOCUMENTO (CIV, CIPP, Tacógrafo, Calibração de Válvula, + customizados) =====================
+    // Cadastro configurável: cada tipo tem um PRAZO PADRÃO (em dias). No formulário de Novo Documento, ao
+    // informar a "Data de Referência" (ex.: data da inspeção/calibração), o Vencimento é calculado
+    // automaticamente como Data de Referência + Prazo do tipo — mas continua editável manualmente também.
+    // A Matriz de Vencimentos (aba Documentação → Matriz) usa esses mesmos tipos como colunas.
+    window.tiposDocumento = [];
+    let tiposDocumentoLoaded = false;
+    const TIPOS_DOCUMENTO_PADRAO = [
+      { nome: 'CIV', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'CIPP', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'CIV + CIPP', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'CRLV Anual', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'Tacógrafo', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'Calibração de Válvula', prazoDias: 365, aplicavelA: 'Carreta' }
+    ];
+
+    function syncTiposDocumento() {
+      onValue(ref(db, 'tiposDocumento'), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window.tiposDocumento = Array.isArray(data) ? data : Object.values(data);
+        } else {
+          // Primeira vez: semeia com os tipos nativos (CIV, CIPP, Tacógrafo, Calibração de Válvula...), mantendo
+          // compatibilidade com os documentos já cadastrados, que usam esses mesmos nomes.
+          window.tiposDocumento = TIPOS_DOCUMENTO_PADRAO.map((t, i) => ({ id: Date.now() + i, ...t }));
+          set(ref(db, 'tiposDocumento'), window.tiposDocumento);
+        }
+        tiposDocumentoLoaded = true;
+        populateTipoDocumentoSelect();
+        renderTiposDocumentoTable();
+        if (document.getElementById('doc-view-matriz-wrap') && !document.getElementById('doc-view-matriz-wrap').classList.contains('hidden')) renderDocMatriz();
+      });
+    }
+
+    window.openTipoDocumentoModal = function() {
+      renderTiposDocumentoTable();
+      document.getElementById('modal-tipo-documento').classList.replace('hidden', 'flex');
+    };
+    window.closeTipoDocumentoModal = function() {
+      document.getElementById('modal-tipo-documento').classList.replace('flex', 'hidden');
+    };
+
+    window.addTipoDocumento = function() {
+      const nomeEl = document.getElementById('tipo-doc-nome-novo');
+      const nome = nomeEl.value.trim();
+      if (!nome) { alert('Informe o nome do tipo de documento.'); return; }
+      if ((window.tiposDocumento || []).some(t => t.nome.toLowerCase() === nome.toLowerCase())) {
+        alert('Já existe um tipo de documento cadastrado com esse nome.');
+        return;
+      }
+      const prazoDias = parseInt(document.getElementById('tipo-doc-prazo-novo').value, 10) || 365;
+      const aplicavelA = document.getElementById('tipo-doc-aplicavel-novo').value;
+      if (!window.tiposDocumento) window.tiposDocumento = [];
+      window.tiposDocumento.push({ id: Date.now(), nome, prazoDias, aplicavelA });
+      addAuditLog('TODAS', 'Documentação', nome, `Tipo de documento "${nome}" cadastrado (prazo: ${prazoDias} dias)`, getTodayStr(), 'Cadastrado');
+      saveData();
+      nomeEl.value = '';
+      document.getElementById('tipo-doc-prazo-novo').value = '365';
+      renderTiposDocumentoTable();
+      populateTipoDocumentoSelect();
+    };
+
+    window.updateTipoDocumentoPrazo = function(id, novoPrazo) {
+      const t = (window.tiposDocumento || []).find(x => String(x.id) === String(id));
+      if (!t) return;
+      const val = parseInt(novoPrazo, 10);
+      if (isNaN(val) || val <= 0) { alert('Informe um prazo válido em dias.'); renderTiposDocumentoTable(); return; }
+      t.prazoDias = val;
+      saveData();
+    };
+
+    window.deleteTipoDocumento = function(id) {
+      const t = (window.tiposDocumento || []).find(x => String(x.id) === String(id));
+      if (!t) return;
+      if (!confirm(`Remover o tipo "${t.nome}"? Documentos já cadastrados com esse tipo não são afetados, só deixa de aparecer como opção para novos cadastros.`)) return;
+      window.tiposDocumento = (window.tiposDocumento || []).filter(x => String(x.id) !== String(id));
+      saveData();
+      renderTiposDocumentoTable();
+      populateTipoDocumentoSelect();
+    };
+
+    window.renderTiposDocumentoTable = function() {
+      const tbody = document.getElementById('tipos-documento-tbody');
+      if (!tbody) return;
+      const list = (window.tiposDocumento || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      tbody.innerHTML = list.map(t => `
+        <tr>
+          <td class="p-2 font-bold text-slate-900">${t.nome}</td>
+          <td class="p-2"><input type="number" min="1" value="${t.prazoDias}" onchange="updateTipoDocumentoPrazo(${t.id}, this.value)" class="w-20 border border-slate-300 rounded p-1 text-xs text-center outline-none focus:ring-2 focus:ring-emerald-500"> dias</td>
+          <td class="p-2 text-slate-600">${t.aplicavelA || 'Ambos'}</td>
+          <td class="p-2 text-center"><button type="button" onclick="deleteTipoDocumento(${t.id})" class="text-red-500 hover:text-red-700" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td>
+        </tr>`).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400 italic">Nenhum tipo de documento cadastrado ainda.</td></tr>`;
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // Preenche o select "Nome do Documento" do formulário com os tipos cadastrados (nativos + customizados).
+    function populateTipoDocumentoSelect() {
+      const el = document.getElementById('doc-name');
+      if (!el) return;
+      const current = el.value;
+      const list = (window.tiposDocumento || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      el.innerHTML = list.map(t => `<option value="${t.nome}" data-prazo="${t.prazoDias}">${t.nome}${t.nome === 'CIV + CIPP' ? ' 🔗' : ''} (${t.prazoDias}d)</option>`).join('');
+      if (current && list.some(t => t.nome === current)) el.value = current;
+    }
+
+    // Calcula automaticamente a Data de Vencimento = Data de Referência + prazo padrão do tipo selecionado —
+    // continua totalmente editável depois de calculado, é só um ponto de partida.
+    window.calcularVencimentoDoc = function() {
+      const ref = document.getElementById('doc-data-referencia').value;
+      const tipoSel = document.getElementById('doc-name');
+      if (!ref || !tipoSel || !tipoSel.value) { alert('Escolha o Nome do Documento e informe a Data de Referência para calcular.'); return; }
+      const opt = tipoSel.selectedOptions[0];
+      const prazo = parseInt(opt.dataset.prazo, 10) || 365;
+      document.getElementById('doc-exp').value = addDaysToDateStr(ref, prazo);
+    };
+
+    // Atualiza a dica de prazo padrão ao trocar o tipo de documento selecionado.
+    window.onDocTipoChange = function() {
+      const tipoSel = document.getElementById('doc-name');
+      const hint = document.getElementById('doc-prazo-hint');
+      if (!tipoSel || !hint) return;
+      const opt = tipoSel.selectedOptions[0];
+      hint.innerText = opt ? `Prazo padrão deste tipo: ${opt.dataset.prazo} dias — clique em "Calcular" para preencher o vencimento automaticamente.` : '';
+    };
+
+    // ===================== MATRIZ DE VENCIMENTOS (uma linha por ativo, colunas = tipos de documento) =====================
+    // Para cada ativo + tipo de documento, mostra o registro com o vencimento mais recente (o "vigente"),
+    // colorido conforme a urgência (igual ao padrão de planilha: vermelho = vencido/perto, amarelo = atenção,
+    // verde = tranquilo, cinza = sem registro).
+    function docMatrizCellColor(days) {
+      if (days === null) return 'bg-slate-100 text-slate-400';
+      if (days < 0) return 'bg-red-200 text-red-900 font-bold';
+      if (days <= 30) return 'bg-red-100 text-red-800 font-bold';
+      if (days <= 90) return 'bg-amber-100 text-amber-800 font-bold';
+      return 'bg-emerald-100 text-emerald-800 font-bold';
+    }
+
+    window.renderDocMatriz = function() {
+      const thead = document.getElementById('doc-matriz-thead');
+      const tbody = document.getElementById('doc-matriz-tbody');
+      if (!thead || !tbody) return;
+
+      const tipos = (window.tiposDocumento || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+
+      thead.innerHTML = `
+        <tr>
+          <th class="p-2 sticky left-0 bg-slate-50 z-10">TAG / Frota</th>
+          <th class="p-2">Unidade</th>
+          ${tipos.map(t => `<th class="p-2 text-center border-l border-slate-200" colspan="2">${t.nome}</th>`).join('')}
+        </tr>
+        <tr class="text-[10px]">
+          <th class="p-1 sticky left-0 bg-slate-50 z-10"></th>
+          <th class="p-1"></th>
+          ${tipos.map(() => `<th class="p-1 text-center border-l border-slate-200">Venc.</th><th class="p-1 text-center">Dias</th>`).join('')}
+        </tr>`;
+
+      let assets = window.assets || [];
+      const unidadeFiltro = document.getElementById('doc-filter-unidade')?.value || 'TODAS';
+      if (window.selectedUnit !== 'TODAS') assets = assets.filter(a => a.unidade === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') assets = assets.filter(a => a.unidade === unidadeFiltro);
+      const tagFiltro = (document.getElementById('doc-filter-tag')?.value || '').trim().toUpperCase();
+      if (tagFiltro) assets = assets.filter(a => (a.tag || '').toUpperCase().includes(tagFiltro));
+      assets = assets.slice().sort((a, b) => (a.tag || '').localeCompare(b.tag || ''));
+
+      // Para cada (TAG, tipo de documento), pega o registro com a MAIOR data de vencimento — é o vigente.
+      const docsByAssetType = {};
+      (window.fleetDocs || []).forEach(d => {
+        const key = d.tag + '|' + d.docName;
+        if (!docsByAssetType[key] || (d.expDate || '') > (docsByAssetType[key].expDate || '')) docsByAssetType[key] = d;
+      });
+
+      tbody.innerHTML = assets.map(a => {
+        const cells = tipos.map(t => {
+          const d = docsByAssetType[a.tag + '|' + t.nome];
+          if (!d) return `<td class="p-1.5 text-center border-l border-slate-100 text-slate-300 text-[11px]">N/A</td><td class="p-1.5 text-center text-slate-300 text-[11px]">N/A</td>`;
+          const days = calculateDaysRemaining(d.expDate);
+          const colorClass = docMatrizCellColor(days);
+          const onclickAttr = `onclick="openDocMatrizHistorico('${a.tag.replace(/'/g, "\\'")}', '${t.nome.replace(/'/g, "\\'")}')"`;
+          return `<td class="p-1.5 text-center border-l border-slate-100 cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr}>${formatDateBR(d.expDate)}</td><td class="p-1.5 text-center cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr}>${days}</td>`;
+        }).join('');
+        return `<tr><td class="p-2 font-bold text-slate-900 sticky left-0 bg-white">${a.tag}</td><td class="p-2">${getUnitBadge(a.unidade)}</td>${cells}</tr>`;
+      }).join('') || `<tr><td colspan="${2 + tipos.length * 2}" class="p-3 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
+    };
+
+    // Histórico de um documento específico de um ativo (todos os registros já cadastrados daquele tipo,
+    // mais recente primeiro) — aberto ao clicar numa célula da Matriz de Vencimentos.
+    window.openDocMatrizHistorico = function(tag, docName) {
+      const registros = (window.fleetDocs || []).filter(d => d.tag === tag && d.docName === docName).sort((a, b) => (b.expDate || '').localeCompare(a.expDate || ''));
+      document.getElementById('doc-historico-title').innerText = `${tag} — ${docName}`;
+      const body = document.getElementById('doc-historico-body');
+      body.innerHTML = registros.map(d => `
+        <div class="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-slate-200">
+          <div>
+            <p class="text-sm font-semibold text-slate-800">Vencimento: ${formatDateBR(d.expDate)}</p>
+            <p class="text-xs text-slate-500">Status: ${d.status}${d.local ? ' · Local: ' + d.local : ''}${d.responsavel ? ' · Responsável: ' + d.responsavel : ''}</p>
+          </div>
+        </div>`).join('') || `<p class="text-xs text-slate-400 italic text-center py-6">Nenhum registro encontrado.</p>`;
+      document.getElementById('modal-doc-historico').classList.replace('hidden', 'flex');
+      lucide.createIcons();
+    };
+    window.closeDocHistoricoModal = function() { document.getElementById('modal-doc-historico').classList.replace('flex', 'hidden'); };
 
     window.applyRolePermissions = function(funcao, userObj) {
       const custom = userObj && Array.isArray(userObj.permissoesCustom) && userObj.permissoesCustom.length > 0 ? userObj.permissoesCustom : null;
@@ -3909,6 +4218,8 @@
       if (docSearch) docSearch.value = '';
       populateAssetSelect('doc-tag', true);
       populateFornecedorSelects();
+      populateTipoDocumentoSelect();
+      onDocTipoChange();
       setFornecedorValue('doc-local', '');
       setFornecedorValue('doc-responsavel', '');
       document.getElementById('modal-doc').classList.replace('hidden', 'flex');
@@ -6026,11 +6337,14 @@
     window.setDocView = function(view) {
       window.currentDocView = view;
       document.getElementById('doc-view-table-wrap').classList.toggle('hidden', view !== 'table');
+      document.getElementById('doc-view-matriz-wrap').classList.toggle('hidden', view !== 'matriz');
       document.getElementById('doc-view-calendar-wrap').classList.toggle('hidden', view !== 'calendar');
       document.getElementById('doc-view-vencimentos-wrap').classList.toggle('hidden', view !== 'vencimentos');
       document.getElementById('btn-doc-view-table').classList.toggle('active', view === 'table');
+      document.getElementById('btn-doc-view-matriz').classList.toggle('active', view === 'matriz');
       document.getElementById('btn-doc-view-calendar').classList.toggle('active', view === 'calendar');
       document.getElementById('btn-doc-view-vencimentos').classList.toggle('active', view === 'vencimentos');
+      if (view === 'matriz') renderDocMatriz();
       if (view === 'calendar') renderDocCalendar();
       if (view === 'vencimentos') renderDocVencimentos();
     };
@@ -6053,6 +6367,7 @@
     window.onDocFiltersChange = function() {
       renderDocuments();
       renderDocCalendar();
+      if (window.currentDocView === 'matriz') renderDocMatriz();
     };
 
     window.renderDocuments = function() {
@@ -6061,6 +6376,7 @@
       if (!tbody || !criticalContainer) return;
 
       populateMarcaFilters();
+      if (window.currentDocView === 'matriz') renderDocMatriz();
       tbody.innerHTML = '';
       criticalContainer.innerHTML = '';
 
@@ -7268,6 +7584,9 @@
     // Retorna a chave/rótulo/ordenação do período (semana ISO, mês ou ano) para uma data ISO (YYYY-MM-DD)
     window.getPeriodInfoPR = function(dateStr, agrupamento) {
       if (!dateStr) return { key: 'sem-data', label: 'Sem data definida', sortKey: '' };
+      if (agrupamento === 'dia') {
+        return { key: dateStr, label: formatDateBR(dateStr), sortKey: dateStr };
+      }
       if (agrupamento === 'semana') {
         const w = getISOWeekInfo(dateStr);
         return { key: w.weekKey || 'sem-data', label: w.label, sortKey: w.mondayStr || '' };
@@ -7397,6 +7716,7 @@
       }
 
       renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro);
+      renderProgRealizadoCurrentBars();
       lucide.createIcons();
     };
 
@@ -7443,31 +7763,152 @@
       });
     }
 
-    window.openPrDrillDown = function(key) {
+    // Gera o HTML de uma linha da tabela de detalhamento — usado tanto pelo clique na tabela consolidada
+    // quanto pelos novos gráficos de coluna (Programado x Realizado — Período Atual).
+    function prItemRowHtml(x) {
+      let statusBadge = 'bg-blue-100 text-blue-800 border-blue-300';
+      if (x.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
+      if (x.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+      const justCell = x.status === 'Realizado'
+        ? '<span class="text-slate-300">-</span>'
+        : (x.raw.justificativa
+            ? `<div class="flex items-center gap-1.5"><span class="text-slate-700">${x.raw.justificativa}</span><button type="button" onclick="promptJustificativa('${x.origem}', ${x.raw.id})" class="text-slate-400 hover:text-emerald-600" title="Editar"><i data-lucide="pencil" class="w-3 h-3"></i></button></div>`
+            : `<button type="button" onclick="promptJustificativa('${x.origem}', ${x.raw.id})" class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-md border bg-red-50 border-red-300 text-red-700 hover:bg-red-100 transition"><i data-lucide="message-square-plus" class="w-3 h-3"></i> Justificar</button>`);
+      return `
+        <tr>
+          <td class="p-2 font-bold text-slate-900">${x.tag}</td>
+          <td class="p-2">${x.placa}</td>
+          <td class="p-2">${getVehicleBadge(x.tipo)}</td>
+          <td class="p-2">${getUnitBadge(x.unit)}</td>
+          <td class="p-2">${x.atividade}</td>
+          <td class="p-2">${formatDateBR(x.progDate)}</td>
+          <td class="p-2">${x.realDate ? formatDateBR(x.realDate) : '-'}</td>
+          <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${x.status}</span></td>
+          <td class="p-2 max-w-[220px]">${justCell}</td>
+        </tr>`;
+    }
+
+    // statusFilter opcional: 'realizado' mostra só o que foi concluído; 'pendente' mostra só o que ainda não
+    // (Programado/Reprogramado); omitido mostra tudo do grupo (comportamento original, ao clicar na linha da tabela).
+    window.openPrDrillDown = function(key, statusFilter) {
       const g = window.currentPrGroups[key];
       if (!g) return;
-      document.getElementById('pr-drilldown-title').innerText = `${g.periodLabel} — ${g.tipo} / ${g.origem} (Programado: ${g.programado} · Realizado: ${g.realizado})`;
+      let itens = g.itens.slice();
+      let tituloSufixo = '';
+      if (statusFilter === 'realizado') { itens = itens.filter(x => x.status === 'Realizado'); tituloSufixo = ' — Realizados'; }
+      else if (statusFilter === 'pendente') { itens = itens.filter(x => x.status !== 'Realizado'); tituloSufixo = ' — Programados (pendentes/reprogramados)'; }
+      document.getElementById('pr-drilldown-title').innerText = `${g.periodLabel} — ${g.tipo} / ${g.origem}${tituloSufixo} (Programado: ${g.programado} · Realizado: ${g.realizado})`;
       const tbody = document.getElementById('pr-drilldown-tbody');
-      tbody.innerHTML = g.itens.slice().sort((a, b) => (a.progDate || '').localeCompare(b.progDate || '')).map(x => {
-        let statusBadge = 'bg-blue-100 text-blue-800 border-blue-300';
-        if (x.status === 'Reprogramado') statusBadge = 'bg-amber-100 text-amber-800 border-amber-300';
-        if (x.status === 'Realizado') statusBadge = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-        return `
-          <tr>
-            <td class="p-2 font-bold text-slate-900">${x.tag}</td>
-            <td class="p-2">${x.placa}</td>
-            <td class="p-2">${getVehicleBadge(x.tipo)}</td>
-            <td class="p-2">${getUnitBadge(x.unit)}</td>
-            <td class="p-2">${x.atividade}</td>
-            <td class="p-2">${formatDateBR(x.progDate)}</td>
-            <td class="p-2">${x.realDate ? formatDateBR(x.realDate) : '-'}</td>
-            <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${statusBadge}">${x.status}</span></td>
-          </tr>`;
-      }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum item neste período.</td></tr>`;
+      tbody.innerHTML = itens.slice().sort((a, b) => (a.progDate || '').localeCompare(b.progDate || '')).map(prItemRowHtml).join('')
+        || `<tr><td colspan="9" class="p-3 text-center text-slate-400 italic">Nenhum item neste período.</td></tr>`;
       document.getElementById('modal-pr-drilldown').classList.replace('hidden', 'flex');
       lucide.createIcons();
     };
     window.closePrDrillDown = function() { document.getElementById('modal-pr-drilldown').classList.replace('flex', 'hidden'); };
+
+    // Detalhamento a partir do clique numa barra dos gráficos "Programado x Realizado — Período Atual"
+    // (Cavalo/Carreta). Diferente de openPrDrillDown, combina Preventiva + Documentação quando o filtro de
+    // origem estiver em "Todos", usando a lista já calculada em window.currentPrBarData.
+    window.openPrBarDrillDown = function(tipo, which) {
+      const data = window.currentPrBarData ? window.currentPrBarData[tipo] : null;
+      if (!data) return;
+      const itens = which === 'programado' ? data.programado : data.realizado;
+      const periodLabel = (document.getElementById('pr-bar-period-label')?.innerText || '').replace('Período: ', '');
+      document.getElementById('pr-drilldown-title').innerText = `${tipo} — ${which === 'programado' ? 'Programado' : 'Realizado'} (${periodLabel})`;
+      const tbody = document.getElementById('pr-drilldown-tbody');
+      tbody.innerHTML = itens.slice().sort((a, b) => (a.progDate || '').localeCompare(b.progDate || '')).map(prItemRowHtml).join('')
+        || `<tr><td colspan="9" class="p-3 text-center text-slate-400 italic">Nenhum item neste período.</td></tr>`;
+      document.getElementById('modal-pr-drilldown').classList.replace('hidden', 'flex');
+      lucide.createIcons();
+    };
+
+    // Salva o motivo de uma preventiva/documento programado não ter sido realizado no prazo — visível no
+    // detalhamento de Programado x Realizado, para dar transparência quando, por exemplo, 5 foram programados
+    // mas só 4 foram concluídos.
+    window.promptJustificativa = function(origem, id) {
+      const list = origem === 'Preventiva' ? window.maintenanceSchedule : window.fleetDocs;
+      const item = (list || []).find(x => String(x.id) === String(id));
+      if (!item) return;
+      const texto = prompt('Justificativa para não realização (ex.: falta de peça, ativo em rota, oficina sem agenda...):', item.justificativa || '');
+      if (texto === null) return; // cancelou
+      item.justificativa = texto.trim();
+      addAuditLog(item.unit, origem, item.tag, `Justificativa registrada: "${item.justificativa}"`, item.date || item.expDate, item.status);
+      saveData();
+      renderProgRealizado();
+      // Reabre o mesmo drilldown atualizado, se ainda estiver com o modal aberto
+      const openTitle = document.getElementById('pr-drilldown-title');
+      if (openTitle && !document.getElementById('modal-pr-drilldown').classList.contains('hidden')) {
+        // pequena espera para renderProgRealizado recalcular window.currentPrGroups antes de reabrir
+        setTimeout(() => {
+          const stillKey = Object.keys(window.currentPrGroups || {}).find(k => (window.currentPrGroups[k].itens || []).some(it => it.raw === item));
+          if (stillKey) openPrDrillDown(stillKey);
+        }, 50);
+      }
+    };
+
+    // Gráficos de coluna "Programado x Realizado — Período Atual", um para Cavalo e um para Carreta, sempre
+    // referentes ao período CORRENTE de acordo com o "Agrupar por Dia/Semana/Mês/Ano" escolhido acima —
+    // acompanha o mesmo período do resto da tela, mas mostra a contagem em barras (não %).
+    window.currentPrBarData = {};
+    window.chartPrBarCavaloInstance = null;
+    window.chartPrBarCarretaInstance = null;
+    function renderProgRealizadoCurrentBars() {
+      const agrupamento = document.getElementById('pr-filter-agrupamento')?.value || 'mes';
+      const unidadeFiltro = document.getElementById('pr-filter-unidade')?.value || 'TODAS';
+      const origemFiltro = document.getElementById('pr-filter-origem')?.value || 'TODOS';
+      const tagFiltro = (document.getElementById('pr-filter-tag')?.value || '').trim().toUpperCase();
+
+      let items = window.buildProgRealizadoDataset();
+      if (window.selectedUnit !== 'TODAS') items = items.filter(x => x.unit === window.selectedUnit);
+      if (unidadeFiltro !== 'TODAS') items = items.filter(x => x.unit === unidadeFiltro);
+      if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
+      if (tagFiltro) items = items.filter(x => (x.tag || '').toUpperCase().includes(tagFiltro) || (x.placa || '').toUpperCase().includes(tagFiltro));
+
+      const currentPeriod = window.getPeriodInfoPR(getTodayStr(), agrupamento);
+      const periodLabelEl = document.getElementById('pr-bar-period-label');
+      if (periodLabelEl) periodLabelEl.innerText = `Período: ${currentPeriod.label}`;
+
+      const data = { Cavalo: { programado: [], realizado: [] }, Carreta: { programado: [], realizado: [] } };
+      items.forEach(x => {
+        if (!data[x.tipo]) return; // tipo fora de Cavalo/Carreta (defensivo) — ignora
+        if (x.progDate && window.getPeriodInfoPR(x.progDate, agrupamento).key === currentPeriod.key) data[x.tipo].programado.push(x);
+        if (x.realDate && window.getPeriodInfoPR(x.realDate, agrupamento).key === currentPeriod.key) data[x.tipo].realizado.push(x);
+      });
+      window.currentPrBarData = data;
+
+      [{ tipo: 'Cavalo', canvasId: 'chartPrBarCavalo', instanceProp: 'chartPrBarCavaloInstance' },
+       { tipo: 'Carreta', canvasId: 'chartPrBarCarreta', instanceProp: 'chartPrBarCarretaInstance' }].forEach(({ tipo, canvasId, instanceProp }) => {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        if (window[instanceProp]) { window[instanceProp].destroy(); window[instanceProp] = null; }
+        const progCount = data[tipo].programado.length;
+        const realCount = data[tipo].realizado.length;
+        window[instanceProp] = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ['Programado', 'Realizado'],
+            datasets: [{ data: [progCount, realCount], backgroundColor: ['#f59e0b', '#22c55e'], borderRadius: 6, maxBarThickness: 90 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            layout: { padding: { top: 24 } },
+            plugins: {
+              legend: { display: false },
+              datalabels: { anchor: 'end', align: 'top', offset: 4, clamp: true, clip: false, color: '#1e293b', font: { weight: 'bold', size: 15 }, formatter: v => v }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(148,163,184,0.15)' } },
+              x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 12 } } }
+            },
+            onClick: (evt, elements) => {
+              if (!elements || !elements.length) return;
+              openPrBarDrillDown(tipo, elements[0].index === 0 ? 'programado' : 'realizado');
+            },
+            onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+          }
+        });
+      });
+    }
 
     // ===================== INICIALIZAÇÃO =====================
     window.toggleTvMode = function() {
@@ -7481,6 +7922,7 @@
       syncMetasMarca();
       syncMetasFabricante();
       syncFornecedores();
+      syncTiposDocumento();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       watchConnection();
