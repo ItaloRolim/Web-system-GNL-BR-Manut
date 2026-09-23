@@ -694,12 +694,31 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i> Operação por Ativo — Dias Operados x Parados</h2>
-            <p class="text-xs text-slate-500">Calculado automaticamente a partir dos registros de parada (Gestão de Ativos): dias parados contam da <strong>Data da Parada</strong> até a <strong>Saída</strong> (ou hoje, se ainda parado). Dias sem parada registrada contam como operados. Paradas "Em Serviço" não contam como parado.</p>
+            <p class="text-xs text-slate-500">Calculado automaticamente a partir dos registros de parada (Gestão de Ativos): dias parados contam da <strong>Data da Parada</strong> até a <strong>Saída</strong> (ou hoje, se ainda parado). Dias sem parada registrada contam como operados — mas só a partir do início dos dados no sistema; antes disso fica zerado. Paradas "Em Serviço" não contam como parado.</p>
           </div>
           <button onclick="exportOperacaoToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel</button>
         </div>
         <div class="filter-grid">
-          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Data de referência</label><input type="date" id="op-ref-date" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-1.5 text-xs outline-none"></div>
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Filtrar por</label>
+            <select id="op-periodo-tipo" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+              <option value="data">Data específica</option>
+              <option value="semana">Semana</option>
+              <option value="mes">Mês</option>
+              <option value="ano">Ano</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label id="op-ref-label" class="text-[9px] font-bold text-slate-400 uppercase">Data</label>
+            <input type="date" id="op-ref-date" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
+            <select id="op-ref-semana" onchange="renderOperacaoAtivos()" class="hidden border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <select id="op-ref-mes" onchange="renderOperacaoAtivos()" class="hidden border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <select id="op-ref-ano" onchange="renderOperacaoAtivos()" class="hidden border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase" title="Antes desta data não há registro no sistema: os dias ficam zerados (nem operou, nem parado)">Dados a partir de</label>
+            <div class="flex gap-1">
+              <input type="date" id="op-inicio-dados" onchange="setInicioOperacao(this.value)" class="flex-1 min-w-0 border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
+              <button type="button" onclick="setInicioOperacao('')" title="Voltar para o automático (primeiro registro do sistema)" class="px-2 border border-slate-300 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50">auto</button>
+            </div>
+          </div>
           <select id="op-filter-unidade" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Unidades</option><option value="AM">AM</option><option value="MA">MA</option></select>
           <select id="op-filter-tipo" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Cavalo + Carreta</option><option value="Cavalo">Só Cavalo</option><option value="Carreta">Só Carreta</option></select>
           <select id="op-filter-operacao" onchange="renderOperacaoAtivos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
@@ -713,6 +732,7 @@
           <input id="op-filter-tag" oninput="renderOperacaoAtivos()" placeholder="Buscar TAG / Placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
           <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 cursor-pointer"><input type="checkbox" id="op-so-parou" onchange="renderOperacaoAtivos()"> Só quem parou no ano</label>
         </div>
+        <p id="op-inicio-info" class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-1.5"></p>
       </div>
 
       <div id="op-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -10220,7 +10240,88 @@
       return dias;
     }
 
+    // Início dos dados: antes dele não há registro no sistema, então os dias ficam ZERADOS (nem operou, nem
+    // parado) — evita a falsa impressão de que a frota operou 100% em meses sem nenhum registro. Automático =
+    // primeiro fechamento diário gravado pelo sistema (ou a parada mais antiga, se ainda não houver fechamento);
+    // pode ser ajustado no filtro "Dados a partir de" (fica salvo neste navegador).
+    window.getInicioAutoOperacao = function() {
+      const snaps = Object.keys(window.dailySnapshots || {}).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+      if (snaps.length) return snaps[0];
+      const evs = (window.assetEvents || []).map(e => e.inicio).filter(Boolean).sort();
+      return evs[0] || getTodayStr();
+    };
+    window.getInicioOperacao = function() {
+      let v = '';
+      try { v = localStorage.getItem('pcm_op_inicio_dados') || ''; } catch (e) {}
+      return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : getInicioAutoOperacao();
+    };
+    window.setInicioOperacao = function(v) {
+      try { if (v) localStorage.setItem('pcm_op_inicio_dados', v); else localStorage.removeItem('pcm_op_inicio_dados'); } catch (e) {}
+      renderOperacaoAtivos();
+    };
+
+    // Data de referência conforme o filtro escolhido (data específica, semana, mês ou ano) — sempre até hoje
+    function getOperacaoRef() {
+      const hoje = getTodayStr();
+      const tipo = document.getElementById('op-periodo-tipo')?.value || 'data';
+      const inicio = getInicioOperacao();
+      const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const show = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !on); };
+      show('op-ref-date', tipo === 'data'); show('op-ref-semana', tipo === 'semana'); show('op-ref-mes', tipo === 'mes'); show('op-ref-ano', tipo === 'ano');
+      const lbl = document.getElementById('op-ref-label');
+      if (lbl) lbl.innerText = { data: 'Data', semana: 'Semana', mes: 'Mês', ano: 'Ano' }[tipo];
+      const fill = (id, opts) => {
+        const el = document.getElementById(id);
+        if (!el) return '';
+        const cur = el.value;
+        el.innerHTML = opts.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+        el.value = opts.some(o => o.v === cur) ? cur : (opts[0] ? opts[0].v : '');
+        return el.value;
+      };
+      // Opções só a partir do início dos dados (períodos com registro), da mais recente para a mais antiga
+      if (tipo === 'semana') {
+        const opts = [];
+        let seg = getMondayOfWeek(new Date(hoje + 'T00:00:00'));
+        const limite = formatDateISO(getMondayOfWeek(new Date(inicio + 'T00:00:00')));
+        let guard = 0;
+        while (formatDateISO(seg) >= limite && guard++ < 160) {
+          const segStr = formatDateISO(seg);
+          const dom = addDaysToDateStr(segStr, 6);
+          opts.push({ v: segStr, t: `Semana ${getISOWeekInfo(segStr).weekNumber}/${seg.getFullYear()} (${formatDateBR(segStr).slice(0, 5)} a ${formatDateBR(dom).slice(0, 5)})` });
+          seg.setDate(seg.getDate() - 7);
+        }
+        const v = fill('op-ref-semana', opts);
+        if (v) { const dom = addDaysToDateStr(v, 6); return dom > hoje ? hoje : dom; }
+      } else if (tipo === 'mes') {
+        const opts = [];
+        let y = parseInt(hoje.slice(0, 4), 10), m = parseInt(hoje.slice(5, 7), 10);
+        const limite = inicio.slice(0, 7);
+        let guard = 0;
+        while (`${y}-${String(m).padStart(2, '0')}` >= limite && guard++ < 120) {
+          opts.push({ v: `${y}-${String(m).padStart(2, '0')}`, t: `${MESES[m - 1]}/${y}` });
+          m--; if (m === 0) { m = 12; y--; }
+        }
+        const v = fill('op-ref-mes', opts);
+        if (v) { const [yy, mm] = v.split('-').map(Number); const fim = formatDateISO(new Date(yy, mm, 0)); return fim > hoje ? hoje : fim; }
+      } else if (tipo === 'ano') {
+        const opts = [];
+        for (let y = parseInt(hoje.slice(0, 4), 10); y >= parseInt(inicio.slice(0, 4), 10); y--) opts.push({ v: String(y), t: String(y) });
+        const v = fill('op-ref-ano', opts);
+        if (v) { const fim = `${v}-12-31`; return fim > hoje ? hoje : fim; }
+      }
+      const refEl = document.getElementById('op-ref-date');
+      if (refEl && !refEl.value) refEl.value = hoje;
+      if (refEl) { refEl.max = hoje; refEl.min = inicio; }
+      let ref = (refEl && refEl.value) || hoje;
+      if (ref > hoje) ref = hoje;
+      return ref;
+    }
+
     function calcOperacaoAtivo(asset, eventosAtivo, bounds) {
+      // Recorta o período no início dos dados: dias sem registro no sistema não contam (ficam zerados)
+      const inicioDados = getInicioOperacao();
+      if (bounds.ini < inicioDados) bounds = { ini: inicioDados, fim: bounds.fim };
+      if (bounds.ini > bounds.fim) return { total: 0, parados: 0, operou: 0, quebras: 0, paradas: 0, semDados: true };
       const total = diasNoIntervalo(bounds.ini, bounds.fim);
       const parados = diasParadosDoAtivo(eventosAtivo, bounds.ini, bounds.fim).size;
       const quebras = eventosAtivo.filter(e => e.tipoParada === 'Corretiva' && e.inicio >= bounds.ini && e.inicio <= bounds.fim).length;
@@ -10232,10 +10333,15 @@
     window.renderOperacaoAtivos = function() {
       const tbody = document.getElementById('op-tbody');
       if (!tbody || !assetsLoaded) return;
-      const refEl = document.getElementById('op-ref-date');
-      if (refEl && !refEl.value) refEl.value = getTodayStr();
-      if (refEl) refEl.max = getTodayStr();
-      const ref = (refEl && refEl.value) || getTodayStr();
+      const ref = getOperacaoRef();
+      const periodoTipo = document.getElementById('op-periodo-tipo')?.value || 'data';
+      const inicioDados = getInicioOperacao();
+      const inicioEl = document.getElementById('op-inicio-dados');
+      if (inicioEl) { inicioEl.value = inicioDados; inicioEl.max = getTodayStr(); }
+      let manual = false;
+      try { manual = !!localStorage.getItem('pcm_op_inicio_dados'); } catch (e) {}
+      const infoEl = document.getElementById('op-inicio-info');
+      if (infoEl) infoEl.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i> Dados considerados a partir de <strong>${formatDateBR(inicioDados)}</strong> ${manual ? '(definido manualmente)' : '(primeiro registro do sistema)'}. Antes dessa data não há registro, então os dias ficam <strong>zerados</strong> — nem operou, nem parado.`;
       const unidade = document.getElementById('op-filter-unidade')?.value || 'TODAS';
       const tipo = document.getElementById('op-filter-tipo')?.value || 'TODOS';
       const operacao = document.getElementById('op-filter-operacao')?.value || 'TODAS';
@@ -10244,13 +10350,16 @@
       const soParou = document.getElementById('op-so-parou')?.checked;
       const sort = document.getElementById('op-sort')?.value || 'tag';
 
+      const clip = (b) => (b.ini < inicioDados ? { ini: inicioDados, fim: b.fim } : b);
       const bSem = periodoBounds(ref, 'semana'), bMes = periodoBounds(ref, 'mes'), bAno = periodoBounds(ref, 'ano');
+      // Destaca a coluna do período escolhido no filtro
+      [['op-th-semana', 'semana'], ['op-th-mes', 'mes'], ['op-th-ano', 'ano']].forEach(([id, t]) => { const el = document.getElementById(id); if (el) el.classList.toggle('bg-amber-100', periodoTipo === t); });
       const semInfo = getISOWeekInfo(ref);
       const MES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       const setTh = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
       setTh('op-th-semana', `Semana ${semInfo.weekNumber} (${formatDateBR(bSem.ini).slice(0, 5)}–${formatDateBR(bSem.fim).slice(0, 5)})`);
       setTh('op-th-mes', `${MES[parseInt(ref.slice(5, 7), 10) - 1]}/${ref.slice(0, 4)}`);
-      setTh('op-th-ano', `Ano ${ref.slice(0, 4)} (até ${formatDateBR(bAno.fim).slice(0, 5)})`);
+      setTh('op-th-ano', `Ano ${ref.slice(0, 4)} (${formatDateBR(clip(bAno).ini).slice(0, 5)} a ${formatDateBR(bAno.fim).slice(0, 5)})`);
 
       let list = filtrarReforma(getActiveAssets());
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
@@ -10284,12 +10393,17 @@
       if (countEl) countEl.innerText = `(${rows.length} ativo(s))`;
 
       // KPIs da frota (soma de todos os ativos no filtro)
-      const kpi = (key, label, cor, bounds) => {
+      const kpi = (key, label, cor, boundsOrig) => {
+        const bounds = clip(boundsOrig);
         const tot = rows.reduce((s, r) => s + r[key].total, 0);
         const par = rows.reduce((s, r) => s + r[key].parados, 0);
         const que = rows.reduce((s, r) => s + r[key].quebras, 0);
         const disp = tot ? Math.round(((tot - par) / tot) * 100) : 0;
-        return `<div class="card-executive p-4 border-l-4 ${cor}">
+        const destaque = ({ sem: 'semana', mes: 'mes', ano: 'ano' })[key] === periodoTipo;
+        if (bounds.ini > bounds.fim || !tot) return `<div class="card-executive p-4 border-l-4 ${cor} ${destaque ? 'ring-2 ring-amber-300' : ''}">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">${label} <span class="font-medium normal-case">(${formatDateBR(boundsOrig.ini)} a ${formatDateBR(boundsOrig.fim)})</span></p>
+          <p class="text-2xl font-black text-slate-300 mt-1">—</p><p class="text-[11px] text-slate-500 mt-2">Sem registro no sistema neste período (dados a partir de ${formatDateBR(inicioDados)}).</p></div>`;
+        return `<div class="card-executive p-4 border-l-4 ${cor} ${destaque ? 'ring-2 ring-amber-300' : ''}">
           <p class="text-[11px] font-bold text-slate-500 uppercase">${label} <span class="font-medium normal-case">(${formatDateBR(bounds.ini)} a ${formatDateBR(bounds.fim)})</span></p>
           <div class="flex items-baseline gap-3 mt-1"><span class="text-2xl font-black text-slate-900">${disp}%</span><span class="text-xs text-slate-500 font-bold">disponibilidade</span></div>
           <div class="mini-bar mt-2"><span style="width:${disp}%;background:#10b981"></span></div>
@@ -10299,12 +10413,14 @@
       const kpisEl = document.getElementById('op-kpis');
       if (kpisEl) kpisEl.innerHTML = kpi('sem', 'Semana', 'border-l-blue-500', bSem) + kpi('mes', 'Mês', 'border-l-purple-500', bMes) + kpi('ano', 'Ano', 'border-l-emerald-500', bAno);
 
-      const cell = (o, border) => `
+      const cell = (o, border) => o.semDados
+        ? `<td class="p-1.5 text-center ${border ? 'border-l border-slate-100' : ''} text-slate-300" colspan="3" title="Sem registro no sistema neste período">sem registro</td>`
+        : `
         <td class="p-1.5 text-center ${border ? 'border-l border-slate-100' : ''} text-emerald-700 font-bold">${o.operou}</td>
         <td class="p-1.5 text-center ${o.parados ? 'text-red-600 font-black' : 'text-slate-300'}">${o.parados}</td>
         <td class="p-1.5 text-center ${o.quebras ? 'text-amber-700 font-black' : 'text-slate-300'}">${o.quebras}</td>`;
       tbody.innerHTML = rows.map(r => {
-        const dispAno = r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : 0;
+        const dispAno = r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : null;
         const statusHtml = r.current.status === 'Indisponivel'
           ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-red-100 text-red-800 border-red-300">Parado ${calcDiasParado(r.open.inicio, null)}d</span>`
           : r.open ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-emerald-100 text-emerald-800 border-emerald-300">Em serviço (pend.)</span>'
@@ -10315,7 +10431,7 @@
             <td class="p-2">${getVehicleBadge(r.a.tipo)} ${getUnitBadge(r.a.unidade)}</td>
             <td class="p-2">${statusHtml}</td>
             ${cell(r.sem, true)}${cell(r.mes, true)}${cell(r.ano, true)}
-            <td class="p-1.5 text-center font-black ${dispAno >= 90 ? 'text-emerald-600' : dispAno >= 75 ? 'text-amber-600' : 'text-red-600'}">${dispAno}%</td>
+            <td class="p-1.5 text-center font-black ${dispAno === null ? 'text-slate-300' : dispAno >= 90 ? 'text-emerald-600' : dispAno >= 75 ? 'text-amber-600' : 'text-red-600'}">${dispAno === null ? '—' : dispAno + '%'}</td>
           </tr>`;
       }).join('') || `<tr><td colspan="13" class="p-4 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
       lucide.createIcons();
@@ -10324,26 +10440,28 @@
     window.openOperacaoDetalhe = function(assetId) {
       const asset = getAssetById(assetId);
       if (!asset) return;
-      const ref = document.getElementById('op-ref-date')?.value || getTodayStr();
+      const ref = getOperacaoRef();
       const ano = parseInt(ref.slice(0, 4), 10);
+      const inicioDados = getInicioOperacao();
       const evs = (window.assetEvents || []).filter(e => String(e.assetId) === String(asset.id) && !(window.ignorarReforma && isReformaEvent(e)));
       const MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
       const hoje = getTodayStr();
-      const operou = [], parado = [];
+      const operou = [], parado = [], semRegistro = [];
       for (let m = 0; m < 12; m++) {
         const ini = `${ano}-${String(m + 1).padStart(2, '0')}-01`;
-        if (ini > hoje) { operou.push(null); parado.push(null); continue; }
+        if (ini > hoje) { operou.push(null); parado.push(null); semRegistro.push(false); continue; }
         const b = periodoBounds(ini, 'mes');
         const r = calcOperacaoAtivo(asset, evs, b);
-        operou.push(r.operou); parado.push(r.parados);
+        // Meses antes do início dos dados ficam zerados (sem registro), não como "operou"
+        operou.push(r.semDados ? 0 : r.operou); parado.push(r.semDados ? 0 : r.parados); semRegistro.push(!!r.semDados);
       }
-      document.getElementById('op-detalhe-title').innerText = `${asset.tag}${asset.placa ? ' · ' + asset.placa : ''} — dias operados x parados em ${ano}`;
+      document.getElementById('op-detalhe-title').innerText = `${asset.tag}${asset.placa ? ' · ' + asset.placa : ''} — dias operados x parados em ${ano} (dados a partir de ${formatDateBR(inicioDados)})`;
       const el = document.getElementById('chartOpDetalhe');
       if (window.chartOpDetalheInstance) window.chartOpDetalheInstance.destroy();
       window.chartOpDetalheInstance = new Chart(el.getContext('2d'), {
         type: 'bar',
         data: { labels: MES, datasets: [{ label: 'Operou (dias)', data: operou, backgroundColor: '#10b981', stack: 's', borderRadius: 3 }, { label: 'Parado (dias)', data: parado, backgroundColor: '#ef4444', stack: 's', borderRadius: 3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0, color: '#fff', font: { weight: 'bold', size: 9 } } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, max: 31 } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0, color: '#fff', font: { weight: 'bold', size: 9 } }, tooltip: { callbacks: { footer: (items) => semRegistro[items[0].dataIndex] ? 'Sem registro no sistema neste mês' : '' } } }, scales: { x: { stacked: true, ticks: { callback: (v, i) => semRegistro[i] ? [MES[i], 'sem reg.'] : MES[i], color: (c) => semRegistro[c.index] ? '#94a3b8' : '#475569', font: { size: 10 }, maxRotation: 0, minRotation: 0, autoSkip: false } }, y: { stacked: true, beginAtZero: true, max: 31 } } }
       });
       const doAno = evs.filter(e => (e.inicio || '').slice(0, 4) === String(ano) || (e.fim || hoje).slice(0, 4) === String(ano)).sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''));
       document.getElementById('op-detalhe-eventos').innerHTML = doAno.map(e => `
@@ -10351,7 +10469,7 @@
           <div><p class="font-bold text-slate-800">${escapeHtml(e.tipoParada)} — ${escapeHtml(e.motivo)}</p>
           <p class="text-slate-500">${formatDateBR(e.inicio)} → ${e.fim ? formatDateBR(e.fim) : 'em aberto'} · ${calcDiasParado(e.inicio, e.fim || null)} dia(s) · Causa: ${escapeHtml(e.causaRaiz || 'não informada')}${e.farolStatus === 'Em Serviço' ? ' · Em Serviço (não conta como parado)' : ''}</p></div>
           <button onclick="document.getElementById('modal-op-detalhe').classList.replace('flex','hidden'); editOpenEvent(${e.id})" class="text-slate-400 hover:text-blue-600" title="Editar"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-        </div>`).join('') || '<p class="text-xs text-slate-400 italic text-center py-3">Nenhuma parada registrada neste ano — operou todos os dias.</p>';
+        </div>`).join('') || `<p class="text-xs text-slate-400 italic text-center py-3">Nenhuma parada registrada neste ano${inicioDados > `${ano}-01-01` ? ` (dados a partir de ${formatDateBR(inicioDados)} — meses anteriores ficam zerados, sem registro)` : ''}.</p>`;
       document.getElementById('modal-op-detalhe').classList.replace('hidden', 'flex');
       lucide.createIcons();
     };
@@ -10359,9 +10477,10 @@
     window.exportOperacaoToExcel = function() {
       const rows = window.lastOperacaoRows || [];
       if (!rows.length) { alert('Nenhum ativo no filtro atual.'); return; }
+      const ref = getOperacaoRef();
       exportRowsToExcel(`Operacao_por_Ativo_${getTodayStr()}.xlsx`, 'Operação',
-        ['TAG', 'Placa', 'Tipo', 'Unidade', 'Semana - Operou', 'Semana - Parado', 'Semana - Quebras', 'Mês - Operou', 'Mês - Parado', 'Mês - Quebras', 'Ano - Operou', 'Ano - Parado', 'Ano - Quebras', 'Ano - Paradas (todas)', '% Disponibilidade Ano'],
-        rows.map(r => [r.a.tag, r.a.placa || '', r.a.tipo, r.a.unidade, r.sem.operou, r.sem.parados, r.sem.quebras, r.mes.operou, r.mes.parados, r.mes.quebras, r.ano.operou, r.ano.parados, r.ano.quebras, r.ano.paradas, r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : 0]));
+        ['TAG', 'Placa', 'Tipo', 'Unidade', 'Referência', 'Dados a partir de', 'Semana - Operou', 'Semana - Parado', 'Semana - Quebras', 'Mês - Operou', 'Mês - Parado', 'Mês - Quebras', 'Ano - Operou', 'Ano - Parado', 'Ano - Quebras', 'Ano - Paradas (todas)', '% Disponibilidade Ano'],
+        rows.map(r => [r.a.tag, r.a.placa || '', r.a.tipo, r.a.unidade, formatDateBR(ref), formatDateBR(getInicioOperacao()), r.sem.operou, r.sem.parados, r.sem.quebras, r.mes.operou, r.mes.parados, r.mes.quebras, r.ano.operou, r.ano.parados, r.ano.quebras, r.ano.paradas, r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : '']));
     };
 
     // ===================== ANÁLISE DE FALHAS (CAUSA RAIZ) =====================
