@@ -694,7 +694,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i> Operação por Ativo — Dias Operados x Parados</h2>
-            <p class="text-xs text-slate-500">Calculado automaticamente a partir dos registros de parada (Gestão de Ativos): dias parados contam da <strong>Data da Parada</strong> até a <strong>Saída</strong> (ou hoje, se ainda parado). Dias sem parada registrada contam como operados — mas só a partir do início dos dados no sistema; antes disso fica zerado. Paradas "Em Serviço" não contam como parado.</p>
+            <p class="text-xs text-slate-500">Calculado automaticamente a partir dos registros de parada (Gestão de Ativos): dias parados contam da <strong>Data da Parada</strong> até a <strong>Saída</strong> (ou hoje, se ainda parado). Cada ativo conta a partir da sua primeira parada registrada (ou do início dos registros do sistema); antes disso fica zerado, não como "operou". Paradas "Em Serviço" não contam como parado.</p>
           </div>
           <button onclick="exportOperacaoToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel</button>
         </div>
@@ -2601,7 +2601,10 @@
   <div id="modal-op-detalhe" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-900 text-lg" id="op-detalhe-title"></h3>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h3 class="font-bold text-slate-900 text-lg" id="op-detalhe-title"></h3>
+          <select id="op-detalhe-ano" onchange="openOperacaoDetalhe(window.opDetalheAssetId, this.value)" title="Ano do gráfico" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none"></select>
+        </div>
         <button onclick="document.getElementById('modal-op-detalhe').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
       </div>
       <div class="h-56"><canvas id="chartOpDetalhe"></canvas></div>
@@ -10255,6 +10258,21 @@
       try { v = localStorage.getItem('pcm_op_inicio_dados') || ''; } catch (e) {}
       return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : getInicioAutoOperacao();
     };
+    // Início dos registros de UM ativo: a primeira parada registrada dele (mesmo que anterior ao sistema — ex.:
+    // parado há 404 dias aparece mês a mês desde a data da parada) ou, se não houver parada anterior, o início
+    // geral dos registros do sistema. Antes disso fica zerado: sem parada registrada não se considera "operou".
+    window.getInicioAtivoOperacao = function(eventosAtivo) {
+      const geral = getInicioOperacao();
+      const primeira = (eventosAtivo || []).map(e => e.inicio).filter(Boolean).sort()[0];
+      return primeira && primeira < geral ? primeira : geral;
+    };
+    // Registro mais antigo da frota inteira — define até onde vão as listas de semana/mês/ano do filtro
+    function getInicioMaisAntigoFrota() {
+      const geral = getInicioOperacao();
+      const primeira = (window.assetEvents || []).map(e => e.inicio).filter(Boolean).sort()[0];
+      return primeira && primeira < geral ? primeira : geral;
+    }
+
     window.setInicioOperacao = function(v) {
       try { if (v) localStorage.setItem('pcm_op_inicio_dados', v); else localStorage.removeItem('pcm_op_inicio_dados'); } catch (e) {}
       renderOperacaoAtivos();
@@ -10264,7 +10282,7 @@
     function getOperacaoRef() {
       const hoje = getTodayStr();
       const tipo = document.getElementById('op-periodo-tipo')?.value || 'data';
-      const inicio = getInicioOperacao();
+      const inicio = getInicioMaisAntigoFrota();
       const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       const show = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !on); };
       show('op-ref-date', tipo === 'data'); show('op-ref-semana', tipo === 'semana'); show('op-ref-mes', tipo === 'mes'); show('op-ref-ano', tipo === 'ano');
@@ -10284,7 +10302,7 @@
         let seg = getMondayOfWeek(new Date(hoje + 'T00:00:00'));
         const limite = formatDateISO(getMondayOfWeek(new Date(inicio + 'T00:00:00')));
         let guard = 0;
-        while (formatDateISO(seg) >= limite && guard++ < 160) {
+        while (formatDateISO(seg) >= limite && guard++ < 270) {
           const segStr = formatDateISO(seg);
           const dom = addDaysToDateStr(segStr, 6);
           opts.push({ v: segStr, t: `Semana ${getISOWeekInfo(segStr).weekNumber}/${seg.getFullYear()} (${formatDateBR(segStr).slice(0, 5)} a ${formatDateBR(dom).slice(0, 5)})` });
@@ -10318,15 +10336,15 @@
     }
 
     function calcOperacaoAtivo(asset, eventosAtivo, bounds) {
-      // Recorta o período no início dos dados: dias sem registro no sistema não contam (ficam zerados)
-      const inicioDados = getInicioOperacao();
+      // Recorta o período no início dos registros do ativo: dias sem registro não contam (ficam zerados)
+      const inicioDados = getInicioAtivoOperacao(eventosAtivo);
       if (bounds.ini < inicioDados) bounds = { ini: inicioDados, fim: bounds.fim };
-      if (bounds.ini > bounds.fim) return { total: 0, parados: 0, operou: 0, quebras: 0, paradas: 0, semDados: true };
+      if (bounds.ini > bounds.fim) return { total: 0, parados: 0, operou: 0, quebras: 0, paradas: 0, semDados: true, inicio: inicioDados };
       const total = diasNoIntervalo(bounds.ini, bounds.fim);
       const parados = diasParadosDoAtivo(eventosAtivo, bounds.ini, bounds.fim).size;
       const quebras = eventosAtivo.filter(e => e.tipoParada === 'Corretiva' && e.inicio >= bounds.ini && e.inicio <= bounds.fim).length;
       const paradas = eventosAtivo.filter(e => e.inicio >= bounds.ini && e.inicio <= bounds.fim).length;
-      return { total, parados, operou: Math.max(0, total - parados), quebras, paradas };
+      return { total, parados, operou: Math.max(0, total - parados), quebras, paradas, inicio: inicioDados };
     }
 
     window.lastOperacaoRows = [];
@@ -10341,7 +10359,7 @@
       let manual = false;
       try { manual = !!localStorage.getItem('pcm_op_inicio_dados'); } catch (e) {}
       const infoEl = document.getElementById('op-inicio-info');
-      if (infoEl) infoEl.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i> Dados considerados a partir de <strong>${formatDateBR(inicioDados)}</strong> ${manual ? '(definido manualmente)' : '(primeiro registro do sistema)'}. Antes dessa data não há registro, então os dias ficam <strong>zerados</strong> — nem operou, nem parado.`;
+      if (infoEl) infoEl.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i> <span>Cada ativo conta a partir da <strong>primeira parada registrada</strong> dele (mesmo que seja anterior ao sistema — ex.: parado há 404 dias aparece mês a mês desde a data da parada). Sem parada registrada, conta a partir do início dos registros do sistema: <strong>${formatDateBR(inicioDados)}</strong> ${manual ? '(definido manualmente)' : '(automático)'}. Antes disso fica <strong>zerado</strong> — nem operou, nem parado.</span>`;
       const unidade = document.getElementById('op-filter-unidade')?.value || 'TODAS';
       const tipo = document.getElementById('op-filter-tipo')?.value || 'TODOS';
       const operacao = document.getElementById('op-filter-operacao')?.value || 'TODAS';
@@ -10350,7 +10368,8 @@
       const soParou = document.getElementById('op-so-parou')?.checked;
       const sort = document.getElementById('op-sort')?.value || 'tag';
 
-      const clip = (b) => (b.ini < inicioDados ? { ini: inicioDados, fim: b.fim } : b);
+      let inicioKpi = inicioDados; // ajustado abaixo para o registro mais antigo entre os ativos listados
+      const clip = (b) => (b.ini < inicioKpi ? { ini: inicioKpi, fim: b.fim } : b);
       const bSem = periodoBounds(ref, 'semana'), bMes = periodoBounds(ref, 'mes'), bAno = periodoBounds(ref, 'ano');
       // Destaca a coluna do período escolhido no filtro
       [['op-th-semana', 'semana'], ['op-th-mes', 'mes'], ['op-th-ano', 'ano']].forEach(([id, t]) => { const el = document.getElementById(id); if (el) el.classList.toggle('bg-amber-100', periodoTipo === t); });
@@ -10359,7 +10378,6 @@
       const setTh = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
       setTh('op-th-semana', `Semana ${semInfo.weekNumber} (${formatDateBR(bSem.ini).slice(0, 5)}–${formatDateBR(bSem.fim).slice(0, 5)})`);
       setTh('op-th-mes', `${MES[parseInt(ref.slice(5, 7), 10) - 1]}/${ref.slice(0, 4)}`);
-      setTh('op-th-ano', `Ano ${ref.slice(0, 4)} (${formatDateBR(clip(bAno).ini).slice(0, 5)} a ${formatDateBR(bAno.fim).slice(0, 5)})`);
 
       let list = filtrarReforma(getActiveAssets());
       if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
@@ -10382,6 +10400,8 @@
         return { a, sem, mes, ano, current: getAssetCurrentStatus(a.id), open: getOpenEventForAsset(a.id) };
       });
       if (soParou) rows = rows.filter(r => r.ano.parados > 0 || r.ano.paradas > 0);
+      rows.forEach(r => { if (r.ano.inicio && r.ano.inicio < inicioKpi) inicioKpi = r.ano.inicio; });
+      setTh('op-th-ano', `Ano ${ref.slice(0, 4)} (${formatDateBR(clip(bAno).ini).slice(0, 5)} a ${formatDateBR(bAno.fim).slice(0, 5)})`);
       rows.sort((x, y) => {
         if (sort === 'parado-ano') return y.ano.parados - x.ano.parados || naturalCompare(x.a.tag, y.a.tag);
         if (sort === 'quebras-ano') return y.ano.quebras - x.ano.quebras || y.ano.parados - x.ano.parados;
@@ -10402,7 +10422,7 @@
         const destaque = ({ sem: 'semana', mes: 'mes', ano: 'ano' })[key] === periodoTipo;
         if (bounds.ini > bounds.fim || !tot) return `<div class="card-executive p-4 border-l-4 ${cor} ${destaque ? 'ring-2 ring-amber-300' : ''}">
           <p class="text-[11px] font-bold text-slate-500 uppercase">${label} <span class="font-medium normal-case">(${formatDateBR(boundsOrig.ini)} a ${formatDateBR(boundsOrig.fim)})</span></p>
-          <p class="text-2xl font-black text-slate-300 mt-1">—</p><p class="text-[11px] text-slate-500 mt-2">Sem registro no sistema neste período (dados a partir de ${formatDateBR(inicioDados)}).</p></div>`;
+          <p class="text-2xl font-black text-slate-300 mt-1">—</p><p class="text-[11px] text-slate-500 mt-2">Sem registro no sistema neste período para os ativos listados.</p></div>`;
         return `<div class="card-executive p-4 border-l-4 ${cor} ${destaque ? 'ring-2 ring-amber-300' : ''}">
           <p class="text-[11px] font-bold text-slate-500 uppercase">${label} <span class="font-medium normal-case">(${formatDateBR(bounds.ini)} a ${formatDateBR(bounds.fim)})</span></p>
           <div class="flex items-baseline gap-3 mt-1"><span class="text-2xl font-black text-slate-900">${disp}%</span><span class="text-xs text-slate-500 font-bold">disponibilidade</span></div>
@@ -10414,7 +10434,7 @@
       if (kpisEl) kpisEl.innerHTML = kpi('sem', 'Semana', 'border-l-blue-500', bSem) + kpi('mes', 'Mês', 'border-l-purple-500', bMes) + kpi('ano', 'Ano', 'border-l-emerald-500', bAno);
 
       const cell = (o, border) => o.semDados
-        ? `<td class="p-1.5 text-center ${border ? 'border-l border-slate-100' : ''} text-slate-300" colspan="3" title="Sem registro no sistema neste período">sem registro</td>`
+        ? `<td class="p-1.5 text-center ${border ? 'border-l border-slate-100' : ''} text-slate-300" colspan="3" title="Sem registro deste ativo neste período (registros a partir de ${formatDateBR(o.inicio)})">sem registro</td>`
         : `
         <td class="p-1.5 text-center ${border ? 'border-l border-slate-100' : ''} text-emerald-700 font-bold">${o.operou}</td>
         <td class="p-1.5 text-center ${o.parados ? 'text-red-600 font-black' : 'text-slate-300'}">${o.parados}</td>
@@ -10437,13 +10457,22 @@
       lucide.createIcons();
     };
 
-    window.openOperacaoDetalhe = function(assetId) {
+    window.openOperacaoDetalhe = function(assetId, anoEscolhido) {
       const asset = getAssetById(assetId);
       if (!asset) return;
-      const ref = getOperacaoRef();
-      const ano = parseInt(ref.slice(0, 4), 10);
-      const inicioDados = getInicioOperacao();
+      window.opDetalheAssetId = asset.id;
       const evs = (window.assetEvents || []).filter(e => String(e.assetId) === String(asset.id) && !(window.ignorarReforma && isReformaEvent(e)));
+      const inicioDados = getInicioAtivoOperacao(evs);
+      const ano = parseInt(anoEscolhido || getOperacaoRef().slice(0, 4), 10);
+      // Seletor de ano: do primeiro registro do ativo até o ano atual
+      const anoSel = document.getElementById('op-detalhe-ano');
+      if (anoSel) {
+        const anos = [];
+        for (let y = parseInt(getTodayStr().slice(0, 4), 10); y >= parseInt(inicioDados.slice(0, 4), 10); y--) anos.push(y);
+        if (!anos.includes(ano)) anos.push(ano);
+        anoSel.innerHTML = anos.sort((a, b) => b - a).map(y => `<option value="${y}">${y}</option>`).join('');
+        anoSel.value = String(ano);
+      }
       const MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
       const hoje = getTodayStr();
       const operou = [], parado = [], semRegistro = [];
@@ -10455,7 +10484,7 @@
         // Meses antes do início dos dados ficam zerados (sem registro), não como "operou"
         operou.push(r.semDados ? 0 : r.operou); parado.push(r.semDados ? 0 : r.parados); semRegistro.push(!!r.semDados);
       }
-      document.getElementById('op-detalhe-title').innerText = `${asset.tag}${asset.placa ? ' · ' + asset.placa : ''} — dias operados x parados em ${ano} (dados a partir de ${formatDateBR(inicioDados)})`;
+      document.getElementById('op-detalhe-title').innerText = `${asset.tag}${asset.placa ? ' · ' + asset.placa : ''} — dias operados x parados (registros a partir de ${formatDateBR(inicioDados)})`;
       const el = document.getElementById('chartOpDetalhe');
       if (window.chartOpDetalheInstance) window.chartOpDetalheInstance.destroy();
       window.chartOpDetalheInstance = new Chart(el.getContext('2d'), {
@@ -10463,13 +10492,13 @@
         data: { labels: MES, datasets: [{ label: 'Operou (dias)', data: operou, backgroundColor: '#10b981', stack: 's', borderRadius: 3 }, { label: 'Parado (dias)', data: parado, backgroundColor: '#ef4444', stack: 's', borderRadius: 3 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0, color: '#fff', font: { weight: 'bold', size: 9 } }, tooltip: { callbacks: { footer: (items) => semRegistro[items[0].dataIndex] ? 'Sem registro no sistema neste mês' : '' } } }, scales: { x: { stacked: true, ticks: { callback: (v, i) => semRegistro[i] ? [MES[i], 'sem reg.'] : MES[i], color: (c) => semRegistro[c.index] ? '#94a3b8' : '#475569', font: { size: 10 }, maxRotation: 0, minRotation: 0, autoSkip: false } }, y: { stacked: true, beginAtZero: true, max: 31 } } }
       });
-      const doAno = evs.filter(e => (e.inicio || '').slice(0, 4) === String(ano) || (e.fim || hoje).slice(0, 4) === String(ano)).sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''));
+      const doAno = evs.filter(e => (e.inicio || '') <= `${ano}-12-31` && (e.fim || hoje) >= `${ano}-01-01`).sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''));
       document.getElementById('op-detalhe-eventos').innerHTML = doAno.map(e => `
         <div class="flex items-center justify-between gap-2 p-2 border border-slate-200 rounded-lg text-xs">
           <div><p class="font-bold text-slate-800">${escapeHtml(e.tipoParada)} — ${escapeHtml(e.motivo)}</p>
           <p class="text-slate-500">${formatDateBR(e.inicio)} → ${e.fim ? formatDateBR(e.fim) : 'em aberto'} · ${calcDiasParado(e.inicio, e.fim || null)} dia(s) · Causa: ${escapeHtml(e.causaRaiz || 'não informada')}${e.farolStatus === 'Em Serviço' ? ' · Em Serviço (não conta como parado)' : ''}</p></div>
           <button onclick="document.getElementById('modal-op-detalhe').classList.replace('flex','hidden'); editOpenEvent(${e.id})" class="text-slate-400 hover:text-blue-600" title="Editar"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-        </div>`).join('') || `<p class="text-xs text-slate-400 italic text-center py-3">Nenhuma parada registrada neste ano${inicioDados > `${ano}-01-01` ? ` (dados a partir de ${formatDateBR(inicioDados)} — meses anteriores ficam zerados, sem registro)` : ''}.</p>`;
+        </div>`).join('') || `<p class="text-xs text-slate-400 italic text-center py-3">Nenhuma parada registrada neste ano${inicioDados > `${ano}-01-01` ? ` — registros deste ativo a partir de ${formatDateBR(inicioDados)}; meses anteriores ficam zerados (sem registro), não como "operou"` : ''}.</p>`;
       document.getElementById('modal-op-detalhe').classList.replace('hidden', 'flex');
       lucide.createIcons();
     };
@@ -10480,7 +10509,7 @@
       const ref = getOperacaoRef();
       exportRowsToExcel(`Operacao_por_Ativo_${getTodayStr()}.xlsx`, 'Operação',
         ['TAG', 'Placa', 'Tipo', 'Unidade', 'Referência', 'Dados a partir de', 'Semana - Operou', 'Semana - Parado', 'Semana - Quebras', 'Mês - Operou', 'Mês - Parado', 'Mês - Quebras', 'Ano - Operou', 'Ano - Parado', 'Ano - Quebras', 'Ano - Paradas (todas)', '% Disponibilidade Ano'],
-        rows.map(r => [r.a.tag, r.a.placa || '', r.a.tipo, r.a.unidade, formatDateBR(ref), formatDateBR(getInicioOperacao()), r.sem.operou, r.sem.parados, r.sem.quebras, r.mes.operou, r.mes.parados, r.mes.quebras, r.ano.operou, r.ano.parados, r.ano.quebras, r.ano.paradas, r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : '']));
+        rows.map(r => [r.a.tag, r.a.placa || '', r.a.tipo, r.a.unidade, formatDateBR(ref), formatDateBR(r.ano.inicio || getInicioOperacao()), r.sem.operou, r.sem.parados, r.sem.quebras, r.mes.operou, r.mes.parados, r.mes.quebras, r.ano.operou, r.ano.parados, r.ano.quebras, r.ano.paradas, r.ano.total ? Math.round((r.ano.operou / r.ano.total) * 100) : '']));
     };
 
     // ===================== ANÁLISE DE FALHAS (CAUSA RAIZ) =====================
