@@ -240,6 +240,9 @@
       </div>
 
       <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
+        <button id="presence-header-badge" onclick="switchTab('online')" title="Quem está online agora" class="hidden items-center gap-1.5 bg-sky-50 border border-sky-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-sky-800 hover:bg-sky-100">
+          <i data-lucide="users-round" class="w-3.5 h-3.5"></i> <span id="presence-header-count">0</span> online
+        </button>
         <div id="sync-status-badge" title="Status de sincronização com a nuvem" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-500">
           <span class="dot bg-slate-300"></span> <span id="sync-status-label">Conectando...</span>
         </div>
@@ -336,6 +339,9 @@
       </button>
       <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="history" class="w-4 h-4"></i> <span class="hidden sm:inline">Histórico Consolidado</span>
+      </button>
+      <button onclick="switchTab('online')" id="btn-tab-online" class="tab-btn hidden px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="radio" class="w-4 h-4"></i> <span class="hidden sm:inline">Usuários Online</span>
       </button>
       <button onclick="switchTab('users')" id="btn-tab-users" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="users" class="w-4 h-4"></i> <span class="hidden sm:inline">Usuários & Permissões</span>
@@ -1348,12 +1354,11 @@
       <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Controle e Acompanhamento de Documentação Veicular</h2>
-          <p class="text-xs text-slate-500">CRLV, CIV, CIPP, Tacógrafo, Calibração de Válvula e outros tipos que você cadastrar — regra 30/60/90 dias: acima de 90 dias o documento fica <strong>Em dia</strong> e não precisa ser programado</p>
+          <p class="text-xs text-slate-500">CIV (1 ano), CIPP, Tacógrafo e Calibração de Válvula (2 anos), CRLV e outros tipos que você cadastrar — regra 30/60/90 dias: acima de 90 dias o documento fica <strong>Em dia</strong> e não precisa ser programado</p>
         </div>
         <div class="flex gap-2 flex-wrap">
           <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-            <button onclick="setDocView('table')" id="btn-doc-view-table" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Tabela</button>
-            <button onclick="setDocView('matriz')" id="btn-doc-view-matriz" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Matriz</button>
+            <button onclick="setDocView('matriz')" id="btn-doc-view-matriz" class="subtab-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Matriz</button>
             <button onclick="setDocView('calendar')" id="btn-doc-view-calendar" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Calendário</button>
             <button onclick="setDocView('vencimentos')" id="btn-doc-view-vencimentos" class="subtab-btn px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 transition">Vencimentos</button>
           </div>
@@ -1391,9 +1396,6 @@
             <option value="boa">Em dia (&gt; 90 dias)</option>
             <option value="renovado">Renovado (ciclo encerrado)</option>
           </select>
-          <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 cursor-pointer" title="Documentos já renovados ficam guardados como histórico — marque para vê-los na tabela">
-            <input type="checkbox" id="doc-filter-mostrar-historico" onchange="onDocFiltersChange()"> Mostrar ciclos já renovados
-          </label>
         </div>
       </div>
 
@@ -1420,29 +1422,7 @@
         </div>
       </div>
 
-      <div id="doc-view-table-wrap" class="card-executive overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
-              <tr>
-                <th class="p-4">Unidade</th>
-                <th class="p-4">TAG / Frota</th>
-                <th class="p-4">Tipo</th>
-                <th class="p-4">Documento</th>
-                <th class="p-4">Vencimento</th>
-                <th class="p-4">Dias Restantes</th>
-                <th class="p-4">Situação</th>
-                <th class="p-4">Status</th>
-                <th class="p-4">Realização / Novo Prazo</th>
-                <th class="p-4 text-center sticky-col-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="docs-table-body" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="doc-view-matriz-wrap" class="hidden space-y-3">
+      <div id="doc-view-matriz-wrap" class="space-y-3">
         <div class="card-executive p-4">
           <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
             <h3 class="text-sm font-bold text-slate-700">Matriz de Vencimentos por Ativo</h3>
@@ -1456,7 +1436,7 @@
               <button onclick="openTipoDocumentoModal()" class="ml-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold flex items-center gap-1"><i data-lucide="columns-3" class="w-3.5 h-3.5"></i> + Nova Coluna (Tipo de Documento)</button>
             </div>
           </div>
-          <p class="text-xs text-slate-500">Uma coluna por tipo de documento (CIV + CIPP não vira coluna: um documento "CIV + CIPP" alimenta as colunas CIV e CIPP). A célula mostra o vencimento vigente; se o último registro já foi <strong>realizado</strong>, mostra o <strong>novo prazo</strong> (data de realização + validade do tipo/norma), marcado com ★. Clique numa célula com dado para ver o histórico, ou numa célula vazia para cadastrar.</p>
+          <p class="text-xs text-slate-500">Uma coluna por tipo de documento (CIV e CIPP em colunas separadas). A célula mostra o vencimento vigente e o status. <strong>Clique numa célula</strong> para registrar a realização, <strong>alterar a data de vencimento</strong> (a Matriz e o controle atualizam na hora), reprogramar ou ver o histórico; numa célula vazia, para cadastrar. ★ = novo prazo calculado pela validade do tipo (clique para confirmar ou ajustar a data real).</p>
         </div>
         <div class="card-executive overflow-hidden">
           <div class="overflow-x-auto">
@@ -1837,6 +1817,66 @@
       </div>
     </section>
 
+    <!-- ABA: USUÁRIOS ONLINE — quem está conectado agora, em qual página, e histórico de login/logout -->
+    <section id="tab-online" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5 text-sky-600"></i> Usuários Online</h2>
+          <p class="text-xs text-slate-500">Quem está com o sistema aberto agora, em qual página está e desde quando — atualiza sozinho. Abaixo, o histórico de entradas (login) e saídas. Visível só para quem tem a opção liberada em Usuários &amp; Permissões.</p>
+        </div>
+        <button onclick="exportAcessosToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Acessos</button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="card-executive p-4 border-l-4 border-l-emerald-500"><p class="text-[11px] font-bold text-emerald-700 uppercase">Online agora</p><h3 class="text-2xl font-black text-emerald-600" id="pres-kpi-online">0</h3></div>
+        <div class="card-executive p-4 border-l-4 border-l-amber-400"><p class="text-[11px] font-bold text-amber-700 uppercase">Ausentes (&gt; 5 min parado)</p><h3 class="text-2xl font-black text-amber-600" id="pres-kpi-ausente">0</h3></div>
+        <div class="card-executive p-4"><p class="text-[11px] font-bold text-slate-500 uppercase">Logins hoje</p><h3 class="text-2xl font-black text-slate-800" id="pres-kpi-logins-hoje">0</h3></div>
+        <div class="card-executive p-4"><p class="text-[11px] font-bold text-slate-500 uppercase">Usuários diferentes hoje</p><h3 class="text-2xl font-black text-slate-800" id="pres-kpi-usuarios-hoje">0</h3></div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot inline-block"></span> Conectados agora</h3></div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">Usuário</th><th class="p-2">Função</th><th class="p-2">Página que está vendo</th><th class="p-2">Na página desde</th><th class="p-2">Entrou às</th><th class="p-2">Última atividade</th><th class="p-2">Dispositivo</th></tr>
+            </thead>
+            <tbody id="pres-online-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700">Todos os usuários — último acesso</h3></div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">Usuário</th><th class="p-2">Função</th><th class="p-2">Situação</th><th class="p-2">Último login</th><th class="p-2">Última vez online</th><th class="p-2">Logins (30 dias)</th></tr>
+            </thead>
+            <tbody id="pres-usuarios-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-bold text-slate-700">Histórico de acessos (login / logout)</h3>
+          <div class="flex flex-wrap gap-2">
+            <select id="pres-filter-usuario" onchange="renderPresenca()" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none"><option value="TODOS">Todos os usuários</option></select>
+            <input type="date" id="pres-filter-data" onchange="renderPresenca()" class="border border-slate-300 rounded-lg p-1.5 text-xs outline-none" title="Filtrar por dia">
+          </div>
+        </div>
+        <div class="overflow-x-auto max-h-[480px]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+              <tr><th class="p-2">Data / Hora</th><th class="p-2">Usuário</th><th class="p-2">Função</th><th class="p-2">Evento</th><th class="p-2">Dispositivo</th></tr>
+            </thead>
+            <tbody id="pres-acessos-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ABA 9: USUÁRIOS & PERMISSÕES -->
     <section id="tab-users" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5">
@@ -1899,6 +1939,21 @@
               <option value="Inativo">Inativo</option>
             </select>
           </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Painel "Quem está online"</label>
+            <select id="user-ver-presenca" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="PADRAO">Padrão da função (Diretor, Gerente e Desenvolvedor veem)</option>
+              <option value="SIM">Sim — pode ver quem está online e os acessos</option>
+              <option value="NAO">Não — não vê o painel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Aparecer como online para os outros</label>
+            <select id="user-mostrar-presenca" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="SIM">Sim — mostra online e a página que está vendo</option>
+              <option value="NAO">Não — acesso fica só no histórico de login</option>
+            </select>
+          </div>
           <div class="md:col-span-3 flex justify-end gap-2 pt-2">
             <button type="button" onclick="resetUserForm()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Limpar</button>
             <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Usuário</button>
@@ -1916,6 +1971,8 @@
                 <th class="p-3">Função</th>
                 <th class="p-3">Unidade</th>
                 <th class="p-3">Status</th>
+                <th class="p-3">Agora</th>
+                <th class="p-3">Vê "Online"</th>
                 <th class="p-3 text-center sticky-col-right">Ações</th>
               </tr>
             </thead>
@@ -2615,7 +2672,7 @@
         <h3 class="font-bold text-slate-900 text-lg">Gerenciar Tipos de Documento</h3>
         <button onclick="closeTipoDocumentoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
       </div>
-      <p class="text-xs text-slate-500">O prazo é usado para calcular a Data de Vencimento a partir de uma Data de Referência (ex.: data da calibração/inspeção), e também define as colunas da Matriz de Vencimentos.</p>
+      <p class="text-xs text-slate-500">Cada tipo vira uma coluna da Matriz. A validade (em dias) calcula o próximo vencimento quando o documento é realizado — norma: CIV 1 ano (365 dias); CIPP, Tacógrafo e Calibração de Válvula 2 anos (730 dias). Pode ajustar aqui a qualquer momento.</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
         <div class="sm:col-span-2">
           <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome do Tipo</label>
@@ -2653,7 +2710,7 @@
 
   <!-- MODAL HISTÓRICO DE DOCUMENTO — aberto ao clicar numa célula da Matriz de Vencimentos -->
   <div id="modal-doc-historico" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[80vh] overflow-y-auto">
+    <div class="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[88vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-slate-900 text-lg" id="doc-historico-title"></h3>
         <button onclick="closeDocHistoricoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
@@ -2844,7 +2901,7 @@
   <!-- SCRIPT ENGINE INTEGRADO -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     Chart.register(ChartDataLabels);
 
@@ -2872,7 +2929,7 @@
     window.docCalendarDate = new Date(2026, 8, 1);
     window.currentCalendarView = 'weekly';
     window.currentDocCalendarView = 'monthly';
-    window.currentDocView = 'table';
+    window.currentDocView = 'matriz';
 
     // Semana de referência (segunda-feira) dos calendários semanais — dinâmica, avança/retrocede e acompanha a data atual
     function getMondayOfWeek(date) {
@@ -2964,7 +3021,7 @@
     const initialDocsDefault = [
       { id: 1, unit: 'AM', tag: 'CN002', assetId: 1002, type: 'Carreta', docName: 'CRLV Anual', expDate: '2026-09-13', status: 'Programado' },
       { id: 2, unit: 'AM', tag: 'CV010', assetId: 1001, type: 'Cavalo', docName: 'Tacógrafo', expDate: '2026-09-05', status: 'Realizado' },
-      { id: 3, unit: 'MA', tag: 'CNC05', assetId: 1004, type: 'Carreta', docName: 'CIV + CIPP', expDate: '2026-09-15', status: 'Programado' },
+      { id: 3, unit: 'MA', tag: 'CNC05', assetId: 1004, type: 'Carreta', docName: 'CIV', expDate: '2026-09-15', status: 'Programado' },
       { id: 4, unit: 'MA', tag: 'CV008', assetId: 1003, type: 'Cavalo', docName: 'CRLV Anual', expDate: '2026-09-12', status: 'Reprogramado' }
     ];
 
@@ -3103,7 +3160,7 @@
         }
         markSynced('fleetDocs', window.fleetDocs);
         docsLoaded = true;
-        migrarDocumentosVigentes();
+        migrarDocumentosNormaV2();
         maybeRunSnapshot();
         renderDocuments();
         renderDocCalendar();
@@ -3184,7 +3241,7 @@
       onValue(ref(db, '.info/connected'), (snap) => {
         window.isFirebaseConnected = snap.val() === true;
         setSyncStatus(window.isFirebaseConnected ? 'online' : 'offline');
-        if (window.isFirebaseConnected) { flushPendingAuditEntries(); saveData(); }
+        if (window.isFirebaseConnected) { flushPendingAuditEntries(); saveData(); if (window.currentLoggedUser && typeof startPresence === 'function') startPresence(); }
       });
     }
 
@@ -3390,7 +3447,7 @@
       'Diretor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
       'Desenvolvedor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
     };
-    const ALL_TABS = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'];
+    const ALL_TABS = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'online', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -3411,6 +3468,16 @@
           safeSet('users', initialUsersDefault).catch(() => {});
         }
         usersLoaded = true;
+        // Atualiza as permissões/opções do usuário logado com o cadastro mais recente (ex.: acesso ao painel online)
+        if (window.currentLoggedUser) {
+          const rec = (window.users || []).find(u => (u.login || '').toLowerCase() === (window.currentLoggedUser.login || '').toLowerCase());
+          if (rec) {
+            Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, permissoesCustom: rec.permissoesCustom || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
+            try { sessionStorage.setItem('pcm_user', JSON.stringify(window.currentLoggedUser)); } catch (e) {}
+            applyRolePermissions(rec.funcao, rec);
+            if (rec.mostrarPresenca === false) stopPresence(false); else startPresence();
+          }
+        }
         renderUsersTable();
       });
     }
@@ -3625,13 +3692,15 @@
     // A Matriz de Vencimentos (aba Documentação → Matriz) usa esses mesmos tipos como colunas.
     window.tiposDocumento = [];
     let tiposDocumentoLoaded = false;
+    // Norma de validade: CIV = 1 ano; CIPP, Tacógrafo e Calibração de Válvula = 2 anos (ajustável em "Gerenciar Tipos")
+    const NORMA_PRAZOS_DOC = { 'CIV': 365, 'CIPP': 730, 'Tacógrafo': 730, 'Calibração de Válvula': 730 };
+    const NORMA_VERSAO = 'norma-2026-09';
     const TIPOS_DOCUMENTO_PADRAO = [
-      { nome: 'CIV', prazoDias: 365, aplicavelA: 'Ambos' },
-      { nome: 'CIPP', prazoDias: 365, aplicavelA: 'Ambos' },
-      { nome: 'CIV + CIPP', prazoDias: 365, aplicavelA: 'Ambos' },
+      { nome: 'CIV', prazoDias: 365, aplicavelA: 'Ambos', normaAplicada: NORMA_VERSAO },
+      { nome: 'CIPP', prazoDias: 730, aplicavelA: 'Ambos', normaAplicada: NORMA_VERSAO },
       { nome: 'CRLV Anual', prazoDias: 365, aplicavelA: 'Ambos' },
-      { nome: 'Tacógrafo', prazoDias: 365, aplicavelA: 'Ambos' },
-      { nome: 'Calibração de Válvula', prazoDias: 365, aplicavelA: 'Carreta' }
+      { nome: 'Tacógrafo', prazoDias: 730, aplicavelA: 'Ambos', normaAplicada: NORMA_VERSAO },
+      { nome: 'Calibração de Válvula', prazoDias: 730, aplicavelA: 'Carreta', normaAplicada: NORMA_VERSAO }
     ];
 
     function syncTiposDocumento() {
@@ -3647,6 +3716,7 @@
         }
         markSynced('tiposDocumento', window.tiposDocumento);
         tiposDocumentoLoaded = true;
+        migrarDocumentosNormaV2();
         populateTipoDocumentoSelect();
         populateDocNomeFilter();
         renderTiposDocumentoTable();
@@ -3666,6 +3736,7 @@
       const nomeEl = document.getElementById('tipo-doc-nome-novo');
       const nome = nomeEl.value.trim();
       if (!nome) { alert('Informe o nome do tipo de documento.'); return; }
+      if (normalizeHeader(nome).replace(/\s/g, '') === 'civ+cipp') { alert('CIV e CIPP são controlados separadamente (CIV vale 1 ano e CIPP 2 anos). Use os tipos CIV e CIPP.'); return; }
       if ((window.tiposDocumento || []).some(t => t.nome.toLowerCase() === nome.toLowerCase())) {
         alert('Já existe um tipo de documento cadastrado com esse nome.');
         return;
@@ -3775,6 +3846,99 @@
       return window.getDocStatusEfetivo(d) !== 'Vigente';
     };
 
+    // ===== Migração da norma (roda uma vez, quando documentos e tipos já chegaram da nuvem) =====
+    // 1) Tipos: CIV 365 dias; CIPP, Tacógrafo e Calibração de Válvula 730 dias; remove o tipo combinado "CIV + CIPP".
+    // 2) Documentos "CIV + CIPP" viram dois documentos (CIV e CIPP), preservando datas, status e histórico.
+    // 3) Ciclos gerados automaticamente com 365 dias para tipos de 2 anos são recalculados pela norma.
+    function migrarDocumentosNormaV2() {
+      if (!docsLoaded || !tiposDocumentoLoaded) return;
+      const a = aplicarNormaTiposDocumento();
+      const b = separarDocumentosCivCipp();
+      const c = recalcularCiclosPelaNorma();
+      migrarDocumentosVigentes();
+      if (a || b || c) {
+        saveData();
+        populateTipoDocumentoSelect();
+        populateDocNomeFilter();
+        renderTiposDocumentoTable();
+        if (assetsLoaded) { renderDocuments(); renderDocVencimentos(); if (window.currentDocView === 'matriz') renderDocMatriz(); }
+      }
+    }
+
+    function aplicarNormaTiposDocumento() {
+      if (!window.tiposDocumento) window.tiposDocumento = [];
+      const civAtual = getTipoDocumento('CIV');
+      const primeiraVez = !civAtual || civAtual.normaAplicada !== NORMA_VERSAO;
+      const alteracoes = [];
+      let mudou = false;
+      if (primeiraVez && window.tiposDocumento.some(t => t.nome === DOC_COMBINADO)) {
+        window.tiposDocumento = window.tiposDocumento.filter(t => t.nome !== DOC_COMBINADO);
+        alteracoes.push({ campo: 'Tipo "CIV + CIPP"', de: 'coluna combinada', para: 'removido — CIV e CIPP separados' });
+        mudou = true;
+      }
+      Object.keys(NORMA_PRAZOS_DOC).forEach((nome, i) => {
+        let t = getTipoDocumento(nome);
+        if (!t) {
+          t = { id: Date.now() + 50 + i, nome, prazoDias: NORMA_PRAZOS_DOC[nome], aplicavelA: nome === 'Calibração de Válvula' ? 'Carreta' : 'Ambos', normaAplicada: NORMA_VERSAO };
+          window.tiposDocumento.push(t);
+          alteracoes.push({ campo: `Tipo ${nome}`, de: '(não existia)', para: `${t.prazoDias} dias` });
+          mudou = true;
+          return;
+        }
+        if (t.normaAplicada !== NORMA_VERSAO) {
+          if (Number(t.prazoDias) !== NORMA_PRAZOS_DOC[nome]) alteracoes.push({ campo: `Validade ${nome}`, de: `${t.prazoDias} dias`, para: `${NORMA_PRAZOS_DOC[nome]} dias` });
+          t.prazoDias = NORMA_PRAZOS_DOC[nome];
+          t.normaAplicada = NORMA_VERSAO;
+          mudou = true;
+        }
+      });
+      if (mudou) addAuditLog('TODAS', 'Configuração', 'TIPOS DE DOCUMENTO', 'Norma de validade aplicada: CIV 1 ano; CIPP, Tacógrafo e Calibração de Válvula 2 anos' + (alteracoes.some(x => x.campo.includes('CIV + CIPP')) ? '; coluna combinada "CIV + CIPP" removida' : ''), getTodayStr(), 'Atualizado', null, alteracoes);
+      return mudou;
+    }
+
+    function separarDocumentosCivCipp() {
+      const combinados = (window.fleetDocs || []).filter(d => d.docName === DOC_COMBINADO);
+      if (combinados.length === 0) return false;
+      const base = Date.now();
+      const mapaCipp = {};
+      combinados.forEach((d, i) => { mapaCipp[String(d.id)] = base + i + 1; });
+      const novos = [];
+      combinados.forEach(d => {
+        const nota = { dataAnterior: d.expDate, dataNova: d.expDate, responsavel: 'Sistema (automático)', motivo: 'Documento "CIV + CIPP" separado em dois registros: CIV (1 ano) e CIPP (2 anos)', timestamp: getNowFormatted(), automatico: true };
+        const copia = JSON.parse(JSON.stringify(d));
+        copia.id = mapaCipp[String(d.id)];
+        copia.docName = 'CIPP';
+        copia.separadoDe = d.id;
+        if (d.proximoCicloId) { if (mapaCipp[String(d.proximoCicloId)]) copia.proximoCicloId = mapaCipp[String(d.proximoCicloId)]; else delete copia.proximoCicloId; }
+        if (d.cicloAnteriorId) { if (mapaCipp[String(d.cicloAnteriorId)]) copia.cicloAnteriorId = mapaCipp[String(d.cicloAnteriorId)]; else delete copia.cicloAnteriorId; }
+        copia.historico = [...(d.historico || []), nota];
+        d.docName = 'CIV';
+        d.separadoEmCipp = copia.id;
+        d.historico = [...(d.historico || []), nota];
+        novos.push(copia);
+      });
+      window.fleetDocs.push(...novos);
+      addAuditLog('TODAS', 'Documentação', 'CIV + CIPP', `${combinados.length} documento(s) "CIV + CIPP" separado(s) em CIV e CIPP (mesmas datas e status): ${combinados.slice(0, 20).map(d => d.tag).join(', ')}${combinados.length > 20 ? '...' : ''}`, getTodayStr(), 'Atualizado');
+      return true;
+    }
+
+    function recalcularCiclosPelaNorma() {
+      const alvo = (window.fleetDocs || []).filter(d => d.cicloAnteriorId && d.dataReferencia && !d.validadeDias && d.status !== 'Realizado' && !d.normaRecalculada
+        && NORMA_PRAZOS_DOC[d.docName] && NORMA_PRAZOS_DOC[d.docName] !== 365 && d.expDate === addDaysToDateStr(d.dataReferencia, 365));
+      if (alvo.length === 0) return false;
+      alvo.forEach(d => {
+        const novo = addDaysToDateStr(d.dataReferencia, NORMA_PRAZOS_DOC[d.docName]);
+        if (!d.historico) d.historico = [];
+        d.historico.push({ dataAnterior: d.expDate, dataNova: novo, responsavel: 'Sistema (automático)', motivo: `Vencimento recalculado pela norma (${d.docName}: ${NORMA_PRAZOS_DOC[d.docName]} dias a partir da realização em ${formatDateBR(d.dataReferencia)})`, timestamp: getNowFormatted(), automatico: true, correcao: true });
+        d.expDate = novo;
+        d.dataOriginal = novo;
+        if (d.status === 'Vigente' || d.status === 'Programado') d.status = getDocStatusPorRegra(novo);
+        d.normaRecalculada = true;
+      });
+      addAuditLog('TODAS', 'Documentação', 'NORMA', `${alvo.length} vencimento(s) recalculado(s) para 2 anos (CIPP / Tacógrafo / Calibração de Válvula): ${alvo.map(d => d.tag + ' ' + d.docName).slice(0, 20).join(', ')}`, getTodayStr(), 'Atualizado');
+      return true;
+    }
+
     // Migração automática (uma única vez por documento): registros marcados "Realizado" cujo vencimento ainda
     // está a mais de 90 dias e que não geraram um novo ciclo são, na prática, documentos válidos (ex.: carga de
     // dados com a validade atual). Passam para "Em dia" — deixam de contar como programação realizada (essa
@@ -3798,8 +3962,8 @@
       const el = document.getElementById('doc-name');
       if (!el) return;
       const current = el.value;
-      const list = (window.tiposDocumento || []).slice().sort((a, b) => a.nome.localeCompare(b.nome));
-      el.innerHTML = list.map(t => `<option value="${escapeAttr(t.nome)}" data-prazo="${t.prazoDias}">${escapeHtml(t.nome)}${t.nome === DOC_COMBINADO ? ' 🔗' : ''} (${t.prazoDias}d)</option>`).join('');
+      const list = (window.tiposDocumento || []).filter(t => t.nome !== DOC_COMBINADO).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      el.innerHTML = list.map(t => `<option value="${escapeAttr(t.nome)}" data-prazo="${t.prazoDias}">${escapeHtml(t.nome)} (${t.prazoDias >= 365 && t.prazoDias % 365 === 0 ? (t.prazoDias / 365) + (t.prazoDias === 365 ? ' ano' : ' anos') : t.prazoDias + 'd'})</option>`).join('');
       if (current && list.some(t => t.nome === current)) el.value = current;
     }
 
@@ -3883,13 +4047,17 @@
       const tbody = document.getElementById('doc-matriz-tbody');
       if (!thead || !tbody) return;
 
-      const tipos = (window.tiposDocumento || []).filter(t => t.nome !== DOC_COMBINADO).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      let tipos = (window.tiposDocumento || []).filter(t => t.nome !== DOC_COMBINADO).slice().sort((a, b) => a.nome.localeCompare(b.nome));
+      const nomeFiltro = document.getElementById('doc-filter-nome')?.value || 'TODOS';
+      if (nomeFiltro !== 'TODOS' && tipos.some(t => t.nome === nomeFiltro)) tipos = tipos.filter(t => t.nome === nomeFiltro);
+      const situacaoFiltro = document.getElementById('doc-filter-situacao')?.value || 'TODAS';
+      const fmtValidade = (d) => d % 365 === 0 ? `${d / 365} ${d === 365 ? 'ano' : 'anos'}` : `${d}d`;
 
       thead.innerHTML = `
         <tr>
           <th class="p-2 sticky left-0 bg-slate-50 z-10">TAG / Frota</th>
           <th class="p-2">Unidade</th>
-          ${tipos.map(t => `<th class="p-2 text-center border-l border-slate-200" colspan="2">${escapeHtml(t.nome)}<span class="block text-[9px] font-medium normal-case text-slate-400">${t.prazoDias}d · ${t.aplicavelA === 'Cavalo' ? 'só cavalo' : t.aplicavelA === 'Carreta' ? 'só carreta' : 'todos'}</span></th>`).join('')}
+          ${tipos.map(t => `<th class="p-2 text-center border-l border-slate-200" colspan="2">${escapeHtml(t.nome)}<span class="block text-[9px] font-medium normal-case text-slate-400">validade ${fmtValidade(Number(t.prazoDias) || 365)} · ${t.aplicavelA === 'Cavalo' ? 'só cavalo' : t.aplicavelA === 'Carreta' ? 'só carreta' : 'todos'}</span></th>`).join('')}
         </tr>
         <tr class="text-[10px]">
           <th class="p-1 sticky left-0 bg-slate-50 z-10"></th>
@@ -3907,7 +4075,10 @@
       if (marcaFiltro !== 'TODAS') assets = assets.filter(a => a.marca === marcaFiltro);
       assets = assets.slice().sort((a, b) => naturalCompare(a.tag, b.tag));
 
-      tbody.innerHTML = assets.map(a => {
+      const STATUS_CURTO = { Vigente: 'Em dia', Programado: 'Programar', Reprogramado: 'Reprogramado', Renovado: '★ novo prazo' };
+      const linhas = [];
+      assets.forEach(a => {
+        const tiers = [];
         const cells = tipos.map(t => {
           const aplicavel = !t.aplicavelA || t.aplicavelA === 'Ambos' || t.aplicavelA === a.tipo;
           if (!aplicavel) return `<td class="p-1.5 text-center border-l border-slate-100 text-slate-300 text-[11px]" colspan="2" title="Não se aplica a ${a.tipo}">—</td>`;
@@ -3916,15 +4087,18 @@
             return `<td class="p-1.5 text-center border-l border-slate-100 text-[11px] cursor-pointer hover:bg-emerald-50 text-slate-400" colspan="2" onclick="cadastrarDocDaMatriz(${a.id}, '${escapeJs(t.nome)}')" title="Sem registro — clique para cadastrar">+ cadastrar</td>`;
           }
           const days = calculateDaysRemaining(info.venc);
+          tiers.push(info.derivado ? 'renovado' : getDocSituacao(days, 'Programado').tier);
           const colorClass = docMatrizCellColor(days);
           const titulo = info.derivado
-            ? `Realizado em ${formatDateBR(info.doc.dataRealizada || info.doc.expDate)} — novo prazo calculado pela validade (${getPrazoTipo(t.nome, info.doc)} dias)`
-            : `${info.doc.docName} · Status: ${info.status === 'Vigente' ? 'Em dia' : info.status}`;
+            ? `Realizado em ${formatDateBR(info.doc.dataRealizada || info.doc.expDate)} — novo prazo calculado pela validade (${getPrazoTipo(t.nome, info.doc)} dias). Clique para confirmar ou alterar a data.`
+            : `${info.doc.docName} · ${STATUS_CURTO[info.status] || info.status} — clique para alterar vencimento, registrar realização ou ver histórico`;
           const onclickAttr = `onclick="openDocMatrizHistorico('${escapeJs(a.tag)}', '${escapeJs(t.nome)}')"`;
-          return `<td class="p-1.5 text-center border-l border-slate-100 cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr} title="${escapeAttr(titulo)}">${formatDateBR(info.venc)}${info.derivado ? ' ★' : ''}</td><td class="p-1.5 text-center cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr} title="${escapeAttr(titulo)}">${days}</td>`;
+          return `<td class="p-1.5 text-center border-l border-slate-100 cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr} title="${escapeAttr(titulo)}">${formatDateBR(info.venc)}<span class="block text-[9px] font-semibold opacity-80">${STATUS_CURTO[info.status] || info.status}</span></td><td class="p-1.5 text-center cursor-pointer hover:opacity-80 text-[11px] ${colorClass}" ${onclickAttr} title="${escapeAttr(titulo)}">${days}</td>`;
         }).join('');
-        return `<tr><td class="p-2 font-bold text-slate-900 sticky left-0 bg-white">${escapeHtml(a.tag)}<span class="block text-[9px] font-medium text-slate-400">${escapeHtml(a.placa || '')}</span></td><td class="p-2">${getUnitBadge(a.unidade)}</td>${cells}</tr>`;
-      }).join('') || `<tr><td colspan="${2 + tipos.length * 2}" class="p-3 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
+        if (situacaoFiltro !== 'TODAS' && !tiers.includes(situacaoFiltro)) return;
+        linhas.push(`<tr><td class="p-2 font-bold text-slate-900 sticky left-0 bg-white">${escapeHtml(a.tag)}<span class="block text-[9px] font-medium text-slate-400">${escapeHtml(a.placa || '')}</span></td><td class="p-2">${getUnitBadge(a.unidade)}</td>${cells}</tr>`);
+      });
+      tbody.innerHTML = linhas.join('') || `<tr><td colspan="${2 + tipos.length * 2}" class="p-3 text-center text-slate-400 italic">Nenhum ativo encontrado com os filtros atuais.</td></tr>`;
     };
 
     // Clique numa célula vazia da Matriz: abre o cadastro já com o ativo e o tipo escolhidos
@@ -3936,33 +4110,133 @@
       if (nameSel) { nameSel.value = tipoNome; onDocTipoChange(); }
     };
 
-    // Histórico de um documento de um ativo (todos os ciclos, mais recente primeiro) — clique na Matriz
+    // Painel do documento (clique na célula da Matriz / Vencimentos): vencimento editável, realização,
+    // reprogramação e histórico de todos os ciclos. Ao salvar, Matriz e controle são atualizados na hora.
+    window.docDetalheAberto = null;
     window.openDocMatrizHistorico = function(tag, docName) {
+      window.docDetalheAberto = { tag, docName };
+      const asset = getAssetByTag(tag);
+      const info = getDocAtualParaAsset(tag, docName);
       const registros = (window.fleetDocs || []).filter(d => d.tag === tag && (d.docName === docName || ((docName === 'CIV' || docName === 'CIPP') && d.docName === DOC_COMBINADO)))
         .sort((a, b) => (b.expDate || '').localeCompare(a.expDate || ''));
       document.getElementById('doc-historico-title').innerText = `${tag} — ${docName}`;
-      const body = document.getElementById('doc-historico-body');
-      body.innerHTML = registros.map(d => {
+      const validade = getPrazoTipo(docName, info ? info.doc : null);
+
+      let atual = '';
+      if (info && !info.derivado) {
+        const d = info.doc;
+        const days = calculateDaysRemaining(d.expDate);
+        const sit = getDocSituacao(days, 'Programado');
+        atual = `
+          <div class="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <p class="text-xs font-black text-slate-500 uppercase">Documento vigente${asset ? ' · ' + escapeHtml(asset.tipo) + (asset.placa ? ' · ' + escapeHtml(asset.placa) : '') : ''}</p>
+              <span class="text-[11px] font-bold px-2.5 py-1 rounded-full border ${sit.badge}">${days < 0 ? 'Vencido há ' + Math.abs(days) + ' dias' : 'Faltam ' + days + ' dias'} · ${sit.shortLabel}</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Data de vencimento</label>
+                <input type="date" id="docdet-venc" value="${d.expDate || ''}" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+              </div>
+              <button onclick="salvarVencimentoDocDetalhe(${d.id})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Salvar novo vencimento</button>
+            </div>
+            <p class="text-[11px] text-slate-500">${d.dataReferencia ? `Realizado/emitido em ${formatDateBR(d.dataReferencia)} · ` : ''}Validade: ${getPrazoTipo(d.docName, d)} dias · Status: <strong>${escapeHtml(d.status === 'Vigente' ? 'Em dia' : d.status)}</strong>${d.local ? ' · Local: ' + escapeHtml(d.local) : ''}</p>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="closeDocHistoricoModal(); openDocRealizarModal(${d.id})" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[11px] font-bold flex items-center gap-1"><i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Registrar Realização</button>
+              <button onclick="closeDocHistoricoModal(); reprogramarProgramacao('Documento', ${d.id})" class="px-3 py-1.5 border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg text-[11px] font-bold flex items-center gap-1"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i> Programar Renovação</button>
+              <button onclick="closeDocHistoricoModal(); editDocument(${d.id})" class="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-[11px] font-bold flex items-center gap-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar dados</button>
+              <button onclick="closeDocHistoricoModal(); deleteDocument(${d.id})" class="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-[11px] font-bold flex items-center gap-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir</button>
+            </div>
+          </div>`;
+      } else if (info && info.derivado) {
+        const d = info.doc;
+        atual = `
+          <div class="p-4 rounded-xl border-2 border-teal-200 bg-teal-50/40 space-y-3">
+            <p class="text-xs font-black text-slate-500 uppercase">Documento realizado — confirme o novo vencimento</p>
+            <p class="text-xs text-slate-600">Realizado em <strong>${formatDateBR(d.dataRealizada || d.expDate)}</strong>. Pela validade do tipo (${getPrazoTipo(docName, d)} dias) o novo vencimento é <strong>${formatDateBR(info.venc)}</strong>. Ajuste se a data real for outra:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Novo vencimento</label>
+                <input type="date" id="docdet-venc" value="${info.venc}" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+              </div>
+              <button onclick="confirmarNovoVencimentoAposRealizado(${d.id})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Confirmar novo vencimento</button>
+            </div>
+          </div>`;
+      } else {
+        atual = `<div class="p-4 rounded-xl border border-dashed border-slate-300 text-center space-y-2">
+            <p class="text-xs text-slate-500">Nenhum ${escapeHtml(docName)} cadastrado para ${escapeHtml(tag)}.</p>
+            ${asset ? `<button onclick="closeDocHistoricoModal(); cadastrarDocDaMatriz(${asset.id}, '${escapeJs(docName)}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold">+ Cadastrar ${escapeHtml(docName)}</button>` : ''}
+          </div>`;
+      }
+
+      const historico = registros.map(d => {
         const st = getDocStatusEfetivo(d);
-        const hist = (d.historico || []).slice().reverse().map(h => `<li>${escapeHtml(h.timestamp || '')} — ${escapeHtml(h.motivo || '')}${h.dataAnterior !== h.dataNova ? ` (${formatDateBR(h.dataAnterior)} → ${formatDateBR(h.dataNova)})` : ''}${h.responsavel ? ' · ' + escapeHtml(h.responsavel) : ''}</li>`).join('');
+        const ev = (d.historico || []).slice().reverse().map(h => `<li>${escapeHtml(h.timestamp || '')} — ${escapeHtml(h.motivo || '')}${h.dataAnterior !== h.dataNova ? ` (${formatDateBR(h.dataAnterior)} → ${formatDateBR(h.dataNova)})` : ''}${h.responsavel ? ' · ' + escapeHtml(h.responsavel) : ''}</li>`).join('');
         return `
-        <div class="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
-          <div class="flex items-center justify-between gap-2">
-            <p class="text-sm font-semibold text-slate-800">${escapeHtml(d.docName)} · Vencimento: ${formatDateBR(d.expDate)}</p>
-            <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${st === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : st === 'Vigente' ? 'bg-teal-100 text-teal-800 border-teal-300' : st === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">${st === 'Vigente' ? 'Em dia' : st}</span>
-          </div>
-          <p class="text-xs text-slate-500">${d.dataRealizada ? 'Realizado em ' + formatDateBR(d.dataRealizada) + ' · ' : ''}Validade: ${getPrazoTipo(d.docName, d)} dias${d.local ? ' · Local: ' + escapeHtml(d.local) : ''}${d.responsavel ? ' · Responsável: ' + escapeHtml(d.responsavel) : ''}</p>
-          ${hist ? `<ul class="text-[11px] text-slate-500 list-disc pl-4">${hist}</ul>` : ''}
-          <div class="flex gap-2 pt-1">
-            <button onclick="closeDocHistoricoModal(); editDocument(${d.id})" class="text-[10px] font-bold text-slate-600 border border-slate-300 rounded px-2 py-0.5 hover:bg-slate-50">Editar</button>
-            ${d.status !== 'Realizado' ? `<button onclick="closeDocHistoricoModal(); openDocRealizarModal(${d.id})" class="text-[10px] font-bold text-emerald-700 border border-emerald-300 bg-emerald-50 rounded px-2 py-0.5 hover:bg-emerald-100">Registrar Realização</button>` : ''}
-          </div>
-        </div>`;
-      }).join('') || `<p class="text-xs text-slate-400 italic text-center py-6">Nenhum registro encontrado.</p>`;
+          <div class="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs font-semibold text-slate-800">Vencimento ${formatDateBR(d.expDate)}${d.dataRealizada ? ' · realizado em ' + formatDateBR(d.dataRealizada) : ''}</p>
+              <span class="flex items-center gap-1.5">
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${st === 'Realizado' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : st === 'Vigente' ? 'bg-teal-100 text-teal-800 border-teal-300' : st === 'Reprogramado' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}">${st === 'Vigente' ? 'Em dia' : st}</span>
+                <button onclick="closeDocHistoricoModal(); editDocument(${d.id})" class="text-slate-400 hover:text-blue-600" title="Editar este registro"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+              </span>
+            </div>
+            ${ev ? `<ul class="text-[11px] text-slate-500 list-disc pl-4">${ev}</ul>` : ''}
+          </div>`;
+      }).join('');
+
+      document.getElementById('doc-historico-body').innerHTML = atual + (historico ? `<h4 class="text-[11px] font-black text-slate-500 uppercase pt-2">Histórico de ciclos (validade padrão: ${validade} dias)</h4>${historico}` : '');
       document.getElementById('modal-doc-historico').classList.replace('hidden', 'flex');
       lucide.createIcons();
     };
     window.closeDocHistoricoModal = function() { document.getElementById('modal-doc-historico').classList.replace('flex', 'hidden'); };
+
+    function reabrirDocDetalhe() {
+      const d = window.docDetalheAberto;
+      if (d && !document.getElementById('modal-doc-historico').classList.contains('hidden')) openDocMatrizHistorico(d.tag, d.docName);
+    }
+
+    // Altera a data de vencimento de um documento (ex.: após realizar, informar a validade real do novo documento)
+    window.alterarVencimentoDoc = function(doc, novaData, motivo) {
+      if (!doc || !novaData || novaData === doc.expDate) return false;
+      const anterior = doc.expDate;
+      const statusAnterior = doc.status;
+      if (!doc.historico) doc.historico = [];
+      doc.historico.push({ dataAnterior: anterior, dataNova: novaData, motivo: motivo || 'Data de vencimento alterada', responsavel: window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema', timestamp: getNowFormatted(), correcao: true });
+      doc.expDate = novaData;
+      if (!doc.dataOriginal || doc.dataOriginal === anterior) doc.dataOriginal = novaData;
+      if (doc.status === 'Vigente' || doc.status === 'Programado') doc.status = getDocStatusPorRegra(novaData);
+      addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName}: data de vencimento alterada`, novaData, doc.status, null, [{ campo: 'Vencimento', de: anterior, para: novaData }, { campo: 'Status', de: statusAnterior, para: doc.status }]);
+      return true;
+    };
+
+    window.salvarVencimentoDocDetalhe = function(docId) {
+      const doc = (window.fleetDocs || []).find(d => String(d.id) === String(docId));
+      const novaData = document.getElementById('docdet-venc')?.value;
+      if (!doc) return;
+      if (!novaData) { alert('Informe a nova data de vencimento.'); return; }
+      if (novaData === doc.expDate) { showToast('A data informada é igual ao vencimento atual.', 'info'); return; }
+      alterarVencimentoDoc(doc, novaData, 'Data de vencimento alterada pelo usuário');
+      saveData();
+      afterDocChange();
+      reabrirDocDetalhe();
+      showToast(`${doc.tag} — ${doc.docName}: vencimento alterado para ${formatDateBR(novaData)}. Matriz e controle atualizados.`, 'success');
+    };
+
+    // Documento realizado sem novo ciclo: cria o próximo ciclo com a data informada (ou a calculada pela norma)
+    window.confirmarNovoVencimentoAposRealizado = function(docId) {
+      const doc = (window.fleetDocs || []).find(d => String(d.id) === String(docId));
+      const novaData = document.getElementById('docdet-venc')?.value;
+      if (!doc) return;
+      if (!novaData) { alert('Informe o novo vencimento.'); return; }
+      const dataReal = doc.dataRealizada || getTodayStr();
+      const novo = criarProximoCicloDoc(doc, dataReal, novaData, calcDiasEntre(dataReal, novaData));
+      addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName}: novo vencimento confirmado após realização — ${formatDateBR(novaData)}`, novaData, novo.status, null, [{ campo: 'Próximo vencimento', de: '(calculado)', para: novaData }]);
+      saveData();
+      afterDocChange();
+      reabrirDocDetalhe();
+      showToast(`${doc.tag} — ${doc.docName}: novo vencimento ${formatDateBR(novaData)} (${novo.status === 'Vigente' ? 'Em dia' : 'Programado'}).`, 'success');
+    };
 
     // ===================== CAUSAS RAIZ (lista configurável usada no Registrar Parada e na Análise de Falhas) =====================
     window.causasRaiz = [];
@@ -4059,8 +4333,12 @@
 
     window.applyRolePermissions = function(funcao, userObj) {
       const custom = userObj && Array.isArray(userObj.permissoesCustom) && userObj.permissoesCustom.length > 0 ? userObj.permissoesCustom : null;
-      const allowed = custom || ROLE_PERMISSIONS[funcao] || ['dashboard'];
+      let allowed = (custom || ROLE_PERMISSIONS[funcao] || ['dashboard']).filter(t => t !== 'online');
+      // Aba "Usuários Online": liberada pela opção individual do usuário (padrão: Diretor, Gerente, Desenvolvedor)
+      if (canSeePresence(userObj || window.currentLoggedUser || { funcao })) allowed = allowed.concat(['online']);
       window.currentAllowedTabs = allowed;
+      if (allowed.includes('online')) ensurePresenceSubscriptions();
+      updatePresenceBadge();
       ALL_TABS.forEach(tabId => {
         const btn = document.getElementById(`btn-tab-${tabId}`);
         if (!btn) return;
@@ -4107,7 +4385,9 @@
         senha: document.getElementById('user-senha').value,
         funcao: document.getElementById('user-funcao').value,
         unidade: document.getElementById('user-unidade').value,
-        status: document.getElementById('user-status').value
+        status: document.getElementById('user-status').value,
+        verPresenca: ({ SIM: true, NAO: false })[document.getElementById('user-ver-presenca').value] ?? null,
+        mostrarPresenca: document.getElementById('user-mostrar-presenca').value !== 'NAO'
       };
 
       const duplicate = (window.users || []).find(u => (u.login || '').toLowerCase() === login.toLowerCase() && String(u.id) !== String(editingId));
@@ -4120,7 +4400,7 @@
         const idx = window.users.findIndex(u => String(u.id) === String(editingId));
         if (idx > -1) {
           const antes = window.users[idx];
-          const alteracoes = diffCampos(antes, payload, { nome: 'Nome', login: 'Login', funcao: 'Função', unidade: 'Unidade', status: 'Status' });
+          const alteracoes = diffCampos(antes, payload, { nome: 'Nome', login: 'Login', funcao: 'Função', unidade: 'Unidade', status: 'Status', verPresenca: 'Vê painel online', mostrarPresenca: 'Aparece como online' });
           if (antes.senha !== payload.senha) alteracoes.push({ campo: 'Senha', de: '••••', para: '•••• (alterada)' });
           window.users[idx] = { ...antes, ...payload };
           addAuditLog('TODAS', 'Usuários', payload.login, `Usuário ${payload.nome} atualizado`, getTodayStr(), payload.status, null, alteracoes);
@@ -4145,6 +4425,9 @@
       document.getElementById('user-funcao').value = u.funcao || 'Assistente Administrativo';
       document.getElementById('user-unidade').value = u.unidade || 'TODAS';
       document.getElementById('user-status').value = u.status || 'Ativo';
+      document.getElementById('user-ver-presenca').value = u.verPresenca === true ? 'SIM' : u.verPresenca === false ? 'NAO' : 'PADRAO';
+      document.getElementById('user-mostrar-presenca').value = u.mostrarPresenca === false ? 'NAO' : 'SIM';
+      document.getElementById('form-user').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window.toggleUserStatus = function(id) {
@@ -4184,6 +4467,13 @@
           <td class="p-3">
             <button onclick="toggleUserStatus(${u.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${u.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${u.status}</button>
           </td>
+          <td class="p-3 text-xs">${(() => {
+            if (!canSeePresence(window.currentLoggedUser)) return '<span class="text-slate-300">-</span>';
+            const sit = getSituacaoPresenca(u.login);
+            if (sit.status === 'Offline') return '<span class="text-slate-400">Offline</span>';
+            return `<span class="font-bold ${sit.status === 'Online' ? 'text-emerald-700' : 'text-amber-700'}">● ${sit.status}</span><span class="block text-[10px] text-slate-500">${escapeHtml(sit.sessoes[0].paginaLabel || '')}</span>`;
+          })()}</td>
+          <td class="p-3 text-xs">${canSeePresence(u) ? '<span class="font-bold text-sky-700">Sim</span>' : '<span class="text-slate-400">Não</span>'}${u.verPresenca === undefined || u.verPresenca === null ? '<span class="block text-[9px] text-slate-400">padrão da função</span>' : ''}${u.mostrarPresenca === false ? '<span class="block text-[9px] text-amber-600">não aparece online</span>' : ''}</td>
           <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
             ${window.currentLoggedUser && window.currentLoggedUser.funcao === 'Desenvolvedor' ? `<button onclick="openUserPermissionsModal(${u.id})" class="text-slate-400 hover:text-purple-600 transition" title="Permissões Individuais"><i data-lucide="shield" class="w-4 h-4"></i></button>` : ''}
             <button onclick="editUser(${u.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
@@ -4200,7 +4490,7 @@
       paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento',
       progrealizado: 'Programado x Realizado',
-      history: 'Histórico Consolidado', users: 'Usuários & Permissões'
+      history: 'Histórico Consolidado', online: 'Usuários Online', users: 'Usuários & Permissões'
     };
 
     window.openUserPermissionsModal = function(userId) {
@@ -4214,7 +4504,7 @@
       document.getElementById('perm-modal-username').innerText = `${u.nome} (${u.funcao})`;
 
       const active = (u.permissoesCustom && u.permissoesCustom.length) ? u.permissoesCustom : (ROLE_PERMISSIONS[u.funcao] || []);
-      document.getElementById('perm-modal-checkboxes').innerHTML = ALL_TABS.map(tabId => `
+      document.getElementById('perm-modal-checkboxes').innerHTML = ALL_TABS.filter(t => t !== 'online').map(tabId => `
         <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
           <input type="checkbox" class="perm-checkbox" value="${tabId}" ${active.includes(tabId) ? 'checked' : ''}>
           <span class="text-xs font-bold text-slate-700">${TAB_LABELS_MAP[tabId] || tabId}</span>
@@ -4449,13 +4739,16 @@
       const user = (window.users || []).find(u => (u.login || '').toLowerCase() === loginInput && u.senha === passInput && u.status === 'Ativo');
 
       if (user) {
+        const sessaoUser = { login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null, verPresenca: user.verPresenca, mostrarPresenca: user.mostrarPresenca };
         sessionStorage.setItem('pcm_auth', 'true');
-        sessionStorage.setItem('pcm_user', JSON.stringify({ login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null }));
+        sessionStorage.setItem('pcm_user', JSON.stringify(sessaoUser));
         document.getElementById('login-overlay').classList.add('hidden');
         document.getElementById('login-error').classList.add('hidden');
-        window.currentLoggedUser = { login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null };
+        window.currentLoggedUser = sessaoUser;
         applyRolePermissions(user.funcao, user);
         updateUserBadge(user);
+        logAcesso('login', sessaoUser);
+        startPresence();
       } else {
         document.getElementById('login-error').innerText = 'Usuário ou senha incorretos! Tente novamente.';
         document.getElementById('login-error').classList.remove('hidden');
@@ -4471,12 +4764,14 @@
         window.currentLoggedUser = userObj;
         applyRolePermissions(userObj ? userObj.funcao : 'Diretor', userObj);
         updateUserBadge(userObj);
+        if (userObj) startPresence();
       } else {
         document.getElementById('login-overlay').classList.remove('hidden');
       }
     };
 
     window.handleLogout = function() {
+      if (window.currentLoggedUser) { logAcesso('logout'); stopPresence(true); }
       sessionStorage.removeItem('pcm_auth');
       sessionStorage.removeItem('pcm_user');
       window.currentLoggedUser = null;
@@ -5259,6 +5554,8 @@
       const mobileSel = document.getElementById('mobile-tab-select');
       if (mobileSel && mobileSel.value !== tabId) mobileSel.value = tabId;
       try { sessionStorage.setItem('pcm_last_tab', tabId); } catch (e) {}
+      if (typeof updatePresencePage === 'function') updatePresencePage(tabId);
+      if (tabId === 'online') renderPresenca();
 
       if (tabId === 'executive') renderExecutiveCharts();
       if (tabId === 'history') { renderHistoryTable(); refreshHistoryTagFilter(); window.historyNeedsRefresh = false; }
@@ -5844,7 +6141,7 @@
       status: ['status (opcional)', 'status', 'situacao']
     };
 
-    const DOC_NAME_CANONICAL = ['CIV + CIPP', 'CRLV Anual', 'CIPP', 'CIV', 'Tacógrafo', 'Calibração de Válvula'];
+    const DOC_NAME_CANONICAL = ['CRLV Anual', 'CIPP', 'CIV', 'Tacógrafo', 'Calibração de Válvula'];
 
     function normalizeDocName(raw) {
       const norm = normalizeHeader(raw);
@@ -5935,11 +6232,17 @@
             return;
           }
           const defaultStatus = document.getElementById('doc-import-default-status').value;
-          window.pendingDocImportRows = rows.map(r => {
+          // Linhas "CIV + CIPP" viram duas (CIV e CIPP) — cada um com a sua validade (CIV 1 ano, CIPP 2 anos)
+          window.pendingDocImportRows = rows.flatMap(r => {
             const mapped = mapDocImportRow(r);
-            mapped.status = statusImportacaoPorRegra(mapped, mapped.status, defaultStatus);
-            mapped._removed = false;
-            return mapped;
+            const partes = mapped.docName === DOC_COMBINADO ? ['CIV', 'CIPP'] : [mapped.docName];
+            return partes.map(nome => {
+              const row = { ...mapped, docName: nome, _deCombinado: partes.length > 1 };
+              if (row.vencCalculado && row.realizacao) row.expDate = addDaysToDateStr(row.realizacao, row.validadeDias || getPrazoTipo(nome));
+              row.status = statusImportacaoPorRegra(row, mapped.status, defaultStatus);
+              row._removed = false;
+              return row;
+            });
           });
           document.getElementById('doc-import-step-upload').classList.add('hidden');
           document.getElementById('doc-import-step-preview').classList.remove('hidden');
@@ -5969,7 +6272,7 @@
     window.renderDocImportPreview = function() {
       const tbody = document.getElementById('doc-import-preview-tbody');
       let validCount = 0, errorCount = 0, removedCount = 0, dupCount = 0, emDiaCount = 0;
-      const nomes = Array.from(new Set([...(window.tiposDocumento || []).map(t => t.nome), ...DOC_NAME_CANONICAL])).sort();
+      const nomes = Array.from(new Set([...(window.tiposDocumento || []).map(t => t.nome), ...DOC_NAME_CANONICAL])).filter(n => n !== DOC_COMBINADO).sort();
       const vistos = new Set();
 
       const rowsHtml = window.pendingDocImportRows.map((row, idx) => {
@@ -6006,7 +6309,7 @@
                 ${opcoesNome.map(n => `<option value="${escapeAttr(n)}" ${row.docName === n ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
               </select>
             </td>
-            <td class="p-2"><input type="date" value="${row.expDate}" onchange="updateDocImportField(${idx},'expDate',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">${row.vencCalculado ? '<span class="block text-[9px] text-slate-400">calculado: realização + validade</span>' : ''}</td>
+            <td class="p-2"><input type="date" value="${row.expDate}" onchange="updateDocImportField(${idx},'expDate',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">${row.vencCalculado ? '<span class="block text-[9px] text-slate-400">calculado: realização + validade</span>' : ''}${row._deCombinado ? '<span class="block text-[9px] text-purple-600 font-bold">separado de "CIV + CIPP"</span>' : ''}</td>
             <td class="p-2">${sit ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${sit.badge}">${sit.shortLabel} (${days}d)</span>` : '-'}</td>
             <td class="p-2">
               <select onchange="updateDocImportField(${idx},'status',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
@@ -7893,6 +8196,22 @@
     };
 
     // Encerra o ciclo do documento (Realizado) e, opcionalmente, gera o próximo ciclo com o novo vencimento
+    // Cria o próximo ciclo (novo documento vigente) a partir de um documento realizado
+    window.criarProximoCicloDoc = function(doc, dataReferencia, novoVencimento, validadeDias) {
+      const novo = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        unit: doc.unit, tag: doc.tag, assetId: doc.assetId, type: doc.type, docName: doc.docName,
+        expDate: novoVencimento, status: getDocStatusPorRegra(novoVencimento),
+        dataOriginal: novoVencimento, dataReferencia: dataReferencia, dataRealizada: null,
+        local: doc.local || '', responsavel: doc.responsavel || '',
+        cicloAnteriorId: doc.id, historico: [], origemCadastro: 'Novo ciclo (após realização)'
+      };
+      if (validadeDias && Number(validadeDias) > 0 && Number(validadeDias) !== getPrazoTipo(doc.docName)) novo.validadeDias = Number(validadeDias);
+      doc.proximoCicloId = novo.id;
+      window.fleetDocs.push(novo);
+      return novo;
+    };
+
     window.realizarDocumento = function(doc, dataRealizacao, validadeDias, novoVencimento, gerarProximo, origemTexto, responsavel) {
       if (!doc) return null;
       const usuario = responsavel || (window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema');
@@ -7904,19 +8223,7 @@
       if (!doc.historico) doc.historico = [];
       doc.historico.push({ dataAnterior: doc.expDate, dataNova: doc.expDate, responsavel: usuario, motivo: `${origemTexto || 'Realização registrada'} — realizado em ${formatDateBR(dataRealizacao)}; novo vencimento ${formatDateBR(novoVencimento)} (${validadeDias} dias)`, timestamp: getNowFormatted(), automatico: true });
       let novo = null;
-      if (gerarProximo && novoVencimento) {
-        novo = {
-          id: Date.now() + Math.floor(Math.random() * 1000),
-          unit: doc.unit, tag: doc.tag, assetId: doc.assetId, type: doc.type, docName: doc.docName,
-          expDate: novoVencimento, status: getDocStatusPorRegra(novoVencimento),
-          dataOriginal: novoVencimento, dataReferencia: dataRealizacao, dataRealizada: null,
-          local: doc.local || '', responsavel: doc.responsavel || '',
-          cicloAnteriorId: doc.id, historico: [], origemCadastro: 'Novo ciclo (após realização)'
-        };
-        if (validadeDias && Number(validadeDias) !== getPrazoTipo(doc.docName)) novo.validadeDias = Number(validadeDias);
-        doc.proximoCicloId = novo.id;
-        window.fleetDocs.push(novo);
-      }
+      if (gerarProximo && novoVencimento) novo = criarProximoCicloDoc(doc, dataRealizacao, novoVencimento, validadeDias);
       addAuditLog(doc.unit, 'Documentação', doc.tag, `${doc.docName} realizado/renovado em ${formatDateBR(dataRealizacao)}${novo ? ` — novo ciclo gerado com vencimento ${formatDateBR(novoVencimento)} (${novo.status === 'Vigente' ? 'Em dia' : novo.status})` : ''}${origemTexto ? ' · ' + origemTexto : ''}`, doc.expDate, 'Realizado', dataRealizacao, [{ campo: 'Status', de: statusAnterior, para: 'Realizado' }, { campo: 'Próximo vencimento', de: doc.expDate, para: novoVencimento }]);
       return novo;
     };
@@ -7958,6 +8265,8 @@
       saveData();
       document.getElementById('modal-doc-realizar').classList.replace('flex', 'hidden');
       afterDocChange();
+      // Veio da Matriz: reabre o painel do documento já com o novo vencimento (editável)
+      if (window.docDetalheAberto && window.docDetalheAberto.tag === doc.tag) openDocMatrizHistorico(doc.tag, window.docDetalheAberto.docName);
       showToast(novo ? `${doc.tag} — ${doc.docName}: realizado. Novo vencimento ${formatDateBR(novo.expDate)} (${novo.status === 'Vigente' ? 'Em dia' : 'Programado'}).` : `${doc.tag} — ${doc.docName}: realização registrada.`, 'success');
     };
 
@@ -7985,12 +8294,11 @@
     };
 
     window.setDocView = function(view) {
+      if (view === 'table' || !document.getElementById(`doc-view-${view}-wrap`)) view = 'matriz';
       window.currentDocView = view;
-      document.getElementById('doc-view-table-wrap').classList.toggle('hidden', view !== 'table');
       document.getElementById('doc-view-matriz-wrap').classList.toggle('hidden', view !== 'matriz');
       document.getElementById('doc-view-calendar-wrap').classList.toggle('hidden', view !== 'calendar');
       document.getElementById('doc-view-vencimentos-wrap').classList.toggle('hidden', view !== 'vencimentos');
-      document.getElementById('btn-doc-view-table').classList.toggle('active', view === 'table');
       document.getElementById('btn-doc-view-matriz').classList.toggle('active', view === 'matriz');
       document.getElementById('btn-doc-view-calendar').classList.toggle('active', view === 'calendar');
       document.getElementById('btn-doc-view-vencimentos').classList.toggle('active', view === 'vencimentos');
@@ -7999,16 +8307,15 @@
       if (view === 'vencimentos') renderDocVencimentos();
     };
 
-    function getDocsForDocumentsTab() {
+    function getDocsForDocumentsTab(incluirHistorico) {
       let data = getFilteredDocs();
       const nomeFiltro = document.getElementById('doc-filter-nome')?.value || 'TODOS';
       const unidadeFiltro = document.getElementById('doc-filter-unidade')?.value || 'TODAS';
       const tagFiltro = (document.getElementById('doc-filter-tag')?.value || '').trim().toUpperCase();
       const marcaFiltro = document.getElementById('doc-filter-marca')?.value || 'TODAS';
       const situacaoFiltro = document.getElementById('doc-filter-situacao')?.value || 'TODAS';
-      const mostrarHistorico = document.getElementById('doc-filter-mostrar-historico')?.checked;
       // Ciclos já renovados (que geraram um novo ciclo) ficam como histórico — só aparecem se pedido
-      if (!mostrarHistorico && situacaoFiltro !== 'renovado') data = data.filter(d => !(d.status === 'Realizado' && d.proximoCicloId));
+      if (!incluirHistorico && situacaoFiltro !== 'renovado') data = data.filter(d => !(d.status === 'Realizado' && d.proximoCicloId));
       if (nomeFiltro !== 'TODOS') data = data.filter(d => d.docName === nomeFiltro);
       if (unidadeFiltro !== 'TODAS') data = data.filter(d => d.unit === unidadeFiltro);
       if (tagFiltro) data = data.filter(d => (d.tag || '').toUpperCase().includes(tagFiltro));
@@ -8036,9 +8343,9 @@
     window.docStatusSelectHtml = docStatusSelectHtml;
 
     window.renderDocuments = function() {
-      const tbody = document.getElementById('docs-table-body');
+      const tbody = document.getElementById('docs-table-body'); // tabela removida da aba — mantido opcional
       const criticalContainer = document.getElementById('dashboard-critical-docs');
-      if (!tbody || !criticalContainer) return;
+      if (!criticalContainer) return;
 
       populateMarcaFilters();
       populateDocNomeFilter();
@@ -8095,6 +8402,8 @@
         else if (st === 'Vigente') vigenteDocs += weight;
       });
 
+      // Realizados/Renovados conta também os ciclos já renovados (que viraram histórico ao gerar o novo vencimento)
+      realizedDocs = getDocsForDocumentsTab(true).filter(d => d.status === 'Realizado').reduce((s, d) => s + (d.docName === DOC_COMBINADO ? 2 : 1), 0);
       document.getElementById('doc-metric-total').innerText = totalDocs;
       document.getElementById('doc-metric-realized').innerText = realizedDocs;
       document.getElementById('doc-metric-pending').innerText = pendingDocs;
@@ -8102,7 +8411,7 @@
       const vigEl = document.getElementById('doc-metric-vigente');
       if (vigEl) vigEl.innerText = vigenteDocs;
 
-      tbody.innerHTML = activeDocs.map(item => {
+      if (tbody) tbody.innerHTML = activeDocs.map(item => {
         const days = calculateDaysRemaining(item.expDate);
         const situacao = getDocSituacao(days, item.status);
         const isAtrelado = item.docName === DOC_COMBINADO;
@@ -8212,6 +8521,7 @@
               </div>
               ${podeProgramar ? `<button type="button" onclick="reprogramarProgramacao('Documento', ${d.id})" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 transition" title="Programar a data de realização da renovação"><i data-lucide="calendar-clock" class="w-3 h-3"></i> Programar Renovação</button>
               <button type="button" onclick="openDocRealizarModal(${d.id})" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100 transition" title="Já foi feito? Registre e o sistema gera o novo vencimento"><i data-lucide="badge-check" class="w-3 h-3"></i> Registrar Realização</button>` : ''}
+              <button type="button" onclick="openDocMatrizHistorico('${escapeJs(d.tag)}', '${escapeJs(d.docName)}')" class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1.5 rounded-md border bg-white border-slate-300 text-slate-700 hover:bg-slate-50 transition" title="Alterar data de vencimento / ver histórico"><i data-lucide="calendar-cog" class="w-3 h-3"></i> Alterar Vencimento</button>
             </div>
           </div>`;
       }).join('') || `<p class="text-xs text-slate-400 italic text-center py-6 empty-state">Nenhum documento nas faixas de atenção com os filtros atuais. 🎉</p>`;
@@ -8294,9 +8604,8 @@
                       <div class="flex items-center gap-1">${getUnitBadge(d.unit)}<span class="font-extrabold text-slate-900">${d.tag}</span></div>
                       ${getVehicleBadge(d.type)}
                     </div>
-                    <p class="text-slate-700 font-medium flex items-center gap-1">
-                      ${d.docName === 'CIV + CIPP' ? '<span class="bg-purple-100 text-purple-800 text-[9px] font-black px-1 py-0.5 rounded border border-purple-200">ATRELADO</span>' : ''}
-                      ${d.docName}
+                    <p class="text-slate-700 font-medium flex items-center gap-1 cursor-pointer hover:underline" onclick="openDocMatrizHistorico('${escapeJs(d.tag)}', '${escapeJs(d.docName)}')" title="Abrir: alterar vencimento / realizar">
+                      ${escapeHtml(d.docName)}
                     </p>
                     <div>${window.vincBadgeHTML('Documento', d)}${window.vincAcoesHTML('Documento', d)}</div>
                     ${docStatusSelectHtml(d, true)}
@@ -8352,7 +8661,7 @@
                   <div class="flex items-center gap-1 justify-between">
                     ${getUnitBadge(d.unit)}<span class="font-extrabold text-slate-900">${d.tag}</span>
                   </div>
-                  <p class="text-slate-700 font-semibold leading-tight">${d.docName}</p>
+                  <p class="text-slate-700 font-semibold leading-tight cursor-pointer hover:underline" onclick="openDocMatrizHistorico('${escapeJs(d.tag)}', '${escapeJs(d.docName)}')" title="Abrir: alterar vencimento / realizar">${escapeHtml(d.docName)}</p>
                   <div>${window.vincBadgeHTML('Documento', d, true)}${window.vincAcoesHTML('Documento', d, true)}</div>
                 </div>
               `).join('')}
@@ -10206,6 +10515,266 @@
         evs.map(x => [x.e.tag, x.a.tipo || '', x.a.marca || '', x.a.modelo || '', x.a.unidade || x.e.unit || '', x.e.tipoParada, x.e.motivo, x.causa, x.e.causaRaizDetalhe || '', formatDateBR(x.e.inicio), formatDateBR(x.e.dataEntrada), x.e.fim ? formatDateBR(x.e.fim) : 'em aberto', x.dias, x.e.local || '', x.e.responsabilidade || '']));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(det), 'Paradas');
       XLSX.writeFile(wb, `Analise_de_Falhas_${getTodayStr()}.xlsx`);
+    };
+
+    // ===================== PRESENÇA: QUEM FEZ LOGIN, QUEM ESTÁ ONLINE E EM QUAL PÁGINA =====================
+    // Cada aba/navegador aberto grava presence/{sessão} (usuário, página atual, desde quando, dispositivo) e
+    // um "batimento" a cada minuto. Ao fechar/cair a conexão, o próprio Firebase remove a sessão (onDisconnect)
+    // e registra o último acesso. Logins e logouts ficam em loginHistory. O painel só é carregado para quem
+    // tem a opção liberada (Usuários & Permissões → Painel "Quem está online").
+    window.presenceSessionId = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    window.presenceData = {};
+    window.presenceLastSeen = {};
+    window.loginHistory = [];
+    window.lastUserInteraction = Date.now();
+    let presenceAtiva = false;
+    let presenceSubscribed = false;
+    let presenceHeartbeat = null;
+    const PRESENCA_AUSENTE_MS = 5 * 60 * 1000;   // sem mexer no sistema há 5 min = ausente
+    const PRESENCA_SINAL_MS = 3 * 60 * 1000;     // sem batimento há 3 min = considerado desconectado
+
+    ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(evName => {
+      window.addEventListener(evName, () => { window.lastUserInteraction = Date.now(); }, { passive: true });
+    });
+
+    function loginKey(login) { return String(login || 'anon').toLowerCase().replace(/[.#$\[\]\/\s]/g, '_'); }
+    function descreverDispositivo() {
+      const ua = navigator.userAgent || '';
+      const tipo = /iPad|Tablet/i.test(ua) ? 'Tablet' : /Mobi|Android|iPhone/i.test(ua) ? 'Celular' : 'Computador';
+      const nav = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Navegador';
+      return `${tipo} · ${nav}`;
+    }
+    function getUserRecord(login) { return (window.users || []).find(u => (u.login || '').toLowerCase() === String(login || '').toLowerCase()); }
+
+    // Opcional por usuário: quem pode ver o painel (padrão: Diretor, Gerente e Desenvolvedor)
+    window.canSeePresence = function(userObj) {
+      if (!userObj) return false;
+      const u = getUserRecord(userObj.login) || userObj;
+      if (u.verPresenca === true) return true;
+      if (u.verPresenca === false) return false;
+      return ['Diretor', 'Gerente', 'Desenvolvedor'].includes(u.funcao);
+    };
+    // Opcional por usuário: aparecer (ou não) como online para os outros
+    function userAparece(userObj) {
+      const u = getUserRecord(userObj.login) || userObj;
+      return u.mostrarPresenca !== false;
+    }
+
+    function currentTabId() { const el = document.querySelector('.tab-content.active'); return el ? el.id.replace('tab-', '') : 'dashboard'; }
+    function presenceRef() { return ref(db, 'presence/' + window.presenceSessionId); }
+
+    window.startPresence = function() {
+      const u = window.currentLoggedUser;
+      if (!u || !u.login) return;
+      if (!userAparece(u)) { if (presenceAtiva) stopPresence(false); return; }
+      const agoraIso = new Date().toISOString();
+      const tab = currentTabId();
+      if (!window.presenceEntrouEm) window.presenceEntrouEm = agoraIso;
+      const entry = {
+        sessionId: window.presenceSessionId, login: u.login, nome: u.nome || u.login, funcao: u.funcao || '',
+        pagina: tab, paginaLabel: TAB_LABELS_MAP[tab] || tab, paginaDesde: window.presencePaginaDesde || agoraIso,
+        entrouEm: window.presenceEntrouEm, heartbeat: agoraIso, ultimaAtividade: new Date(window.lastUserInteraction).toISOString(),
+        dispositivo: descreverDispositivo()
+      };
+      window.presencePaginaDesde = entry.paginaDesde;
+      try {
+        onDisconnect(presenceRef()).remove();
+        onDisconnect(ref(db, 'presenceUltimoAcesso/' + loginKey(u.login))).set({ login: u.login, nome: entry.nome, quandoMs: serverTimestamp(), pagina: entry.paginaLabel });
+        set(presenceRef(), sanitizeForDb(entry)).catch(err => console.warn('Presença não registrada:', err));
+        presenceAtiva = true;
+      } catch (err) { console.warn('Presença indisponível:', err); }
+      if (!presenceHeartbeat) presenceHeartbeat = setInterval(presenceBeat, 60000);
+    };
+
+    function presenceBeat() {
+      if (!presenceAtiva || !window.currentLoggedUser) return;
+      try {
+        set(ref(db, `presence/${window.presenceSessionId}/heartbeat`), new Date().toISOString()).catch(() => {});
+        set(ref(db, `presence/${window.presenceSessionId}/ultimaAtividade`), new Date(window.lastUserInteraction).toISOString()).catch(() => {});
+      } catch (e) { /* sem conexão: tenta no próximo batimento */ }
+      if (presenceSubscribed) { updatePresenceBadge(); if (currentTabId() === 'online') renderPresenca(); }
+    }
+
+    // Chamado ao trocar de aba: grava a página que o usuário está vendo
+    window.updatePresencePage = function(tabId) {
+      window.presencePaginaDesde = new Date().toISOString();
+      if (!presenceAtiva || !window.currentLoggedUser) return;
+      const label = TAB_LABELS_MAP[tabId] || tabId;
+      try {
+        const base = `presence/${window.presenceSessionId}/`;
+        set(ref(db, base + 'pagina'), tabId).catch(() => {});
+        set(ref(db, base + 'paginaLabel'), label).catch(() => {});
+        set(ref(db, base + 'paginaDesde'), window.presencePaginaDesde).catch(() => {});
+        set(ref(db, base + 'ultimaAtividade'), new Date().toISOString()).catch(() => {});
+        onDisconnect(ref(db, 'presenceUltimoAcesso/' + loginKey(window.currentLoggedUser.login))).set({ login: window.currentLoggedUser.login, nome: window.currentLoggedUser.nome || window.currentLoggedUser.login, quandoMs: serverTimestamp(), pagina: label });
+      } catch (e) { /* ignora */ }
+    };
+
+    window.stopPresence = function(registrarUltimoAcesso) {
+      const u = window.currentLoggedUser;
+      try {
+        onDisconnect(presenceRef()).cancel();
+        set(presenceRef(), null).catch(() => {});
+        if (u && u.login) {
+          const lastRef = ref(db, 'presenceUltimoAcesso/' + loginKey(u.login));
+          onDisconnect(lastRef).cancel();
+          if (registrarUltimoAcesso) set(lastRef, { login: u.login, nome: u.nome || u.login, quandoMs: serverTimestamp(), pagina: 'Saiu do sistema' }).catch(() => {});
+        }
+      } catch (e) { /* ignora */ }
+      presenceAtiva = false;
+    };
+
+    // Registro permanente de entrada/saída
+    window.logAcesso = function(tipo, userObj) {
+      const u = userObj || window.currentLoggedUser;
+      if (!u || !u.login) return;
+      const agora = new Date();
+      const key = 'l' + agora.getTime() + Math.random().toString(36).slice(2, 6);
+      try {
+        set(ref(db, 'loginHistory/' + key), sanitizeForDb({ login: u.login, nome: u.nome || u.login, funcao: u.funcao || '', tipo, quando: agora.toISOString(), quandoBR: getNowFormatted(), dispositivo: descreverDispositivo() })).catch(err => console.warn('Acesso não registrado:', err));
+      } catch (e) { /* ignora */ }
+    };
+
+    function ensurePresenceSubscriptions() {
+      if (presenceSubscribed || !canSeePresence(window.currentLoggedUser)) return;
+      presenceSubscribed = true;
+      onValue(ref(db, 'presence'), (snap) => {
+        window.presenceData = snap.val() || {};
+        updatePresenceBadge();
+        if (currentTabId() === 'online') renderPresenca();
+        if (currentTabId() === 'users') renderUsersTable();
+      });
+      onValue(ref(db, 'presenceUltimoAcesso'), (snap) => {
+        window.presenceLastSeen = snap.val() || {};
+        if (currentTabId() === 'online') renderPresenca();
+      });
+      onValue(query(ref(db, 'loginHistory'), limitToLast(800)), (snap) => {
+        const data = snap.val() || {};
+        window.loginHistory = Object.keys(data).map(k => ({ key: k, ...data[k] })).filter(x => x && x.quando).sort((a, b) => (b.quando || '').localeCompare(a.quando || ''));
+        if (currentTabId() === 'online') renderPresenca();
+      });
+    }
+
+    // Sessões conectadas (com batimento recente), marcando ausentes
+    function getSessoesOnline() {
+      const agora = Date.now();
+      return Object.values(window.presenceData || {}).filter(p => p && p.login).map(p => {
+        const hb = Date.parse(p.heartbeat || p.paginaDesde || p.entrouEm || 0) || 0;
+        const at = Date.parse(p.ultimaAtividade || p.heartbeat || 0) || 0;
+        return { ...p, hbMs: hb, atMs: at, ausente: agora - at > PRESENCA_AUSENTE_MS };
+      }).filter(p => agora - p.hbMs < PRESENCA_SINAL_MS);
+    }
+
+    function updatePresenceBadge() {
+      const badge = document.getElementById('presence-header-badge');
+      if (!badge) return;
+      const pode = canSeePresence(window.currentLoggedUser);
+      badge.classList.toggle('hidden', !pode);
+      badge.classList.toggle('flex', pode);
+      if (!pode) return;
+      const logins = new Set(getSessoesOnline().map(p => p.login.toLowerCase()));
+      const el = document.getElementById('presence-header-count');
+      if (el) el.innerText = logins.size;
+    }
+
+    function tempoRelativo(msOrIso) {
+      const ms = typeof msOrIso === 'number' ? msOrIso : Date.parse(msOrIso || '');
+      if (!ms) return '-';
+      const diff = Math.max(0, Date.now() - ms);
+      const min = Math.floor(diff / 60000);
+      if (min < 1) return 'agora';
+      if (min < 60) return `há ${min} min`;
+      const h = Math.floor(min / 60);
+      if (h < 24) return `há ${h} h ${min % 60 ? (min % 60) + ' min' : ''}`.trim();
+      return new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    function horaBR(iso) { const ms = Date.parse(iso || ''); return ms ? new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'; }
+
+    // Situação atual de um login (para a aba Usuários e a lista de todos os usuários)
+    window.getSituacaoPresenca = function(login) {
+      const sess = getSessoesOnline().filter(p => p.login.toLowerCase() === String(login || '').toLowerCase());
+      if (sess.length === 0) return { status: 'Offline', sessoes: [] };
+      return { status: sess.some(p => !p.ausente) ? 'Online' : 'Ausente', sessoes: sess };
+    };
+
+    window.renderPresenca = function() {
+      const tbody = document.getElementById('pres-online-tbody');
+      if (!tbody) return;
+      if (!canSeePresence(window.currentLoggedUser)) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Seu usuário não tem acesso a este painel.</td></tr>'; return; }
+      ensurePresenceSubscriptions();
+      const sessoes = getSessoesOnline().sort((a, b) => (a.ausente - b.ausente) || (a.nome || '').localeCompare(b.nome || ''));
+      const loginsOnline = new Set(sessoes.filter(p => !p.ausente).map(p => p.login.toLowerCase()));
+      const loginsAusentes = new Set(sessoes.filter(p => p.ausente).map(p => p.login.toLowerCase()).filter(l => !loginsOnline.has(l)));
+      const hojeStr = getTodayStr();
+      const loginsHoje = (window.loginHistory || []).filter(x => x.tipo === 'login' && formatDateISO(new Date(x.quando)) === hojeStr);
+      const set_ = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+      set_('pres-kpi-online', loginsOnline.size);
+      set_('pres-kpi-ausente', loginsAusentes.size);
+      set_('pres-kpi-logins-hoje', loginsHoje.length);
+      set_('pres-kpi-usuarios-hoje', new Set(loginsHoje.map(x => x.login.toLowerCase())).size);
+
+      tbody.innerHTML = sessoes.map(p => `
+        <tr class="${p.ausente ? 'bg-amber-50/40' : ''}">
+          <td class="p-2 font-bold text-slate-900"><span class="inline-block w-2 h-2 rounded-full ${p.ausente ? 'bg-amber-400' : 'bg-emerald-500'} mr-1.5"></span>${escapeHtml(p.nome)}${p.sessionId === window.presenceSessionId ? ' <span class="text-[10px] text-sky-700 font-black">(você)</span>' : ''}<span class="block text-[10px] text-slate-400 font-medium pl-3.5">${escapeHtml(p.login)}${p.ausente ? ' · ausente' : ''}</span></td>
+          <td class="p-2">${escapeHtml(p.funcao || '-')}</td>
+          <td class="p-2"><button onclick="switchTab('${escapeJs(p.pagina || 'dashboard')}')" class="font-bold text-sky-700 hover:underline" title="Abrir a mesma página">${escapeHtml(p.paginaLabel || p.pagina || '-')}</button></td>
+          <td class="p-2">${tempoRelativo(p.paginaDesde)}</td>
+          <td class="p-2">${horaBR(p.entrouEm)}</td>
+          <td class="p-2">${tempoRelativo(p.atMs)}</td>
+          <td class="p-2 text-slate-500">${escapeHtml(p.dispositivo || '-')}</td>
+        </tr>`).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Ninguém conectado no momento.</td></tr>';
+
+      // Todos os usuários
+      const limite30 = Date.now() - 30 * 86400000;
+      const usuarios = (window.users || []).slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+      document.getElementById('pres-usuarios-tbody').innerHTML = usuarios.map(u => {
+        const sit = getSituacaoPresenca(u.login);
+        const acessos = (window.loginHistory || []).filter(x => (x.login || '').toLowerCase() === (u.login || '').toLowerCase());
+        const ultimoLogin = acessos.find(x => x.tipo === 'login');
+        const ls = (window.presenceLastSeen || {})[loginKey(u.login)];
+        const ultimaVez = sit.status !== 'Offline' ? 'agora' : (ls && ls.quandoMs ? tempoRelativo(Number(ls.quandoMs)) : (ultimoLogin ? tempoRelativo(ultimoLogin.quando) : 'nunca'));
+        const badge = sit.status === 'Online' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : sit.status === 'Ausente' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-300';
+        const pagina = sit.sessoes.length ? ` · ${escapeHtml(sit.sessoes[0].paginaLabel || '')}` : '';
+        return `<tr>
+          <td class="p-2 font-bold text-slate-900">${escapeHtml(u.nome)}<span class="block text-[10px] text-slate-400 font-medium">${escapeHtml(u.login)}${u.status !== 'Ativo' ? ' · usuário inativo' : ''}${u.mostrarPresenca === false ? ' · não aparece online' : ''}</span></td>
+          <td class="p-2">${escapeHtml(u.funcao || '-')}</td>
+          <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${badge}">${sit.status}</span><span class="text-[10px] text-slate-500">${pagina}</span></td>
+          <td class="p-2">${ultimoLogin ? escapeHtml(ultimoLogin.quandoBR || horaBR(ultimoLogin.quando)) : '-'}</td>
+          <td class="p-2">${ultimaVez}${ls && ls.pagina && sit.status === 'Offline' ? `<span class="block text-[10px] text-slate-400">${escapeHtml(ls.pagina)}</span>` : ''}</td>
+          <td class="p-2 font-bold">${acessos.filter(x => x.tipo === 'login' && Date.parse(x.quando) >= limite30).length}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum usuário cadastrado.</td></tr>';
+
+      // Histórico de acessos
+      const selU = document.getElementById('pres-filter-usuario');
+      if (selU) {
+        const cur = selU.value;
+        const logins = Array.from(new Set((window.loginHistory || []).map(x => x.login))).filter(Boolean).sort();
+        selU.innerHTML = '<option value="TODOS">Todos os usuários</option>' + logins.map(l => { const u = getUserRecord(l); return `<option value="${escapeAttr(l)}">${escapeHtml(u ? u.nome : l)}</option>`; }).join('');
+        if (logins.includes(cur)) selU.value = cur;
+      }
+      const fU = selU ? selU.value : 'TODOS';
+      const fD = document.getElementById('pres-filter-data')?.value || '';
+      let acessos = (window.loginHistory || []).slice();
+      if (fU !== 'TODOS') acessos = acessos.filter(x => x.login === fU);
+      if (fD) acessos = acessos.filter(x => formatDateISO(new Date(x.quando)) === fD);
+      window.lastAcessosRows = acessos;
+      document.getElementById('pres-acessos-tbody').innerHTML = acessos.slice(0, 400).map(x => `
+        <tr>
+          <td class="p-2 whitespace-nowrap">${escapeHtml(x.quandoBR || horaBR(x.quando))}</td>
+          <td class="p-2 font-bold text-slate-900">${escapeHtml(x.nome || x.login)}</td>
+          <td class="p-2">${escapeHtml(x.funcao || '-')}</td>
+          <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${x.tipo === 'login' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-300'}">${x.tipo === 'login' ? 'Entrou (login)' : 'Saiu (logout)'}</span></td>
+          <td class="p-2 text-slate-500">${escapeHtml(x.dispositivo || '-')}</td>
+        </tr>`).join('') || '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Nenhum acesso registrado ainda (os registros começam a partir desta versão).</td></tr>';
+      lucide.createIcons();
+    };
+
+    window.exportAcessosToExcel = function() {
+      const rows = window.lastAcessosRows || window.loginHistory || [];
+      if (!rows.length) { alert('Nenhum acesso registrado para exportar.'); return; }
+      exportRowsToExcel(`Acessos_Usuarios_${getTodayStr()}.xlsx`, 'Acessos', ['Data/Hora', 'Usuário', 'Login', 'Função', 'Evento', 'Dispositivo'],
+        rows.map(x => [x.quandoBR || horaBR(x.quando), x.nome || '', x.login || '', x.funcao || '', x.tipo === 'login' ? 'Login' : 'Logout', x.dispositivo || '']));
     };
 
     // ===================== INICIALIZAÇÃO =====================
