@@ -1525,7 +1525,8 @@
           </div>
         </div>
       </div>
-      <p class="text-[11px] text-slate-400 -mt-3 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Dica: no modo Mensal, arraste um card de manutenção e solte em outro dia para reprogramar automaticamente. Cada card mostra se o ativo realmente parou na data — e, se não parou, os botões <strong>Registrar Parada</strong> e <strong>Reprogramar</strong>.</p>
+      <p class="text-[11px] text-indigo-700 -mt-3 flex items-center gap-1"><i data-lucide="history" class="w-3 h-3"></i> Lançamento retroativo: volte ao mês/semana desejado (◀) e clique no <strong>+</strong> do dia para registrar o que foi programado e se foi realizado — já entra no Programado x Realizado.</p>
+      <p class="text-[11px] text-slate-400 -mt-4 flex items-center gap-1"><i data-lucide="move" class="w-3 h-3"></i> Dica: no modo Mensal, arraste um card de manutenção e solte em outro dia para reprogramar automaticamente. Cada card mostra se o ativo realmente parou na data — e, se não parou, os botões <strong>Registrar Parada</strong> e <strong>Reprogramar</strong>.</p>
 
       <div id="calendar-check-banner"></div>
 
@@ -1769,14 +1770,30 @@
     <section id="tab-progrealizado" class="tab-content fade-in space-y-6">
       <div class="card-executive p-4">
         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="bar-chart-4" class="w-5 h-5 text-emerald-600"></i> Programado x Realizado — Histórico e Aderência</h2>
-        <p class="text-xs text-slate-500 mb-3">Compare o que foi programado com o que realmente foi realizado, semana a semana, mês a mês e ano a ano — separado por Cavalo e Carreta, Preventiva e Documentação. Cada item conta no período da sua data programada, e "Realizado" são os itens <strong>desse mesmo conjunto</strong> já concluídos (a aderência nunca passa de 100%). Documentos <strong>em dia</strong> (&gt; 90 dias para vencer) não entram, pois não precisam ser programados. Clique em qualquer linha da tabela para ver o detalhe por frota.</p>
+        <p class="text-xs text-slate-500 mb-3">Compare o que foi programado com o que realmente foi realizado no <strong>dia, semana, mês ou ano</strong> escolhido — use ◀ ▶ para ir ao período anterior ou ao próximo. Todos os indicadores e gráficos acompanham o período. Cada item conta no período da sua data programada, e "Realizado" são os itens <strong>desse mesmo conjunto</strong> já concluídos (a aderência nunca passa de 100%). Documentos <strong>em dia</strong> (&gt; 90 dias para vencer) não entram. Para alimentar meses anteriores, use <strong>Lançar retroativo</strong> (ou o <strong>+</strong> de cada dia no Calendário de Preventivas).</p>
+        <div class="flex flex-col lg:flex-row lg:items-end gap-3 mb-3">
+          <div class="flex flex-col gap-0.5">
+            <label class="text-[9px] font-bold text-slate-400 uppercase">Visão por</label>
+            <select id="pr-filter-agrupamento" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+              <option value="dia">Dia</option>
+              <option value="semana">Semana</option>
+              <option value="mes" selected>Mês</option>
+              <option value="ano">Ano</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+            <label class="text-[9px] font-bold text-slate-400 uppercase">Período</label>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="prNavegar(-1)" id="pr-btn-anterior" title="Período anterior" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <select id="pr-ref-select" onchange="prSetRef(this.value)" class="flex-1 min-w-0 border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+              <input type="date" id="pr-ref-date" onchange="prSetRef(this.value)" class="hidden flex-1 min-w-0 border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none">
+              <button type="button" onclick="prNavegar(1)" id="pr-btn-proximo" title="Próximo período" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              <button type="button" onclick="prNavegar(0)" title="Voltar para o período atual" class="px-3 py-2 border border-emerald-300 bg-emerald-50 rounded-lg text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition">Hoje</button>
+            </div>
+          </div>
+          <button type="button" onclick="prLancarRetroativo()" title="Registrar uma preventiva programada/realizada neste período (inclusive meses passados)" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm"><i data-lucide="history" class="w-4 h-4"></i> Lançar retroativo no período</button>
+        </div>
         <div class="filter-grid">
-          <select id="pr-filter-agrupamento" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
-            <option value="dia">Agrupar por Dia</option>
-            <option value="semana">Agrupar por Semana</option>
-            <option value="mes" selected>Agrupar por Mês</option>
-            <option value="ano">Agrupar por Ano</option>
-          </select>
           <select id="pr-filter-unidade" onchange="renderProgRealizado()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
             <option value="TODAS">Todas Unidades</option>
             <option value="AM">AM</option>
@@ -1794,6 +1811,7 @@
           </select>
           <input id="pr-filter-tag" oninput="renderProgRealizado()" placeholder="Filtrar por TAG / Placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
         </div>
+        <div id="pr-periodo-info" class="mt-3 text-[11px] bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1"></div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -1839,7 +1857,7 @@
           <p class="text-[11px] text-slate-500"><span id="pr-kpi-reprog-pct">0%</span> dos programados</p>
         </div>
         <div class="card-executive p-4 border-l-4 border-l-red-400">
-          <p class="text-[11px] font-bold text-red-700 uppercase">Pendentes (vencidos)</p>
+          <p class="text-[11px] font-bold text-red-700 uppercase">Pendentes (vencidos no período)</p>
           <h3 class="text-2xl font-black text-red-600" id="pr-kpi-pendentes">0</h3>
           <p class="text-[11px] text-slate-500"><span id="pr-kpi-sem-just">0</span> sem justificativa</p>
         </div>
@@ -1852,9 +1870,9 @@
 
       <div class="card-executive p-5">
         <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
-          <h3 class="font-bold text-slate-900 text-sm">Programado x Realizado — Período Atual <span id="pr-bar-period-label" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 ml-1"></span></h3>
+          <h3 class="font-bold text-slate-900 text-sm">Programado x Realizado — Período Selecionado <span id="pr-bar-period-label" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 ml-1"></span></h3>
         </div>
-        <p class="text-xs text-slate-500 mb-3">Acompanha o "Agrupar por Dia/Semana/Mês/Ano" escolhido acima. Clique numa barra para ver os ativos: <strong>Programado</strong> mostra tudo que foi previsto no período (feito ou não); <strong>Realizado</strong> mostra só o que foi concluído.</p>
+        <p class="text-xs text-slate-500 mb-3">Acompanha o período escolhido acima (◀ ▶). Clique numa barra para ver os ativos: <strong>Programado</strong> mostra tudo que foi previsto no período (feito ou não); <strong>Realizado</strong> mostra só o que foi concluído.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <p class="text-xs font-bold text-blue-700 text-center mb-1">Cavalo</p>
@@ -1868,13 +1886,22 @@
       </div>
 
       <div class="card-executive p-5">
-        <h3 class="font-bold text-slate-900 text-sm mb-3">Evolução da Aderência (% Realizado / Programado) por período</h3>
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+          <h3 class="font-bold text-slate-900 text-sm">Programado x Realizado por Período <span id="pr-janela-label" class="text-[11px] font-medium text-slate-400"></span></h3>
+          <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique numa coluna para ir ao período</p>
+        </div>
+        <p class="text-xs text-slate-500 mb-3">Períodos anteriores ao escolhido e o seguinte (o que já está programado). O período escolhido fica destacado; a linha mostra a aderência (%).</p>
+        <div class="h-72"><canvas id="chartPrPeriodos"></canvas></div>
+      </div>
+
+      <div class="card-executive p-5">
+        <h3 class="font-bold text-slate-900 text-sm mb-3">Evolução da Aderência (% Realizado / Programado) por Tipo e Origem</h3>
         <div class="h-80"><canvas id="chartProgRealizado"></canvas></div>
       </div>
 
       <div class="card-executive overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
-          <h3 class="text-sm font-bold text-slate-700">Consolidado por Período, Tipo e Origem</h3>
+          <h3 class="text-sm font-bold text-slate-700">Consolidado por Período, Tipo e Origem <span class="text-[11px] font-medium text-slate-400">(mesmos períodos do gráfico — o escolhido fica destacado)</span></h3>
           <p class="text-[11px] text-slate-400 flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> Clique em uma linha para ver o detalhe por frota</p>
         </div>
         <div class="overflow-x-auto">
@@ -1894,7 +1921,7 @@
       <div class="card-executive p-5 space-y-4">
         <div class="flex items-start justify-between flex-wrap gap-2">
           <div>
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-amber-600"></i> Reprogramações e Justificativas</h3>
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-amber-600"></i> Reprogramações e Justificativas <span id="pr-reprog-periodo" class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"></span></h3>
             <p class="text-xs text-slate-500">Toda mudança de data feita com motivo (arrastar no calendário, botão Reprogramar ou Programar Renovação) — respeita os filtros acima. Pendentes vencidos sem justificativa aparecem em vermelho no detalhamento.</p>
           </div>
           <button onclick="exportReprogToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel</button>
@@ -3016,7 +3043,7 @@
   <div id="modal-maint" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-900 text-lg">Agendar Preventiva</h3>
+        <h3 class="font-bold text-slate-900 text-lg" id="modal-maint-title">Agendar Preventiva</h3>
         <button onclick="closeMaintModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
       </div>
       <form id="form-maint" onsubmit="saveMaintenance(event)" class="space-y-3">
@@ -3045,7 +3072,29 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Data da Programação</label>
-          <input type="date" id="maint-date" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          <input type="date" id="maint-date" required onchange="onMaintDateChange()" oninput="onMaintDateChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <!-- Lançamento retroativo: data no passado — registra se foi realizada (e quando) ou por que não foi -->
+        <div id="maint-retro-box" class="hidden rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2">
+          <p class="text-[11px] font-bold text-indigo-900 flex items-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5"></i> Lançamento retroativo (data no passado)</p>
+          <p class="text-[10px] text-indigo-800">Entra no Programado x Realizado do período dessa data. Informe se foi realizada:</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Situação</label>
+              <select id="maint-status-inicial" onchange="onMaintDateChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Realizado">Realizada</option>
+                <option value="Programado">Não realizada (pendente)</option>
+              </select>
+            </div>
+            <div id="maint-data-real-wrap">
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Realizada em</label>
+              <input type="date" id="maint-data-realizada" oninput="this.dataset.auto = '0'" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+          <div id="maint-just-wrap" class="hidden">
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Por que não foi realizada? (opcional)</label>
+            <input type="text" id="maint-justificativa" placeholder="Ex.: falta de peça, ativo em rota, oficina sem agenda" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
@@ -3066,9 +3115,31 @@
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
           <button type="button" onclick="closeMaintModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Programação</button>
+          <button type="submit" onclick="window._maintSalvarOutra = true" title="Salva e mantém a janela aberta com a mesma data, unidade e tipo — agiliza lançar vários itens do mesmo dia/mês" class="px-3 py-2 border border-emerald-300 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-50">Salvar e lançar outra</button>
+          <button type="submit" onclick="window._maintSalvarOutra = false" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Programação</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR REALIZAÇÃO DE PREVENTIVA — pergunta a data em que foi feita (vale para lançamentos retroativos) -->
+  <div id="modal-maint-realizar" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-3">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="circle-check-big" class="w-5 h-5 text-emerald-600"></i> Confirmar Realização</h3>
+        <button type="button" onclick="cancelarRealizarMaint()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="mr-id" value="">
+      <p id="mr-desc" class="text-xs text-slate-600"></p>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Data em que foi realizada</label>
+        <input type="date" id="mr-data" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        <button type="button" id="mr-usar-prog" onclick="document.getElementById('mr-data').value = this.dataset.data" class="mt-1 text-[11px] font-bold text-emerald-700 hover:underline"></button>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="cancelarRealizarMaint()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="button" onclick="confirmarRealizarMaint()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar</button>
+      </div>
     </div>
   </div>
 
@@ -6035,14 +6106,36 @@
       document.getElementById('doc-editing-id').value = '';
       document.getElementById('modal-doc').classList.replace('flex', 'hidden');
     };
-    window.openMaintModal = function() {
+    // dataStr opcional: abre já com a data (clique no + de um dia do calendário ou "Lançar retroativo")
+    window.openMaintModal = function(dataStr) {
       const maintSearch = document.getElementById('maint-tag-search');
       if (maintSearch) maintSearch.value = '';
       populateAssetSelect('maint-tag', true);
       populateFornecedorSelects();
       setFornecedorValue('maint-local', '');
       setFornecedorValue('maint-responsavel', '');
+      if (typeof dataStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dataStr)) document.getElementById('maint-date').value = dataStr;
+      document.getElementById('maint-status-inicial').value = 'Realizado';
+      document.getElementById('maint-data-realizada').value = '';
+      document.getElementById('maint-data-realizada').dataset.auto = '1';
+      document.getElementById('maint-justificativa').value = '';
+      onMaintDateChange();
       document.getElementById('modal-maint').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+    };
+    // Data no passado = lançamento retroativo: pergunta se foi realizada (e quando) ou por que não foi
+    window.onMaintDateChange = function() {
+      const hoje = getTodayStr();
+      const data = document.getElementById('maint-date').value;
+      const retro = !!data && data < hoje;
+      document.getElementById('maint-retro-box').classList.toggle('hidden', !retro);
+      document.getElementById('modal-maint-title').innerText = retro ? 'Lançamento Retroativo de Preventiva' : 'Agendar Preventiva';
+      const realizada = document.getElementById('maint-status-inicial').value === 'Realizado';
+      document.getElementById('maint-data-real-wrap').classList.toggle('hidden', !realizada);
+      document.getElementById('maint-just-wrap').classList.toggle('hidden', realizada);
+      const dr = document.getElementById('maint-data-realizada');
+      dr.max = hoje;
+      if (retro) { dr.min = ''; if (!dr.value || dr.dataset.auto === '1') { dr.value = data; dr.dataset.auto = '1'; } }
     };
     window.closeMaintModal = function() { document.getElementById('modal-maint').classList.replace('flex', 'hidden'); };
     window.closeAssetHistoryModal = function() { document.getElementById('modal-asset-history').classList.replace('flex', 'hidden'); };
@@ -9077,34 +9170,89 @@
       const date = document.getElementById('maint-date').value;
       const local = getFornecedorValue('maint-local');
       const responsavel = getFornecedorValue('maint-responsavel');
+      const hoje = getTodayStr();
+      const retro = date < hoje;
+      const status = retro ? document.getElementById('maint-status-inicial').value : 'Programado';
+      let dataRealizada = null;
+      if (status === 'Realizado') {
+        dataRealizada = document.getElementById('maint-data-realizada').value || date;
+        if (dataRealizada > hoje) { alert('A data de realização não pode ser futura.'); return; }
+      }
+      const justificativa = retro && status !== 'Realizado' ? document.getElementById('maint-justificativa').value.trim() : '';
 
-      window.maintenanceSchedule.push({ id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, local, responsavel, status: 'Programado', dataOriginal: date, dataRealizada: null, historico: [] });
-      addAuditLog(unit, 'Preventiva', asset.tag, `${service} (${type})`, date, 'Programado');
+      const item = { id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, local, responsavel, status, dataOriginal: date, dataRealizada, historico: [] };
+      if (retro) { item.retroativo = true; item.lancadoEm = hoje; }
+      if (justificativa) item.justificativa = justificativa;
+      window.maintenanceSchedule.push(item);
+      addAuditLog(unit, 'Preventiva', asset.tag,
+        retro ? `${service} (${type}) — lançamento retroativo: ${status === 'Realizado' ? `realizada em ${formatDateBR(dataRealizada)}` : `não realizada${justificativa ? ` (${justificativa})` : ''}`}` : `${service} (${type})`,
+        date, status, dataRealizada);
 
       saveData();
-      closeMaintModal();
-      document.getElementById('form-maint').reset();
-      setFornecedorValue('maint-local', '');
-      setFornecedorValue('maint-responsavel', '');
+      const outra = !!window._maintSalvarOutra;
+      window._maintSalvarOutra = false;
+      if (outra) {
+        // Mantém data, unidade, tipo e situação — troca só o ativo e o serviço
+        document.getElementById('maint-service').value = '';
+        const busca = document.getElementById('maint-tag-search');
+        if (busca) { busca.value = ''; filterAssetSelectOptions('maint-tag-search', 'maint-tag'); }
+        document.getElementById('maint-tag').value = '';
+        showToast(`${asset.tag} — ${service} salvo${retro ? ` (${status === 'Realizado' ? 'realizada' : 'não realizada'})` : ''}. Lance o próximo.`, 'success');
+      } else {
+        closeMaintModal();
+        document.getElementById('form-maint').reset();
+        setFornecedorValue('maint-local', '');
+        setFornecedorValue('maint-responsavel', '');
+        if (retro) showToast(`Lançamento retroativo salvo — já aparece no Programado x Realizado de ${formatDateBR(date)}.`, 'success');
+      }
       renderCalendar();
       renderPlanejamento();
       renderProgRealizado();
       renderDivergenciasPanel();
     };
 
-    window.toggleStatus = function(id, newStatus) {
+    // Ao marcar "Realizado", pergunta a data em que foi feita (padrão hoje; atalho para a data programada)
+    window.toggleStatus = function(id, newStatus, dataRealizada) {
       const item = window.maintenanceSchedule.find(m => m.id === id);
+      if (item && newStatus === 'Realizado' && item.status !== 'Realizado' && !dataRealizada) {
+        const hoje = getTodayStr();
+        document.getElementById('mr-id').value = id;
+        document.getElementById('mr-desc').innerHTML = `<strong>${escapeHtml(item.tag)}</strong> — ${escapeHtml(item.service || '')}<br>Programada para ${formatDateBR(item.date)}`;
+        const inp = document.getElementById('mr-data');
+        inp.max = hoje;
+        inp.value = hoje;
+        const btn = document.getElementById('mr-usar-prog');
+        btn.dataset.data = item.date <= hoje ? item.date : hoje;
+        btn.innerText = item.date < hoje ? `Usar a data programada (${formatDateBR(item.date)})` : '';
+        btn.classList.toggle('hidden', !(item.date < hoje));
+        document.getElementById('modal-maint-realizar').classList.replace('hidden', 'flex');
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
       if (item) {
         item.status = newStatus;
-        if (newStatus === 'Realizado' && !item.dataRealizada) item.dataRealizada = getTodayStr();
+        if (newStatus === 'Realizado') item.dataRealizada = dataRealizada || item.dataRealizada || getTodayStr();
         if (newStatus !== 'Realizado') item.dataRealizada = null;
-        addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status`, item.date, newStatus);
+        addAuditLog(item.unit, 'Preventiva', item.tag, `${item.service} - Alteração de Status${newStatus === 'Realizado' ? ` (realizada em ${formatDateBR(item.dataRealizada)})` : ''}`, item.date, newStatus, newStatus === 'Realizado' ? item.dataRealizada : null);
         saveData();
         renderCalendar();
         renderPlanejamento();
         renderProgRealizado();
         renderDivergenciasPanel();
       }
+    };
+
+    window.confirmarRealizarMaint = function() {
+      const id = Number(document.getElementById('mr-id').value);
+      const data = document.getElementById('mr-data').value;
+      if (!data) { alert('Informe a data da realização.'); return; }
+      if (data > getTodayStr()) { alert('A data de realização não pode ser futura.'); return; }
+      document.getElementById('modal-maint-realizar').classList.replace('flex', 'hidden');
+      toggleStatus(id, 'Realizado', data);
+    };
+    window.cancelarRealizarMaint = function() {
+      document.getElementById('modal-maint-realizar').classList.replace('flex', 'hidden');
+      renderCalendar(); // volta o seletor do cartão para o status anterior
     };
 
     window.deleteMaintenance = function(id) {
@@ -9196,9 +9344,12 @@
                  ondragover="allowDrop(event)"
                  ondragleave="event.currentTarget.classList.remove('drop-target-hover')"
                  ondrop="dropMaint(event, '${day.dateStr}')">
-              <h3 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2 mb-3 flex justify-between items-center">
+              <h3 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2 mb-3 flex justify-between items-center gap-1">
                 <span>${day.name}</span>
-                <span class="text-xs bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded">${day.displayDate}</span>
+                <span class="flex items-center gap-1">
+                  <span class="text-xs bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded">${day.displayDate}</span>
+                  <button onclick="openMaintModal('${day.dateStr}')" title="${day.dateStr < getTodayStr() ? 'Lançar retroativo neste dia (programado / realizado)' : 'Programar preventiva neste dia'}" class="${day.dateStr < getTodayStr() ? 'text-indigo-600 hover:text-indigo-800' : 'text-emerald-600 hover:text-emerald-800'}"><i data-lucide="circle-plus" class="w-4 h-4"></i></button>
+                </span>
               </h3>
               <div class="space-y-2 flex-1">
                 ${events.length === 0 ? '<p class="text-[11px] text-slate-400 italic text-center py-4">Sem programação</p>' : ''}
@@ -9266,7 +9417,10 @@
                  ondrop="dropMaint(event, '${dateStr}')">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-black text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${day}</span>
-                ${events.length > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">${events.length} prog</span>` : ''}
+                <span class="flex items-center gap-1">
+                  ${events.length > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded" title="${events.filter(x => x.status === 'Realizado').length} realizada(s)">${events.filter(x => x.status === 'Realizado').length}/${events.length}</span>` : ''}
+                  <button onclick="openMaintModal('${dateStr}')" title="${dateStr < getTodayStr() ? 'Lançar retroativo neste dia (programado / realizado)' : 'Programar preventiva neste dia'}" class="${dateStr < getTodayStr() ? 'text-indigo-500 hover:text-indigo-700' : 'text-emerald-500 hover:text-emerald-700'}"><i data-lucide="circle-plus" class="w-3.5 h-3.5"></i></button>
+                </span>
               </div>
 
               <div class="space-y-1.5 mt-1 flex-1 overflow-y-auto max-h-[100px]">
@@ -9957,10 +10111,114 @@
 
     window.currentPrGroups = {};
 
+    // Período escolhido na página: uma data de referência dentro dele (dia, semana, mês ou ano), navegável com
+    // ◀ (anterior), ▶ (próximo) e "Hoje". Indicadores, gráficos, consolidado e reprogramações acompanham o período.
+    window.prRef = null;
+    const PR_JANELA = { dia: 14, semana: 12, mes: 12, ano: 6 }; // períodos exibidos no gráfico/consolidado
+    function prAgrupamento() { return document.getElementById('pr-filter-agrupamento')?.value || 'mes'; }
+    function prInicioPeriodo(ref, agr) {
+      if (agr === 'dia') return ref;
+      if (agr === 'semana') return getISOWeekInfo(ref).mondayStr || ref;
+      if (agr === 'mes') return ref.slice(0, 7) + '-01';
+      return ref.slice(0, 4) + '-01-01';
+    }
+    function prFimPeriodo(ini, agr) {
+      if (agr === 'dia') return ini;
+      if (agr === 'semana') return addDaysToDateStr(ini, 6);
+      if (agr === 'mes') { const [y, m] = ini.split('-').map(Number); return formatDateISO(new Date(y, m, 0)); }
+      return ini.slice(0, 4) + '-12-31';
+    }
+    function prDeslocar(ref, agr, n) {
+      const ini = prInicioPeriodo(ref, agr);
+      if (agr === 'dia') return addDaysToDateStr(ini, n);
+      if (agr === 'semana') return addDaysToDateStr(ini, 7 * n);
+      const [y, m] = ini.split('-').map(Number);
+      if (agr === 'mes') return formatDateISO(new Date(y, m - 1 + n, 1));
+      return `${y + n}-01-01`;
+    }
+    function prRotulo(ini, agr, curto) {
+      if (agr === 'semana') {
+        const w = getISOWeekInfo(ini);
+        return curto ? `S${w.weekNumber}/${String(w.isoYear || ini.slice(0, 4)).slice(2)}` : `Semana ${w.weekNumber}/${w.isoYear || ini.slice(0, 4)} (${formatDateBR(ini).slice(0, 5)} a ${formatDateBR(addDaysToDateStr(ini, 6)).slice(0, 5)})`;
+      }
+      if (agr === 'dia') return curto ? formatDateBR(ini).slice(0, 5) : formatDateBR(ini);
+      if (agr === 'ano') return ini.slice(0, 4);
+      const m = parseInt(ini.slice(5, 7), 10);
+      return curto ? `${MESES_PT_PR[m - 1].slice(0, 3)}/${ini.slice(2, 4)}` : `${MESES_PT_PR[m - 1]}/${ini.slice(0, 4)}`;
+    }
+    function prRelacao(ini, agr) {
+      const atual = prInicioPeriodo(getTodayStr(), agr);
+      return ini === atual ? 'atual' : ini < atual ? 'passado' : 'futuro';
+    }
+    function prPeriodoSel() {
+      const agr = prAgrupamento();
+      if (!window.prRef) window.prRef = getTodayStr();
+      const ini = prInicioPeriodo(window.prRef, agr);
+      return { agr, ini, fim: prFimPeriodo(ini, agr), info: getPeriodInfoPR(ini, agr), rel: prRelacao(ini, agr), label: prRotulo(ini, agr) };
+    }
+    window.prNavegar = function(n) {
+      window.prRef = n === 0 ? getTodayStr() : prDeslocar(window.prRef || getTodayStr(), prAgrupamento(), n);
+      renderProgRealizado();
+    };
+    window.prSetRef = function(v) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v || '')) window.prRef = v;
+      renderProgRealizado();
+    };
+    // Abre o "Agendar Preventiva" com uma data do período escolhido — para lançar o que foi programado e
+    // realizado em meses anteriores (retroativo) e já ver no gráfico
+    window.prLancarRetroativo = function() {
+      const sel = prPeriodoSel();
+      const hoje = getTodayStr();
+      openMaintModal(sel.rel === 'atual' ? (sel.agr === 'dia' ? sel.ini : hoje) : sel.ini);
+    };
+
+    // Lista de períodos do seletor: do registro mais antigo até o próximo período (ou o último programado)
+    function prMontarSeletor(items, sel) {
+      const dateEl = document.getElementById('pr-ref-date');
+      const selEl = document.getElementById('pr-ref-select');
+      if (dateEl) dateEl.classList.toggle('hidden', sel.agr !== 'dia');
+      if (selEl) selEl.classList.toggle('hidden', sel.agr === 'dia');
+      if (sel.agr === 'dia') { if (dateEl) dateEl.value = sel.ini; return; }
+      if (!selEl) return;
+      const hoje = getTodayStr();
+      let min = hoje, max = hoje;
+      items.forEach(x => {
+        if (x.progDate) { if (x.progDate < min) min = x.progDate; if (x.progDate > max) max = x.progDate; }
+        (x.reprogs || []).forEach(h => { if (h.dataAnterior && h.dataAnterior < min) min = h.dataAnterior; });
+      });
+      const limiteFuturo = addDaysToDateStr(hoje, 730);
+      if (max > limiteFuturo) max = limiteFuturo;
+      let topo = prInicioPeriodo(max, sel.agr);
+      const proximo = prDeslocar(hoje, sel.agr, 1);
+      if (proximo > topo) topo = proximo;
+      if (sel.ini > topo) topo = sel.ini;
+      let base = prInicioPeriodo(min, sel.agr);
+      if (sel.ini < base) base = sel.ini;
+      const opts = [];
+      let cur = topo, guard = 0;
+      while (cur >= base && guard++ < 600) {
+        const rel = prRelacao(cur, sel.agr);
+        opts.push(`<option value="${cur}">${prRotulo(cur, sel.agr)}${rel === 'atual' ? ' • atual' : rel === 'futuro' ? ' • futuro' : ''}</option>`);
+        cur = prDeslocar(cur, sel.agr, -1);
+      }
+      selEl.innerHTML = opts.join('');
+      selEl.value = sel.ini;
+    }
+
     window.renderProgRealizado = function() {
       if (!assetsLoaded) return;
-      const agrupamento = document.getElementById('pr-filter-agrupamento')?.value || 'mes';
       const { items, tipoFiltro, origemFiltro } = getProgRealizadoFilteredItems();
+      const sel = prPeriodoSel();
+      const agrupamento = sel.agr;
+      prMontarSeletor(items, sel);
+
+      // Janela: períodos anteriores ao escolhido + o escolhido + o seguinte (mostra o que já está programado)
+      const N = PR_JANELA[agrupamento] || 12;
+      const janela = [];
+      for (let i = N - 2; i >= -1; i--) janela.push(prDeslocar(sel.ini, agrupamento, -i));
+      const janelaKeys = new Set(janela.map(ini => getPeriodInfoPR(ini, agrupamento).key));
+      const lbl = document.getElementById('pr-janela-label');
+      if (lbl) lbl.innerText = `— ${prRotulo(janela[0], agrupamento)} a ${prRotulo(janela[janela.length - 1], agrupamento)}`;
 
       // Cada item conta UMA vez, no período da sua data programada. "Realizado" = itens desse mesmo conjunto já
       // concluídos. Antes, o realizado era contado pela data da realização — um documento importado como
@@ -9972,12 +10230,10 @@
         if (!groups[key]) groups[key] = { key, periodKey: periodInfo.key, periodLabel: periodInfo.label, sortKey: periodInfo.sortKey, tipo, origem, programado: 0, realizado: 0, pendente: 0, reprogramacoes: 0, itens: [] };
         return groups[key];
       }
-
-      const currentSortKey = window.getPeriodInfoPR(getTodayStr(), agrupamento).sortKey;
       items.forEach(x => {
         if (!x.progDate) return;
         const pInfo = window.getPeriodInfoPR(x.progDate, agrupamento);
-        if (pInfo.sortKey > currentSortKey) return; // períodos futuros só entram quando chegarem
+        if (!janelaKeys.has(pInfo.key)) return;
         const g = ensureGroup(pInfo, x.tipo, x.origem);
         g.programado++;
         if (x.status === 'Realizado') g.realizado++; else g.pendente++;
@@ -9986,27 +10242,43 @@
       // Reprogramações: contam no período da data ANTERIOR (de onde a atividade foi empurrada)
       items.forEach(x => (x.reprogs || []).forEach(h => {
         const pInfo = window.getPeriodInfoPR(h.dataAnterior, agrupamento);
-        if (pInfo.sortKey > currentSortKey) return;
+        if (!janelaKeys.has(pInfo.key)) return;
         const g = ensureGroup(pInfo, x.tipo, x.origem);
         g.reprogramacoes++;
         if (!g.itens.includes(x)) g.itens.push(x);
       }));
-
       window.currentPrGroups = groups;
 
+      // Indicadores do período escolhido
+      const doPeriodo = Object.values(groups).filter(g => g.periodKey === sel.info.key);
       function sumFor(tipo, origem) {
         let programado = 0, realizado = 0;
-        Object.values(groups).forEach(g => { if (g.tipo === tipo && g.origem === origem) { programado += g.programado; realizado += g.realizado; } });
-        return { programado, realizado, pct: programado > 0 ? Math.round((realizado / programado) * 100) : 0 };
+        doPeriodo.forEach(g => { if (g.tipo === tipo && g.origem === origem) { programado += g.programado; realizado += g.realizado; } });
+        // Período futuro sem nada realizado: aderência ainda não se aplica
+        return { programado, realizado, pct: programado > 0 && !(sel.rel === 'futuro' && !realizado) ? Math.round((realizado / programado) * 100) : null };
       }
       [['Cavalo', 'Preventiva', 'pr-kpi-cavalo-prev'], ['Carreta', 'Preventiva', 'pr-kpi-carreta-prev'], ['Cavalo', 'Documento', 'pr-kpi-cavalo-doc'], ['Carreta', 'Documento', 'pr-kpi-carreta-doc']].forEach(([tipo, origem, prefix]) => {
         const r = sumFor(tipo, origem);
         const pctEl = document.getElementById(`${prefix}-pct`);
         const ratioEl = document.getElementById(`${prefix}-ratio`);
-        if (pctEl) pctEl.innerText = `${r.pct}%`;
+        if (pctEl) pctEl.innerText = r.pct === null ? '—' : `${r.pct}%`;
         if (ratioEl) ratioEl.innerText = `${r.realizado}/${r.programado}`;
       });
+      const tot = doPeriodo.reduce((a, g) => ({ p: a.p + g.programado, r: a.r + g.realizado, pe: a.pe + g.pendente, rp: a.rp + g.reprogramacoes }), { p: 0, r: 0, pe: 0, rp: 0 });
+      const info = document.getElementById('pr-periodo-info');
+      if (info) {
+        const relTxt = { atual: 'período atual (em andamento)', passado: 'período anterior', futuro: 'período futuro — só o que já está programado' }[sel.rel];
+        const pctTot = tot.p && !(sel.rel === 'futuro' && !tot.r) ? Math.round((tot.r / tot.p) * 100) : null;
+        info.innerHTML = `<span class="font-black text-slate-900 flex items-center gap-1"><i data-lucide="calendar-range" class="w-3.5 h-3.5 text-emerald-700"></i> ${escapeHtml(sel.label)}</span>
+          <span class="text-slate-500">${formatDateBR(sel.ini)} a ${formatDateBR(sel.fim)} • ${relTxt}</span>
+          <span>Programado: <strong class="text-amber-600">${tot.p}</strong></span>
+          <span>Realizado: <strong class="text-emerald-600">${tot.r}</strong></span>
+          <span>Pendente: <strong class="${tot.pe ? 'text-red-600' : 'text-slate-500'}">${tot.pe}</strong></span>
+          <span>Reprogramações: <strong class="text-amber-700">${tot.rp}</strong></span>
+          <span>Aderência: <strong class="${pctTot === null ? 'text-slate-400' : pctTot >= 90 ? 'text-emerald-700' : pctTot >= 70 ? 'text-amber-600' : 'text-red-600'}">${pctTot === null ? '—' : pctTot + '%'}</strong></span>`;
+      }
 
+      const atualSortKey = getPeriodInfoPR(getTodayStr(), agrupamento).sortKey;
       const sortedGroups = Object.values(groups).sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.tipo.localeCompare(b.tipo) || a.origem.localeCompare(b.origem));
       const tbody = document.getElementById('pr-consolidado-tbody');
       if (tbody) {
@@ -10014,9 +10286,11 @@
           const pct = g.programado > 0 ? Math.round((g.realizado / g.programado) * 100) : null;
           const pctColor = pct === null ? 'text-slate-400' : pct >= 90 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600';
           const origemBadge = g.origem === 'Documento' ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-blue-100 text-blue-800 border-blue-300';
+          const escolhido = g.periodKey === sel.info.key;
+          const futuro = g.sortKey > atualSortKey;
           return `
-            <tr class="cursor-pointer hover:bg-emerald-50/40 transition" onclick="openPrDrillDown('${escapeJs(g.key)}')">
-              <td class="p-2 font-bold text-slate-900">${escapeHtml(g.periodLabel)}</td>
+            <tr class="cursor-pointer transition ${escolhido ? 'bg-emerald-50 hover:bg-emerald-100 font-semibold' : 'hover:bg-emerald-50/40'}" onclick="openPrDrillDown('${escapeJs(g.key)}')">
+              <td class="p-2 font-bold text-slate-900 whitespace-nowrap">${escolhido ? '▶ ' : ''}${escapeHtml(g.periodLabel)}${futuro ? ' <span class="text-[9px] font-bold text-slate-400 uppercase">futuro</span>' : ''}</td>
               <td class="p-2">${getVehicleBadge(g.tipo)}</td>
               <td class="p-2"><span class="text-[10px] font-black px-1.5 py-0.5 rounded border ${origemBadge}">${g.origem}</span></td>
               <td class="p-2 text-blue-600 font-bold">${g.programado}</td>
@@ -10025,31 +10299,87 @@
               <td class="p-2 ${g.reprogramacoes ? 'text-amber-600 font-bold' : 'text-slate-400'}">${g.reprogramacoes}</td>
               <td class="p-2 font-black ${pctColor}">${pct === null ? '-' : pct + '%'}</td>
             </tr>`;
-        }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum dado encontrado no filtro atual.</td></tr>`;
+        }).join('') || `<tr><td colspan="8" class="p-3 text-center text-slate-400 italic">Nenhum item programado entre ${escapeHtml(prRotulo(janela[0], agrupamento))} e ${escapeHtml(prRotulo(janela[janela.length - 1], agrupamento))} no filtro atual.</td></tr>`;
       }
 
-      renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro);
-      renderProgRealizadoCurrentBars();
-      renderPrReprogramacoes(items, agrupamento, currentSortKey);
+      renderPrPeriodosChart(janela, groups, sel);
+      renderProgRealizadoChart(janela, groups, sel, tipoFiltro, origemFiltro);
+      renderProgRealizadoCurrentBars(sel);
+      renderPrReprogramacoes(items, sel);
       lucide.createIcons();
     };
 
+    // Colunas Programado x Realizado de cada período da janela + linha de aderência; clique leva ao período
+    window.chartPrPeriodosInstance = null;
+    function renderPrPeriodosChart(janela, groups, sel) {
+      const el = document.getElementById('chartPrPeriodos');
+      if (!el) return;
+      if (window.chartPrPeriodosInstance) window.chartPrPeriodosInstance.destroy();
+      const agr = sel.agr;
+      const dados = janela.map(ini => {
+        const key = getPeriodInfoPR(ini, agr).key;
+        let p = 0, r = 0;
+        Object.values(groups).forEach(g => { if (g.periodKey === key) { p += g.programado; r += g.realizado; } });
+        return { ini, key, p, r, rel: prRelacao(ini, agr), escolhido: key === sel.info.key };
+      });
+      const cor = (base, fraco, d) => d.escolhido ? base : fraco;
+      window.chartPrPeriodosInstance = new Chart(el.getContext('2d'), {
+        data: {
+          labels: dados.map(d => prRotulo(d.ini, agr, true) + (d.rel === 'futuro' ? ' ›' : '')),
+          datasets: [
+            { type: 'bar', label: 'Programado', data: dados.map(d => d.p), backgroundColor: dados.map(d => cor('#d97706', '#fcd34d', d)), borderColor: dados.map(d => d.escolhido ? '#92400e' : 'transparent'), borderWidth: dados.map(d => d.escolhido ? 2 : 0), borderRadius: 4, yAxisID: 'y', order: 2 },
+            { type: 'bar', label: 'Realizado', data: dados.map(d => d.r), backgroundColor: dados.map(d => cor('#15803d', '#86efac', d)), borderColor: dados.map(d => d.escolhido ? '#14532d' : 'transparent'), borderWidth: dados.map(d => d.escolhido ? 2 : 0), borderRadius: 4, yAxisID: 'y', order: 2 },
+            { type: 'line', label: '% Aderência', data: dados.map(d => (d.p && d.rel !== 'futuro') ? Math.round((d.r / d.p) * 100) : null), borderColor: '#0f172a', backgroundColor: '#0f172a', yAxisID: 'y1', spanGaps: true, tension: 0.25, order: 1,
+              pointRadius: dados.map(d => d.escolhido ? 6 : 3), pointBackgroundColor: dados.map(d => d.escolhido ? '#059669' : '#0f172a'),
+              datalabels: { display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null && ctx.dataset.data[ctx.dataIndex] !== undefined, align: 'top', color: '#0f172a', font: { weight: 'bold', size: 9 }, formatter: v => v + '%' } }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          layout: { padding: { top: 12 } },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } },
+            datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#334155', font: { weight: 'bold', size: 10 }, formatter: v => v || '' },
+            tooltip: { callbacks: { title: (ctx) => { const d = dados[ctx[0].dataIndex]; return prRotulo(d.ini, agr) + (d.rel === 'futuro' ? ' (futuro)' : d.rel === 'atual' ? ' (atual)' : ''); } } }
+          },
+          scales: {
+            y: { beginAtZero: true, grace: '15%', ticks: { precision: 0 }, title: { display: true, text: 'Quantidade', font: { size: 10 } } },
+            y1: { position: 'right', min: 0, max: 110, grid: { display: false }, ticks: { stepSize: 20, callback: v => (v <= 100 ? v + '%' : '') } },
+            x: { grid: { display: false }, ticks: { font: (ctx) => ({ size: 10, weight: dados[ctx.index] && dados[ctx.index].escolhido ? 'bold' : 'normal' }), maxRotation: 0, autoSkip: false } }
+          },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            const d = dados[elements[0].index];
+            if (d) { window.prRef = d.ini; renderProgRealizado(); }
+          },
+          onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+        }
+      });
+    }
+
     // Reprogramações e justificativas (KPIs, gráficos e tabela) — para o gestor analisar os adiamentos
     window.lastPrReprogRows = [];
-    function renderPrReprogramacoes(items, agrupamento, currentSortKey) {
+    // Considera o período escolhido: reprogramações cuja data ANTERIOR caía no período e itens programados nele
+    function renderPrReprogramacoes(items, sel) {
+      const noPeriodo = (d) => !!d && d >= sel.ini && d <= sel.fim;
       const rows = [];
+      const itensComReprog = new Set();
       items.forEach(x => {
         (x.reprogs || []).forEach((h, i) => {
+          if (!noPeriodo(h.dataAnterior)) return;
+          itensComReprog.add(x);
           rows.push({ ...h, origem: x.origem, tag: x.tag, tipo: x.tipo, atividade: x.atividade, numero: i + 1, total: x.reprogs.length });
         });
       });
       rows.sort((a, b) => (b.dataNova || '').localeCompare(a.dataNova || ''));
       window.lastPrReprogRows = rows;
+      const rp = document.getElementById('pr-reprog-periodo');
+      if (rp) rp.innerText = sel.label;
 
-      const itensReprog = items.filter(x => (x.reprogs || []).length > 0).length;
-      const programadosAteHoje = items.filter(x => x.progDate && window.getPeriodInfoPR(x.progDate, agrupamento).sortKey <= currentSortKey).length;
+      const itensReprog = itensComReprog.size;
+      const programadosAteHoje = items.filter(x => noPeriodo(x.progDate)).length;
       const hoje = getTodayStr();
-      const pendentes = items.filter(x => x.status !== 'Realizado' && x.progDate && x.progDate < hoje);
+      const pendentes = items.filter(x => x.status !== 'Realizado' && noPeriodo(x.progDate) && x.progDate < hoje);
       const semJust = pendentes.filter(x => !x.raw.justificativa).length;
       const mediaAdiamento = rows.length ? (rows.reduce((s, r) => s + Math.abs(calcDiasEntre(r.dataAnterior, r.dataNova)), 0) / rows.length) : 0;
 
@@ -10079,7 +10409,7 @@
             <td class="p-2 max-w-[260px]">${escapeHtml(r.motivo || 'Não informado')}</td>
             <td class="p-2">${escapeHtml(r.responsavel || '-')}</td>
           </tr>`;
-        }).join('') || `<tr><td colspan="11" class="p-3 text-center text-slate-400 italic">Nenhuma reprogramação no filtro atual. 🎉</td></tr>`;
+        }).join('') || `<tr><td colspan="11" class="p-3 text-center text-slate-400 italic">Nenhuma reprogramação em ${escapeHtml(sel.label)} no filtro atual. 🎉</td></tr>`;
       }
 
       const motivoCounts = {};
@@ -10119,20 +10449,13 @@
     };
 
     window.chartProgRealizadoInstance = null;
-    function renderProgRealizadoChart(sortedGroups, tipoFiltro, origemFiltro) {
+    function renderProgRealizadoChart(janela, groups, sel, tipoFiltro, origemFiltro) {
       const el = document.getElementById('chartProgRealizado');
       if (!el) return;
       if (window.chartProgRealizadoInstance) window.chartProgRealizadoInstance.destroy();
-
-      // Eixo X: todos os períodos distintos, em ordem cronológica
-      const periodOrder = [];
-      const periodLabelByKeyPart = {};
-      sortedGroups.forEach(g => {
-        const pKey = g.sortKey;
-        if (!periodLabelByKeyPart[pKey]) { periodLabelByKeyPart[pKey] = g.periodLabel; periodOrder.push(pKey); }
-      });
-      periodOrder.sort();
-      const labels = periodOrder.map(k => periodLabelByKeyPart[k]);
+      const agr = sel.agr;
+      const labels = janela.map(ini => prRotulo(ini, agr, true) + (prRelacao(ini, agr) === 'futuro' ? ' ›' : ''));
+      const idxSel = janela.findIndex(ini => getPeriodInfoPR(ini, agr).key === sel.info.key);
 
       const combos = [
         { tipo: 'Cavalo', origem: 'Preventiva', label: 'Cavalo — Preventiva', color: '#2563eb' },
@@ -10142,12 +10465,14 @@
       ].filter(c => (tipoFiltro === 'TODOS' || c.tipo === tipoFiltro) && (origemFiltro === 'TODOS' || c.origem === origemFiltro));
 
       const datasets = combos.map(c => {
-        const data = periodOrder.map(pKey => {
-          const g = sortedGroups.find(x => x.sortKey === pKey && x.tipo === c.tipo && x.origem === c.origem);
+        const data = janela.map(ini => {
+          if (prRelacao(ini, agr) === 'futuro') return null; // período que ainda não chegou: sem aderência
+          const g = groups[`${getPeriodInfoPR(ini, agr).key}|${c.tipo}|${c.origem}`];
           if (!g || !g.programado) return null;
           return Math.round((g.realizado / g.programado) * 100);
         });
-        return { label: c.label, data, borderColor: c.color, backgroundColor: c.color, cubicInterpolationMode: 'monotone', spanGaps: true, clip: 8 };
+        return { label: c.label, data, borderColor: c.color, backgroundColor: c.color, cubicInterpolationMode: 'monotone', spanGaps: true, clip: 8,
+          pointRadius: janela.map((_, i) => i === idxSel ? 6 : 3), pointBorderWidth: janela.map((_, i) => i === idxSel ? 2 : 1) };
       });
 
       window.chartProgRealizadoInstance = new Chart(el.getContext('2d'), {
@@ -10156,8 +10481,16 @@
         options: {
           responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 8 } },
-          scales: { y: { min: 0, max: 100, ticks: { stepSize: 20, callback: v => v + '%' } } },
-          plugins: { datalabels: { display: false }, legend: { position: 'bottom' } }
+          scales: {
+            y: { min: 0, max: 100, ticks: { stepSize: 20, callback: v => v + '%' } },
+            x: { ticks: { maxRotation: 0, autoSkip: false, font: (ctx) => ({ size: 10, weight: ctx.index === idxSel ? 'bold' : 'normal' }) } }
+          },
+          plugins: { datalabels: { display: false }, legend: { position: 'bottom' },
+            tooltip: { callbacks: { title: (ctx) => prRotulo(janela[ctx[0].dataIndex], agr) } } },
+          onClick: (evt, elements) => {
+            if (!elements || !elements.length) return;
+            window.prRef = janela[elements[0].index]; renderProgRealizado();
+          }
         }
       });
     }
@@ -10258,8 +10591,9 @@
     window.currentPrBarData = {};
     window.chartPrBarCavaloInstance = null;
     window.chartPrBarCarretaInstance = null;
-    function renderProgRealizadoCurrentBars() {
-      const agrupamento = document.getElementById('pr-filter-agrupamento')?.value || 'mes';
+    function renderProgRealizadoCurrentBars(sel) {
+      sel = sel || prPeriodoSel();
+      const agrupamento = sel.agr;
       const unidadeFiltro = document.getElementById('pr-filter-unidade')?.value || 'TODAS';
       const origemFiltro = document.getElementById('pr-filter-origem')?.value || 'TODOS';
       const tagFiltro = (document.getElementById('pr-filter-tag')?.value || '').trim().toUpperCase();
@@ -10270,9 +10604,9 @@
       if (origemFiltro !== 'TODOS') items = items.filter(x => x.origem === origemFiltro);
       if (tagFiltro) items = items.filter(x => (x.tag || '').toUpperCase().includes(tagFiltro) || (x.placa || '').toUpperCase().includes(tagFiltro));
 
-      const currentPeriod = window.getPeriodInfoPR(getTodayStr(), agrupamento);
+      const currentPeriod = sel.info;
       const periodLabelEl = document.getElementById('pr-bar-period-label');
-      if (periodLabelEl) periodLabelEl.innerText = `Período: ${currentPeriod.label}`;
+      if (periodLabelEl) periodLabelEl.innerText = `Período: ${sel.label}${sel.rel === 'atual' ? ' (atual)' : sel.rel === 'futuro' ? ' (futuro)' : ''}`;
 
       const data = { Cavalo: { programado: [], realizado: [] }, Carreta: { programado: [], realizado: [] } };
       items.forEach(x => {
