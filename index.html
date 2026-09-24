@@ -166,13 +166,28 @@
       body.printing-area .print-target, body.printing-area .print-target * { visibility: visible !important; }
       body.printing-area .print-target { position: absolute; left: 0; top: 0; width: 100%; box-shadow:none !important; }
       body.printing-area .no-print { display:none !important; }
+      body.printing-area .print-target .print-only-title { display:block !important; }
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
     /* Navegação: no celular, um seletor compacto substitui a faixa de abas (que só mostraria ícones) */
     @media (max-width: 639px) {
       #main-tab-nav { display:none; }
+      header.app-header { position: static; }
     }
+    /* ===== CONGELAR TOPO (opcional, botão 📌 no cabeçalho): menu de abas, título/filtros da página e cabeçalho
+       das tabelas ficam fixos; a tabela rola dentro da própria área ===== */
+    body.freeze-top #main-tab-nav, body.freeze-top #mobile-tab-wrap { position: sticky; top: var(--freeze-nav-top, 64px); z-index: 35; background: var(--canvas); }
+    body.freeze-top #main-tab-nav { padding-top: .5rem; box-shadow: 0 6px 8px -8px rgba(15,23,42,.25); }
+    body.freeze-top .freeze-head { position: sticky; top: var(--freeze-head-top, 120px); z-index: 30; background: var(--canvas); padding-bottom: .75rem; box-shadow: 0 10px 12px -12px rgba(15,23,42,.35); }
+    body.freeze-top .freeze-scroll { max-height: var(--freeze-table-max, 60vh); overflow: auto; }
+    body.freeze-top .freeze-scroll table > thead { position: sticky; top: 0; z-index: 6; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+    body.freeze-top .freeze-scroll table > thead th:not(.sticky-col-right):not(.sticky) { position: static; }
+    @media print {
+      body.freeze-top #main-tab-nav, body.freeze-top #mobile-tab-wrap, body.freeze-top .freeze-head { position: static !important; box-shadow: none !important; }
+      body.freeze-top .freeze-scroll { max-height: none !important; overflow: visible !important; }
+    }
+    #btn-freeze-top.ativo { background:#059669; color:#fff; border-color:#047857; }
     .mini-bar { height:6px; border-radius:99px; background:#e2e8f0; overflow:hidden; }
     .mini-bar > span { display:block; height:100%; border-radius:99px; }
     .diff-chip { display:inline-flex; gap:.25rem; align-items:center; font-size:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:.35rem; padding:.05rem .35rem; margin:.1rem .15rem 0 0; }
@@ -273,6 +288,9 @@
           <div class="text-right text-xs text-slate-500 hidden sm:block">
             Hoje: <span id="current-date-display" class="font-bold text-emerald-700"></span>
           </div>
+          <button onclick="toggleFreezeTop()" id="btn-freeze-top" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg border border-slate-200 transition" title="Congelar topo: mantém o menu, o título da página, os filtros e o cabeçalho das tabelas fixos enquanto a lista rola (liga/desliga)">
+            <i data-lucide="pin" class="w-4 h-4"></i>
+          </button>
           <button onclick="toggleTvMode()" id="btn-tv-mode" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg border border-slate-200 transition" title="Modo TV / Projeção (aumenta fontes para tela grande)">
             <i data-lucide="monitor" class="w-4 h-4"></i>
           </button>
@@ -288,7 +306,7 @@
   <div class="max-w-[1680px] mx-auto px-4 py-6 flex-1 w-full flex flex-col gap-6">
 
     <!-- MENU DE NAVEGAÇÃO (CELULAR): seletor compacto com o nome das abas liberadas para o usuário -->
-    <div class="sm:hidden flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
+    <div id="mobile-tab-wrap" class="sm:hidden flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
       <i data-lucide="menu" class="w-4 h-4 text-emerald-700 shrink-0"></i>
       <select id="mobile-tab-select" onchange="switchTab(this.value)" class="flex-1 bg-transparent text-sm font-extrabold text-slate-800 outline-none"></select>
     </div>
@@ -318,6 +336,9 @@
       </button>
       <button onclick="switchTab('falhas')" id="btn-tab-falhas" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="microscope" class="w-4 h-4"></i> <span class="hidden sm:inline">Análise de Falhas</span>
+      </button>
+      <button onclick="switchTab('acao')" id="btn-tab-acao" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="list-checks" class="w-4 h-4"></i> <span class="hidden sm:inline">Plano de Ação</span>
       </button>
       <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="hidden sm:inline">Evolução</span>
@@ -848,6 +869,148 @@
                 <tr><th class="p-2">TAG</th><th class="p-2">Tipo</th><th class="p-2">Motivo</th><th class="p-2">Causa Raiz</th><th class="p-2">Detalhe</th><th class="p-2">Data da Parada</th><th class="p-2">Saída</th><th class="p-2">Dias</th><th class="p-2 no-print"></th></tr>
               </thead>
               <tbody id="fa-eventos-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: PLANO DE AÇÃO / FATOS RELEVANTES — fatos gerados automaticamente dos dados da frota (paradas,
+         disponibilidade, corretivas, causa raiz, vencimentos) por dia/semana/mês/ano + plano de ação com prazo e status -->
+    <section id="tab-acao" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 space-y-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5 text-emerald-600"></i> Plano de Ação & Fatos Relevantes</h2>
+            <p class="text-xs text-slate-500">Fatos gerados automaticamente dos dados da frota (paradas, disponibilidade, corretivas, causa raiz e vencimentos) no período escolhido, comparados com o período anterior. Clique em <strong>+ Plano de ação</strong> num fato para abrir a ação já preenchida.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="copiarResumoAcao()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap" title="Copia um texto pronto para colar no WhatsApp / e-mail"><i data-lucide="clipboard-copy" class="w-4 h-4"></i> Copiar resumo</button>
+            <button onclick="printArea('acao-print-area')" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="printer" class="w-4 h-4"></i> Imprimir</button>
+            <button onclick="exportAcaoToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel</button>
+            <button onclick="openPlanoAcaoModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm whitespace-nowrap"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano de Ação</button>
+          </div>
+        </div>
+        <div class="filter-grid">
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Período</label>
+            <select id="acao-periodo-tipo" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none">
+              <option value="dia">Dia</option>
+              <option value="semana" selected>Semana</option>
+              <option value="mes">Mês</option>
+              <option value="ano">Ano</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label id="acao-ref-label" class="text-[9px] font-bold text-slate-400 uppercase">Semana</label>
+            <input type="date" id="acao-ref-date" onchange="renderPlanoAcao()" class="hidden border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
+            <select id="acao-ref-semana" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <select id="acao-ref-mes" onchange="renderPlanoAcao()" class="hidden border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <select id="acao-ref-ano" onchange="renderPlanoAcao()" class="hidden border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Unidade</label>
+            <select id="acao-filter-unidade" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Unidades</option><option value="AM">AM</option><option value="MA">MA</option></select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Tipo de equipamento</label>
+            <select id="acao-filter-tipo" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Cavalo + Carreta</option><option value="Cavalo">Só Cavalo</option><option value="Carreta">Só Carreta</option></select>
+          </div>
+          <div class="flex flex-col gap-0.5"><label class="text-[9px] font-bold text-slate-400 uppercase">Operação</label>
+            <select id="acao-filter-operacao" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas Operações</option></select>
+          </div>
+        </div>
+        <p id="acao-periodo-info" class="text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex items-center gap-1.5"></p>
+      </div>
+
+      <div id="acao-kpis" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3"></div>
+
+      <div id="acao-print-area" class="space-y-6">
+        <div class="hidden print-only-title"><h2 class="text-lg font-black text-slate-900">Plano de Ação & Fatos Relevantes — <span id="acao-print-periodo"></span></h2></div>
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+          <div class="card-executive p-4 xl:col-span-3">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i data-lucide="megaphone" class="w-4 h-4 text-amber-600"></i> Fatos Relevantes <span id="acao-fatos-periodo" class="text-slate-400 font-medium"></span></h3>
+              <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200 no-print" id="acao-fatos-filtro">
+                <button onclick="setFiltroFatos('todos')" data-f="todos" class="subtab-btn active px-2.5 py-1 text-[11px] font-bold rounded-md transition">Todos</button>
+                <button onclick="setFiltroFatos('critico')" data-f="critico" class="subtab-btn px-2.5 py-1 text-[11px] font-bold rounded-md text-slate-600 transition">Críticos</button>
+                <button onclick="setFiltroFatos('atencao')" data-f="atencao" class="subtab-btn px-2.5 py-1 text-[11px] font-bold rounded-md text-slate-600 transition">Atenção</button>
+                <button onclick="setFiltroFatos('positivo')" data-f="positivo" class="subtab-btn px-2.5 py-1 text-[11px] font-bold rounded-md text-slate-600 transition">Positivos</button>
+              </div>
+            </div>
+            <div id="acao-fatos-list" class="space-y-2"></div>
+          </div>
+          <div class="card-executive p-4 xl:col-span-2 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i data-lucide="repeat" class="w-4 h-4 text-red-600"></i> O que mais está parando</h3>
+              <select id="acao-recorr-agrup" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none no-print">
+                <option value="tipocausa">Tipo de parada × Causa raiz</option>
+                <option value="causa">Causa raiz</option>
+                <option value="motivo">Motivo (texto da parada)</option>
+                <option value="ativo">Ativo</option>
+                <option value="marca">Marca / Modelo</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+                  <tr><th class="p-2">Problema</th><th class="p-2 text-center" title="Paradas iniciadas no período">Qtd</th><th class="p-2 text-center" title="Mesmo intervalo do período anterior">Ant.</th><th class="p-2 text-center" title="Dias parados dentro do período">Dias</th><th class="p-2">Ativos</th><th class="p-2 no-print"></th></tr>
+                </thead>
+                <tbody id="acao-recorr-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i data-lucide="columns-3" class="w-4 h-4 text-indigo-600"></i> Comparativo por
+              <select id="acao-quebra" onchange="renderPlanoAcao()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none">
+                <option value="unidade">Unidade</option>
+                <option value="tipo">Tipo de equipamento</option>
+                <option value="operacao">Operação</option>
+                <option value="marca">Marca</option>
+              </select>
+            </h3>
+            <p class="text-[11px] text-slate-400">Disponibilidade = dias operados ÷ dias com registro no período (mesma regra da Operação por Ativo).</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+                <tr><th class="p-2">Grupo</th><th class="p-2 text-center">Ativos</th><th class="p-2 text-center">Disponibilidade</th><th class="p-2 text-center">x Anterior</th><th class="p-2 text-center">Paradas</th><th class="p-2 text-center">Corretivas</th><th class="p-2 text-center">Dias Parados</th><th class="p-2 text-center">Parados Agora</th><th class="p-2 text-center">Docs Vencidos</th><th class="p-2 text-center">Ações Abertas</th></tr>
+              </thead>
+              <tbody id="acao-quebra-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-4 h-4 text-emerald-600"></i> Plano de Ação <span id="acao-plano-count" class="text-slate-400 font-medium"></span></h3>
+            <div class="flex flex-wrap gap-2 no-print">
+              <select id="acao-plano-status" onchange="renderPlanoAcaoTabela()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none">
+                <option value="ABERTAS">Abertas (não iniciada + em andamento)</option>
+                <option value="TODAS">Todas</option>
+                <option value="Não iniciada">Não iniciada</option>
+                <option value="Em andamento">Em andamento</option>
+                <option value="Concluída">Concluída</option>
+                <option value="Cancelada">Cancelada</option>
+              </select>
+              <select id="acao-plano-prazo" onchange="renderPlanoAcaoTabela()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none">
+                <option value="TODAS">Dentro + fora do prazo</option>
+                <option value="dentro">Dentro do prazo</option>
+                <option value="fora">Fora do prazo</option>
+              </select>
+              <input id="acao-plano-busca" oninput="renderPlanoAcaoTabela()" placeholder="Buscar ação, causa, responsável, TAG..." class="border border-slate-300 rounded-lg p-1.5 text-[11px] outline-none w-56">
+            </div>
+          </div>
+          <div id="acao-plano-kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-3 border-b border-slate-100"></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200">
+                <tr>
+                  <th class="p-2">Nº</th><th class="p-2">Problema / Fato</th><th class="p-2">Causa</th><th class="p-2">Ação</th><th class="p-2">Responsável</th>
+                  <th class="p-2">Escopo</th><th class="p-2">Prioridade</th><th class="p-2">Abertura</th><th class="p-2">Prazo</th><th class="p-2">Status</th>
+                  <th class="p-2">Situação do Prazo</th><th class="p-2">Conclusão</th><th class="p-2 text-center sticky-col-right no-print">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="acao-plano-tbody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
@@ -2578,6 +2741,110 @@
     </div>
   </div>
 
+  <!-- MODAL PLANO DE AÇÃO (novo / editar) -->
+  <div id="modal-plano-acao" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-600"></i> <span id="modal-plano-acao-title">Novo Plano de Ação</span></h3>
+        <button type="button" onclick="closePlanoAcaoModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-plano-acao" onsubmit="savePlanoAcao(event)" class="space-y-3">
+        <input type="hidden" id="pa-editing-id" value="">
+        <input type="hidden" id="pa-origem" value="">
+        <div id="pa-origem-box" class="hidden text-[11px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Problema / Fato relevante *</label>
+          <input type="text" id="pa-tema" required placeholder="Ex.: Muitas reformas por perda de vácuo nas carretas" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Causa</label>
+          <input type="text" id="pa-causa" list="pa-causas-list" placeholder="Causa raiz identificada (ex.: Perda de Vácuo — válvula / isolamento)" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          <datalist id="pa-causas-list"></datalist>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ação *</label>
+          <textarea id="pa-acao" required rows="3" placeholder="O que será feito para eliminar/reduzir o problema" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Responsável *</label>
+            <input type="text" id="pa-responsavel" required list="pa-resp-list" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <datalist id="pa-resp-list"></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Data de prazo *</label>
+            <input type="date" id="pa-prazo" required onchange="onPlanoPrazoChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+        <div id="pa-just-prazo-wrap" class="hidden">
+          <label class="block text-xs font-bold text-amber-800 mb-1">Justificativa da mudança de prazo *</label>
+          <input type="text" id="pa-just-prazo" placeholder="Por que o prazo mudou? (fica no histórico da ação)" class="w-full border border-amber-300 bg-amber-50 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Status</label>
+            <select id="pa-status" onchange="onPlanoStatusChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Não iniciada">Não iniciada</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Prioridade</label>
+            <select id="pa-prioridade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="Alta">Alta</option>
+              <option value="Média" selected>Média</option>
+              <option value="Baixa">Baixa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Data de conclusão</label>
+            <input type="date" id="pa-conclusao" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Unidade</label>
+            <select id="pa-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="TODAS">Todas (AM + MA)</option><option value="AM">AM</option><option value="MA">MA</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de equipamento</label>
+            <select id="pa-tipo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="TODOS">Cavalo + Carreta</option><option value="Cavalo">Cavalo</option><option value="Carreta">Carreta</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Operação</label>
+            <input type="text" id="pa-operacao" list="pa-operacao-list" placeholder="Todas" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <datalist id="pa-operacao-list"></datalist>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ativos envolvidos (TAGs, separados por vírgula)</label>
+          <input type="text" id="pa-ativos" placeholder="Ex.: CR012, CR018" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Observações / evidência / resultado</label>
+          <textarea id="pa-obs" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+        </div>
+        <div id="pa-historico-wrap" class="hidden">
+          <p class="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5"></i> Histórico desta ação</p>
+          <div id="pa-historico" class="max-h-40 overflow-y-auto space-y-1 text-[11px] border border-slate-200 rounded-lg p-2 bg-slate-50"></div>
+        </div>
+        <div class="flex justify-between gap-2 pt-2 border-t">
+          <button type="button" id="pa-btn-excluir" onclick="deletePlanoAcao()" class="hidden px-3 py-2 border border-red-200 text-red-700 hover:bg-red-50 rounded-lg text-xs font-bold">Excluir</button>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" onclick="closePlanoAcaoModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar Plano de Ação</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL GERENCIAR CAUSAS RAIZ -->
   <div id="modal-causa-raiz" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-[60] p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
@@ -3299,7 +3566,8 @@
       { key: 'maintenanceSchedule', loaded: () => maintLoaded, get: () => window.maintenanceSchedule || [] },
       { key: 'fornecedores', loaded: () => fornecedoresLoaded, get: () => window.fornecedores || [] },
       { key: 'tiposDocumento', loaded: () => tiposDocumentoLoaded, get: () => window.tiposDocumento || [] },
-      { key: 'causasRaiz', loaded: () => causasRaizLoaded, get: () => window.causasRaiz || [] }
+      { key: 'causasRaiz', loaded: () => causasRaizLoaded, get: () => window.causasRaiz || [] },
+      { key: 'planosAcao', loaded: () => planosAcaoLoaded, get: () => window.planosAcao || [] }
     ];
 
     function performSave(retry) {
@@ -3382,6 +3650,7 @@
         fornecedores: window.fornecedores || [],
         tiposDocumento: window.tiposDocumento || [],
         causasRaiz: window.causasRaiz || [],
+        planosAcao: window.planosAcao || [],
         users: (window.users || []).map(u => { const c = { ...u }; delete c.senha; return c; }),
         totalHistorico: (window.globalAuditHistory || []).length
       };
@@ -3402,7 +3671,8 @@
         metasFabricante: window.metasFabricante || {},
         fornecedores: window.fornecedores || [],
         tiposDocumento: window.tiposDocumento || [],
-        causasRaiz: window.causasRaiz || []
+        causasRaiz: window.causasRaiz || [],
+        planosAcao: window.planosAcao || []
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -3435,6 +3705,7 @@
           if (data.fornecedores) window.fornecedores = toList(data.fornecedores);
           if (data.tiposDocumento) window.tiposDocumento = toList(data.tiposDocumento);
           if (data.causasRaiz) window.causasRaiz = toList(data.causasRaiz);
+          if (data.planosAcao) window.planosAcao = toList(data.planosAcao);
           if (data.dailySnapshots) {
             window.dailySnapshots = {};
             Object.keys(data.dailySnapshots).forEach(d => { window.dailySnapshots[d] = toList(data.dailySnapshots[d]); });
@@ -3463,14 +3734,14 @@
     // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'farol', 'documents', 'history'],
-      'Analista Planejamento': ['dashboard', 'farol', 'operacao', 'falhas', 'calendar', 'documents', 'planning', 'progrealizado', 'evolution', 'history'],
-      'Controlador de Manutenção': ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'calendar', 'planning', 'progrealizado', 'history'],
-      'Supervisor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
-      'Gerente': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
-      'Diretor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
-      'Desenvolvedor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
+      'Analista Planejamento': ['dashboard', 'farol', 'operacao', 'falhas', 'acao', 'calendar', 'documents', 'planning', 'progrealizado', 'evolution', 'history'],
+      'Controlador de Manutenção': ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'calendar', 'planning', 'progrealizado', 'history'],
+      'Supervisor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Gerente': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history'],
+      'Diretor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users'],
+      'Desenvolvedor': ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'users']
     };
-    const ALL_TABS = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'online', 'users'];
+    const ALL_TABS = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'progrealizado', 'history', 'online', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -3495,7 +3766,7 @@
         if (window.currentLoggedUser) {
           const rec = (window.users || []).find(u => (u.login || '').toLowerCase() === (window.currentLoggedUser.login || '').toLowerCase());
           if (rec) {
-            Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, permissoesCustom: rec.permissoesCustom || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
+            Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, permissoesCustom: rec.permissoesCustom || null, permissoesVersao: rec.permissoesVersao || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
             try { sessionStorage.setItem('pcm_user', JSON.stringify(window.currentLoggedUser)); } catch (e) {}
             applyRolePermissions(rec.funcao, rec);
             if (rec.mostrarPresenca === false) stopPresence(false); else startPresence();
@@ -4354,9 +4625,13 @@
       if (window.lucide) lucide.createIcons();
     }
 
+    const PERMISSOES_VERSAO = 2; // 2 = já conhece a aba Plano de Ação
+    function permissoesAntigas(u) { return !(u && Number(u.permissoesVersao) >= PERMISSOES_VERSAO); }
     window.applyRolePermissions = function(funcao, userObj) {
       const custom = userObj && Array.isArray(userObj.permissoesCustom) && userObj.permissoesCustom.length > 0 ? userObj.permissoesCustom : null;
       let allowed = (custom || ROLE_PERMISSIONS[funcao] || ['dashboard']).filter(t => t !== 'online');
+      // Página nova (Plano de Ação): permissões individuais salvas antes dela seguem o padrão da função
+      if (custom && permissoesAntigas(userObj) && (ROLE_PERMISSIONS[funcao] || []).includes('acao') && !allowed.includes('acao')) allowed = allowed.concat(['acao']);
       // Aba "Usuários Online": liberada pela opção individual do usuário (padrão: Diretor, Gerente, Desenvolvedor)
       if (canSeePresence(userObj || window.currentLoggedUser || { funcao })) allowed = allowed.concat(['online']);
       window.currentAllowedTabs = allowed;
@@ -4510,7 +4785,7 @@
     // ===================== PERMISSÕES INDIVIDUAIS (SOMENTE CONTA DESENVOLVEDOR) =====================
     const TAB_LABELS_MAP = {
       dashboard: 'Visão Geral', assets: 'Cadastro de Ativos', status: 'Status & Paradas', farol: 'Farol de Manutenção', availability: 'Disponibilidade',
-      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', evolution: 'Evolução', executive: 'Painel Diretoria',
+      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', acao: 'Plano de Ação & Fatos Relevantes', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento',
       progrealizado: 'Programado x Realizado',
       history: 'Histórico Consolidado', online: 'Usuários Online', users: 'Usuários & Permissões'
@@ -4526,7 +4801,8 @@
       document.getElementById('perm-modal-user-id').value = u.id;
       document.getElementById('perm-modal-username').innerText = `${u.nome} (${u.funcao})`;
 
-      const active = (u.permissoesCustom && u.permissoesCustom.length) ? u.permissoesCustom : (ROLE_PERMISSIONS[u.funcao] || []);
+      let active = (u.permissoesCustom && u.permissoesCustom.length) ? u.permissoesCustom : (ROLE_PERMISSIONS[u.funcao] || []);
+      if (u.permissoesCustom && u.permissoesCustom.length && permissoesAntigas(u) && (ROLE_PERMISSIONS[u.funcao] || []).includes('acao')) active = active.concat(['acao']);
       document.getElementById('perm-modal-checkboxes').innerHTML = ALL_TABS.filter(t => t !== 'online').map(tabId => `
         <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
           <input type="checkbox" class="perm-checkbox" value="${tabId}" ${active.includes(tabId) ? 'checked' : ''}>
@@ -4552,6 +4828,7 @@
       const selected = Array.from(document.querySelectorAll('.perm-checkbox:checked')).map(cb => cb.value);
       const antes = (u.permissoesCustom || []).join(', ') || 'padrão da função';
       u.permissoesCustom = selected.length > 0 ? selected : null;
+      u.permissoesVersao = PERMISSOES_VERSAO;
       addAuditLog('TODAS', 'Usuários', u.login, `Permissões individuais de ${u.nome} alteradas`, getTodayStr(), 'Atualizado', null, [{ campo: 'Abas', de: antes, para: selected.join(', ') || 'padrão da função' }]);
       saveUsersToDb();
       renderUsersTable();
@@ -4559,6 +4836,7 @@
       // Se o próprio usuário logado teve as permissões alteradas, aplica na hora
       if (window.currentLoggedUser && window.currentLoggedUser.login === u.login) {
         window.currentLoggedUser.permissoesCustom = u.permissoesCustom;
+        window.currentLoggedUser.permissoesVersao = u.permissoesVersao;
         sessionStorage.setItem('pcm_user', JSON.stringify(window.currentLoggedUser));
         applyRolePermissions(u.funcao, u);
       }
@@ -4762,7 +5040,7 @@
       const user = (window.users || []).find(u => (u.login || '').toLowerCase() === loginInput && u.senha === passInput && u.status === 'Ativo');
 
       if (user) {
-        const sessaoUser = { login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null, verPresenca: user.verPresenca, mostrarPresenca: user.mostrarPresenca };
+        const sessaoUser = { login: user.login, nome: user.nome, funcao: user.funcao, permissoesCustom: user.permissoesCustom || null, permissoesVersao: user.permissoesVersao || null, verPresenca: user.verPresenca, mostrarPresenca: user.mostrarPresenca };
         sessionStorage.setItem('pcm_auth', 'true');
         sessionStorage.setItem('pcm_user', JSON.stringify(sessaoUser));
         document.getElementById('login-overlay').classList.add('hidden');
@@ -4772,6 +5050,7 @@
         updateUserBadge(user);
         logAcesso('login', sessaoUser);
         startPresence();
+        restoreFreezeTop();
       } else {
         document.getElementById('login-error').innerText = 'Usuário ou senha incorretos! Tente novamente.';
         document.getElementById('login-error').classList.remove('hidden');
@@ -4788,6 +5067,7 @@
         applyRolePermissions(userObj ? userObj.funcao : 'Diretor', userObj);
         updateUserBadge(userObj);
         if (userObj) startPresence();
+        restoreFreezeTop();
       } else {
         document.getElementById('login-overlay').classList.remove('hidden');
       }
@@ -4980,10 +5260,12 @@
       if (!activeTab || activeTab === 'evolution') renderEvolutionChart();
       if (!activeTab || activeTab === 'operacao') renderOperacaoAtivos();
       if (!activeTab || activeTab === 'falhas') renderFalhas();
+      if (!activeTab || activeTab === 'acao') renderPlanoAcao();
       renderPlanejamento();
       renderProgRealizado();
       if (docsLoaded) { renderDocuments(); renderDocVencimentos(); }
       renderDivergenciasPanel();
+      agendarFreezeTop(false);
     };
 
     // Painel de Divergências (Visão Geral): lista preventivas/documentos vencidos sem parada real vinculada
@@ -5591,10 +5873,12 @@
       if (tabId === 'paradasdetalhado') renderParadasDetalhado();
       if (tabId === 'operacao') renderOperacaoAtivos();
       if (tabId === 'falhas') renderFalhas();
+      if (tabId === 'acao') renderPlanoAcao();
       if (tabId === 'planning') renderPlanejamento();
       if (tabId === 'progrealizado') renderProgRealizado();
       if (tabId === 'users') { renderPermissionsOverview(); renderUsersTable(); }
       if (window.lucide) lucide.createIcons();
+      if (window.freezeTopEnabled) applyFreezeTop(true);
     };
 
     // ===================== MODAIS =====================
@@ -10162,6 +10446,7 @@
         scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: Math.max(el.scrollWidth, 1100),
         // Garante cores em formato que o gerador de imagem entende (algumas versões do Tailwind usam oklch)
         onclone: (doc) => {
+          doc.body.classList.remove('freeze-top');
           const cv = doc.createElement('canvas').getContext('2d');
           const toRgb = (c) => { if (!c || !/oklch|oklab|lab\(|lch\(|color\(/.test(c)) return null; try { cv.fillStyle = '#000'; cv.fillStyle = c; return /oklch|oklab|lab\(|lch\(|color\(/.test(cv.fillStyle) ? '#0f172a' : cv.fillStyle; } catch (e) { return '#0f172a'; } };
           doc.querySelectorAll('#farol-sheet, #farol-sheet *').forEach(node => {
@@ -10925,6 +11210,1024 @@
         rows.map(x => [x.quandoBR || horaBR(x.quando), x.nome || '', x.login || '', x.funcao || '', x.tipo === 'login' ? 'Login' : 'Logout', x.dispositivo || '']));
     };
 
+    // ===================== PLANO DE AÇÃO & FATOS RELEVANTES =====================
+    // Fatos relevantes = leitura automática dos dados da frota no período escolhido (dia/semana/mês/ano),
+    // comparada com o mesmo intervalo do período anterior: disponibilidade, paradas, corretivas, reincidência por
+    // causa raiz, paradas longas / previsão vencida, documentos e preventivas vencidas e o andamento do plano.
+    // O plano de ação fica salvo na nuvem (nó "planosAcao") com causa, ação, responsável, prazo, status e histórico.
+    window.planosAcao = [];
+    let planosAcaoLoaded = false;
+    const PA_ABERTOS = ['Não iniciada', 'Em andamento'];
+    const PA_LABELS = {
+      tema: 'Problema / Fato', causa: 'Causa', acao: 'Ação', responsavel: 'Responsável', prazo: 'Prazo', status: 'Status',
+      prioridade: 'Prioridade', dataConclusao: 'Data de conclusão', unidade: 'Unidade', tipoEquipamento: 'Tipo de equipamento',
+      operacao: 'Operação', ativos: 'Ativos', observacoes: 'Observações'
+    };
+    window.fatosFiltro = 'todos';
+    window.lastFatos = [];
+    window.lastAcaoCtx = null;
+
+    function syncPlanosAcao() {
+      onValue(ref(db, 'planosAcao'), (snapshot) => {
+        window.planosAcao = toList(snapshot.val()).filter(p => p && p.id);
+        markSynced('planosAcao', window.planosAcao);
+        planosAcaoLoaded = true;
+        const ativa = document.querySelector('.tab-content.active');
+        if (ativa && ativa.id === 'tab-acao') renderPlanoAcao();
+      });
+    }
+
+    const fmtPct1 = (v) => (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(1).replace('.', ',') + '%';
+    const fmtNum1 = (v) => (Math.round(v * 10) / 10).toString().replace('.', ',');
+    const plural = (n, s, p) => `${n} ${n === 1 ? s : (p || s + 's')}`;
+    const normTxt = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const listaTags = (tags, max) => { const arr = Array.from(tags).sort(naturalCompare); max = max || 8; return arr.slice(0, max).join(', ') + (arr.length > max ? ` +${arr.length - max}` : ''); };
+
+    // Período escolhido + o mesmo intervalo do período anterior (ex.: 1 a 24/09 x 1 a 24/08) — comparação justa
+    function getAcaoPeriodo() {
+      const hoje = getTodayStr();
+      const tipo = document.getElementById('acao-periodo-tipo')?.value || 'semana';
+      const inicio = getInicioMaisAntigoFrota();
+      const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const show = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !on); };
+      show('acao-ref-date', tipo === 'dia'); show('acao-ref-semana', tipo === 'semana'); show('acao-ref-mes', tipo === 'mes'); show('acao-ref-ano', tipo === 'ano');
+      const lbl = document.getElementById('acao-ref-label');
+      if (lbl) lbl.innerText = { dia: 'Dia', semana: 'Semana', mes: 'Mês', ano: 'Ano' }[tipo] || 'Período';
+      const fill = (id, opts) => {
+        const el = document.getElementById(id);
+        if (!el) return opts[0] ? opts[0].v : '';
+        const cur = el.value;
+        el.innerHTML = opts.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+        el.value = opts.some(o => o.v === cur) ? cur : (opts[0] ? opts[0].v : '');
+        return el.value;
+      };
+      const minStr = (a, b) => (a < b ? a : b);
+      let ini, fimCheio, prevIni, prevFimCheio, label, prevLabel;
+      if (tipo === 'dia') {
+        const el = document.getElementById('acao-ref-date');
+        if (el && !el.value) el.value = hoje;
+        if (el) el.max = hoje;
+        ini = fimCheio = minStr((el && el.value) || hoje, hoje);
+        prevIni = prevFimCheio = addDaysToDateStr(ini, -1);
+        label = formatDateBR(ini);
+        prevLabel = formatDateBR(prevIni);
+      } else if (tipo === 'mes') {
+        const opts = [];
+        let y = parseInt(hoje.slice(0, 4), 10), m = parseInt(hoje.slice(5, 7), 10);
+        const limite = inicio.slice(0, 7);
+        let guard = 0;
+        do {
+          opts.push({ v: `${y}-${String(m).padStart(2, '0')}`, t: `${MESES[m - 1]}/${y}` });
+          m--; if (m === 0) { m = 12; y--; }
+        } while (`${y}-${String(m).padStart(2, '0')}` >= limite && guard++ < 120);
+        const v = fill('acao-ref-mes', opts);
+        const [yy, mm] = v.split('-').map(Number);
+        ini = `${v}-01`;
+        fimCheio = formatDateISO(new Date(yy, mm, 0));
+        const pi = new Date(yy, mm - 2, 1);
+        prevIni = formatDateISO(pi);
+        prevFimCheio = formatDateISO(new Date(pi.getFullYear(), pi.getMonth() + 1, 0));
+        label = `${MESES[mm - 1]}/${yy}`;
+        prevLabel = `${MESES[pi.getMonth()]}/${pi.getFullYear()}`;
+      } else if (tipo === 'ano') {
+        const opts = [];
+        const y0 = parseInt(hoje.slice(0, 4), 10);
+        for (let y = y0; y >= Math.min(y0, parseInt(inicio.slice(0, 4), 10)); y--) opts.push({ v: String(y), t: String(y) });
+        const v = fill('acao-ref-ano', opts);
+        ini = `${v}-01-01`; fimCheio = `${v}-12-31`;
+        prevIni = `${Number(v) - 1}-01-01`; prevFimCheio = `${Number(v) - 1}-12-31`;
+        label = `Ano ${v}`; prevLabel = `Ano ${Number(v) - 1}`;
+      } else {
+        const opts = [];
+        const seg = getMondayOfWeek(new Date(hoje + 'T00:00:00'));
+        const limite = formatDateISO(getMondayOfWeek(new Date(inicio + 'T00:00:00')));
+        let guard = 0;
+        do {
+          const segStr = formatDateISO(seg);
+          const dom = addDaysToDateStr(segStr, 6);
+          opts.push({ v: segStr, t: `Semana ${getISOWeekInfo(segStr).weekNumber}/${seg.getFullYear()} (${formatDateBR(segStr).slice(0, 5)} a ${formatDateBR(dom).slice(0, 5)})` });
+          seg.setDate(seg.getDate() - 7);
+        } while (formatDateISO(seg) >= limite && guard++ < 160);
+        const v = fill('acao-ref-semana', opts);
+        ini = v; fimCheio = addDaysToDateStr(v, 6);
+        prevIni = addDaysToDateStr(v, -7); prevFimCheio = addDaysToDateStr(v, -1);
+        label = `Semana ${getISOWeekInfo(v).weekNumber} (${formatDateBR(ini).slice(0, 5)} a ${formatDateBR(fimCheio).slice(0, 5)})`;
+        prevLabel = `Semana ${getISOWeekInfo(prevIni).weekNumber} (${formatDateBR(prevIni).slice(0, 5)} a ${formatDateBR(prevFimCheio).slice(0, 5)})`;
+      }
+      const fim = minStr(fimCheio, hoje);
+      // Período em andamento: compara com o mesmo número de dias do período anterior
+      const prevFim = minStr(addDaysToDateStr(prevIni, calcDiasEntre(ini, fim)), prevFimCheio);
+      return { tipo, ini, fim, fimCheio, prevIni, prevFim, label, prevLabel, parcial: fim < fimCheio, hoje };
+    }
+
+    function getAcaoFiltros() {
+      return {
+        unidade: document.getElementById('acao-filter-unidade')?.value || 'TODAS',
+        tipo: document.getElementById('acao-filter-tipo')?.value || 'TODOS',
+        operacao: document.getElementById('acao-filter-operacao')?.value || 'TODAS'
+      };
+    }
+    function getAcaoAtivos(f) {
+      let list = filtrarReforma(getActiveAssets());
+      if (window.selectedUnit !== 'TODAS') list = list.filter(a => a.unidade === window.selectedUnit);
+      if (f.unidade !== 'TODAS') list = list.filter(a => a.unidade === f.unidade);
+      if (f.tipo !== 'TODOS') list = list.filter(a => a.tipo === f.tipo);
+      if (f.operacao !== 'TODAS') list = list.filter(a => a.operacao === f.operacao);
+      return list;
+    }
+    // Plano de ação dentro do escopo dos filtros (ação "Todas" vale para qualquer unidade/tipo/operação)
+    function planoNoEscopo(p, f) {
+      const un = window.selectedUnit !== 'TODAS' ? window.selectedUnit : f.unidade;
+      if (un !== 'TODAS' && p.unidade && p.unidade !== 'TODAS' && p.unidade !== un) return false;
+      if (f.tipo !== 'TODOS' && p.tipoEquipamento && p.tipoEquipamento !== 'TODOS' && p.tipoEquipamento !== f.tipo) return false;
+      if (f.operacao !== 'TODAS' && p.operacao && p.operacao !== f.operacao) return false;
+      return true;
+    }
+
+    // Dias de UMA parada dentro de [ini, fim] (da Data da Parada até a véspera da saída ou hoje)
+    function diasEventoNoPeriodo(e, ini, fim) {
+      if (!e.inicio || !eventoBloqueia(e)) return 0;
+      const ultimo = e.fim ? addDaysToDateStr(e.fim, -1) : getTodayStr();
+      const a = e.inicio > ini ? e.inicio : ini;
+      const b = ultimo < fim ? ultimo : fim;
+      return a > b ? 0 : calcDiasEntre(a, b) + 1;
+    }
+
+    function calcAcaoStats(ativos, evsPorAtivo, ini, fim) {
+      let total = 0, operou = 0, parados = 0;
+      const eventos = [], liberadas = [], porAtivo = [];
+      ativos.forEach(a => {
+        const evs = evsPorAtivo[String(a.id)] || [];
+        const op = calcOperacaoAtivo(a, evs, { ini, fim });
+        if (!op.semDados) { total += op.total; operou += op.operou; parados += op.parados; }
+        porAtivo.push({ a, parados: op.semDados ? 0 : op.parados, total: op.semDados ? 0 : op.total });
+        evs.forEach(e => {
+          if (e.inicio && e.inicio >= ini && e.inicio <= fim) eventos.push({ e, a });
+          if (e.fim && e.fim >= ini && e.fim <= fim) liberadas.push({ e, a });
+        });
+      });
+      return {
+        disp: total ? (operou / total) * 100 : null, total, operou, parados, eventos, liberadas, porAtivo,
+        corretivas: eventos.filter(x => x.e.tipoParada === 'Corretiva')
+      };
+    }
+
+    // Situação do prazo de uma ação: dentro / vence em N dias / fora do prazo / concluída no prazo ou fora
+    window.getSituacaoPrazoPlano = function(p) {
+      const hoje = getTodayStr();
+      if (p.status === 'Cancelada') return { key: 'cancelada', grupo: 'cancelada', label: 'Cancelada', cls: 'bg-slate-100 text-slate-500 border-slate-300' };
+      if (!p.prazo) return { key: 'semprazo', grupo: 'dentro', label: 'Sem prazo', cls: 'bg-slate-100 text-slate-600 border-slate-300' };
+      if (p.status === 'Concluída') {
+        const fimReal = p.dataConclusao || hoje;
+        if (fimReal <= p.prazo) return { key: 'concluida-no-prazo', grupo: 'dentro', label: 'Concluída no prazo', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+        return { key: 'concluida-fora', grupo: 'fora', label: `Concluída fora do prazo (+${calcDiasEntre(p.prazo, fimReal)}d)`, cls: 'bg-orange-100 text-orange-800 border-orange-300' };
+      }
+      const faltam = calcDiasEntre(hoje, p.prazo);
+      if (faltam < 0) return { key: 'atrasada', grupo: 'fora', atrasada: true, label: `Fora do prazo — atrasada ${plural(-faltam, 'dia')}`, cls: 'bg-red-100 text-red-800 border-red-300' };
+      if (faltam <= 3) return { key: 'vencendo', grupo: 'dentro', vencendo: true, label: faltam === 0 ? 'Dentro do prazo — vence hoje' : `Dentro do prazo — vence em ${plural(faltam, 'dia')}`, cls: 'bg-amber-100 text-amber-800 border-amber-300' };
+      return { key: 'dentro', grupo: 'dentro', label: `Dentro do prazo (${plural(faltam, 'dia')})`, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    };
+
+    // ---------- Geração dos fatos relevantes ----------
+    function gerarFatosRelevantes(ctx) {
+      const { per, f, ativos, evsPorAtivo, cur, prev, hoje } = ctx;
+      const fatos = [];
+      const tagsDe = (lista) => new Set(lista.map(x => x.a.tag || x.e.tag));
+      const mesmo = (lista, campo) => { const s = new Set(lista.map(x => x.a[campo]).filter(Boolean)); return s.size === 1 ? Array.from(s)[0] : ''; };
+      const escopoSug = (lista) => ({
+        unidade: mesmo(lista, 'unidade') || (f.unidade !== 'TODAS' ? f.unidade : (window.selectedUnit !== 'TODAS' ? window.selectedUnit : 'TODAS')),
+        tipoEquipamento: mesmo(lista, 'tipo') || (f.tipo !== 'TODOS' ? f.tipo : 'TODOS'),
+        operacao: mesmo(lista, 'operacao') || (f.operacao !== 'TODAS' ? f.operacao : '')
+      });
+      const add = (sev, icone, titulo, detalhe, extra) => fatos.push(Object.assign({ sev, icone, titulo, detalhe: detalhe || '', chips: [] }, extra || {}));
+      const topCausas = (lista, n) => {
+        const c = {};
+        lista.forEach(x => { const k = x.e.causaRaiz || 'Não informada'; c[k] = (c[k] || 0) + 1; });
+        return Object.keys(c).sort((a, b) => c[b] - c[a]).slice(0, n || 3).map(k => ({ causa: k, qtd: c[k] }));
+      };
+
+      // 1) Disponibilidade (x período anterior e x meta cadastrada por marca, quando houver)
+      if (cur.disp !== null) {
+        const delta = prev.disp !== null ? cur.disp - prev.disp : null;
+        const meta = ctx.metaFrota;
+        const abaixoMeta = meta !== null && cur.disp < meta;
+        let sev = 'info';
+        if (delta !== null && delta <= -5) sev = 'critico';
+        else if (delta !== null && delta <= -2) sev = 'atencao';
+        else if (delta !== null && delta >= 2) sev = 'positivo';
+        if (abaixoMeta) sev = (meta - cur.disp >= 10) ? 'critico' : (sev === 'critico' ? 'critico' : 'atencao');
+        const piores = cur.porAtivo.filter(x => x.parados > 0).sort((a, b) => b.parados - a.parados).slice(0, 4);
+        const tc = topCausas(cur.eventos.filter(x => x.e.tipoParada !== 'Preventiva'), 1)[0];
+        add(sev, sev === 'positivo' ? 'trending-up' : (sev === 'info' ? 'gauge' : 'trending-down'),
+          `Disponibilidade de ${fmtPct1(cur.disp)} no período` + (delta !== null ? ` (${delta >= 0 ? '▲' : '▼'} ${fmtNum1(Math.abs(delta))} p.p. — anterior ${fmtPct1(prev.disp)})` : '') + (meta !== null ? (abaixoMeta ? ` — abaixo da meta de ${fmtPct1(meta)}` : ` — meta de ${fmtPct1(meta)} atingida`) : ''),
+          `${plural(cur.parados, 'dia parado', 'dias parados')} em ${plural(cur.total, 'dia-ativo', 'dias-ativo')} com registro.` + (piores.length ? ` Mais parados: ${piores.map(x => `${x.a.tag} (${x.parados}d)`).join(', ')}.` : ''),
+          (sev === 'critico' || sev === 'atencao') ? { sugestao: Object.assign({ tema: `Queda de disponibilidade (${fmtPct1(prev.disp)} → ${fmtPct1(cur.disp)})`, causa: tc ? tc.causa : '', ativos: piores.map(x => x.a.tag).join(', ') }, escopoSug(cur.eventos)) } : null);
+      }
+
+      // 1b) Marcas abaixo da própria meta de disponibilidade (metas cadastradas no Painel Diretoria)
+      const porMarca = {};
+      ativos.forEach(a => { const m = getMetaForMarca(a.marca); if (typeof m === 'number') (porMarca[a.marca] = porMarca[a.marca] || { meta: m, lista: [] }).lista.push(a); });
+      Object.keys(porMarca).map(marca => {
+        const g = porMarca[marca];
+        const st = calcAcaoStats(g.lista, evsPorAtivo, per.ini, per.fim);
+        return { marca, meta: g.meta, st };
+      }).filter(x => x.st.disp !== null && x.st.disp < x.meta).sort((a, b) => (a.st.disp - a.meta) - (b.st.disp - b.meta)).slice(0, 4).forEach(x => {
+        const piores = x.st.porAtivo.filter(p => p.parados > 0).sort((a, b) => b.parados - a.parados).slice(0, 5);
+        add(x.meta - x.st.disp >= 10 ? 'critico' : 'atencao', 'target', `${x.marca} abaixo da meta: ${fmtPct1(x.st.disp)} (meta ${fmtPct1(x.meta)})`,
+          `${plural(x.st.parados, 'dia parado', 'dias parados')} no período.` + (piores.length ? ` Mais parados: ${piores.map(p => `${p.a.tag} (${p.parados}d)`).join(', ')}.` : ''),
+          { sugestao: Object.assign({ tema: `Disponibilidade ${x.marca} abaixo da meta (${fmtPct1(x.st.disp)} x ${fmtPct1(x.meta)})`, causa: (topCausas(x.st.eventos, 1)[0] || {}).causa || '', ativos: piores.map(p => p.a.tag).join(', ') }, escopoSug(x.st.eventos)) });
+      });
+
+      // 2) Paradas iniciadas e corretivas x período anterior
+      const nc = cur.corretivas.length, np = prev.corretivas.length;
+      if (nc || np) {
+        const varPct = np ? ((nc - np) / np) * 100 : null;
+        let sev = 'info';
+        if (nc > np && nc - np >= 2 && (np === 0 || varPct >= 30)) sev = (nc >= 4 && (np === 0 || varPct >= 100)) ? 'critico' : 'atencao';
+        else if (nc < np) sev = 'positivo';
+        const tc = topCausas(cur.corretivas, 3);
+        const porTipo = {};
+        cur.corretivas.forEach(x => { const k = x.a.tipo || 'N/D'; porTipo[k] = (porTipo[k] || 0) + 1; });
+        add(sev, 'wrench', `${plural(nc, 'corretiva')} no período (anterior: ${np}${varPct !== null ? `, ${varPct >= 0 ? '+' : ''}${Math.round(varPct)}%` : ''})`,
+          nc ? `Principais causas: ${tc.map(c => `${c.causa} (${c.qtd})`).join(', ')}. Por tipo: ${Object.keys(porTipo).map(k => `${k} ${porTipo[k]}`).join(' • ')}.` : 'Nenhuma corretiva iniciada no período.',
+          (sev === 'critico' || sev === 'atencao') ? { sugestao: Object.assign({ tema: `Aumento de corretivas (${np} → ${nc})`, causa: tc[0] ? tc[0].causa : '', ativos: listaTags(tagsDe(cur.corretivas), 20) }, escopoSug(cur.corretivas)) } : null);
+      }
+      if (cur.eventos.length) {
+        const porTipoParada = {};
+        cur.eventos.forEach(x => { const k = x.e.tipoParada || 'Outros'; porTipoParada[k] = (porTipoParada[k] || 0) + 1; });
+        add('info', 'octagon-pause', `${plural(cur.eventos.length, 'parada iniciada', 'paradas iniciadas')} (anterior: ${prev.eventos.length})`,
+          Object.keys(porTipoParada).sort((a, b) => porTipoParada[b] - porTipoParada[a]).map(k => `${k}: ${porTipoParada[k]}`).join(' • '));
+      }
+
+      // 3) Reincidência: mesmo tipo de parada + mesma causa raiz (ex.: muita Reforma por Perda de Vácuo)
+      const grupos = {};
+      cur.eventos.forEach(x => {
+        let chave, rotulo, causa;
+        if (x.e.causaRaiz) { chave = `c|${x.e.tipoParada}|${x.e.causaRaiz}`; rotulo = `${x.e.tipoParada} por ${x.e.causaRaiz}`; causa = x.e.causaRaiz; }
+        else if (x.e.motivo) { chave = `m|${x.e.tipoParada}|${normTxt(x.e.motivo)}`; rotulo = `${x.e.tipoParada}: "${String(x.e.motivo).trim()}"`; causa = ''; }
+        else return;
+        const g = grupos[chave] = grupos[chave] || { chave, rotulo, causa, tipoParada: x.e.tipoParada, lista: [], dias: 0 };
+        g.lista.push(x); g.dias += diasEventoNoPeriodo(x.e, per.ini, per.fim);
+      });
+      const prevGrupos = {};
+      prev.eventos.forEach(x => {
+        const chave = x.e.causaRaiz ? `c|${x.e.tipoParada}|${x.e.causaRaiz}` : (x.e.motivo ? `m|${x.e.tipoParada}|${normTxt(x.e.motivo)}` : null);
+        if (chave) prevGrupos[chave] = (prevGrupos[chave] || 0) + 1;
+      });
+      Object.values(grupos).filter(g => g.lista.length >= 2 && g.tipoParada !== 'Preventiva')
+        .sort((a, b) => b.lista.length - a.lista.length || b.dias - a.dias).slice(0, 5).forEach(g => {
+          const q = g.lista.length, qa = prevGrupos[g.chave] || 0, tags = tagsDe(g.lista);
+          const sev = (q >= 4 || (q >= 3 && tags.size >= 3)) ? 'critico' : 'atencao';
+          add(sev, 'repeat', `Reincidência — ${g.rotulo}: ${plural(q, 'parada')} no período (${plural(tags.size, 'ativo')})`,
+            `${plural(g.dias, 'dia parado', 'dias parados')} no período • anterior: ${qa} • ativos: ${listaTags(tags)}.`,
+            { sugestao: Object.assign({ tema: `Reincidência: ${g.rotulo} (${q}x no período)`, causa: g.causa, ativos: listaTags(tags, 50) }, escopoSug(g.lista)) });
+        });
+
+      // 4) Ativos com corretivas repetidas nos últimos 90 dias (até o fim do período)
+      const ini90 = addDaysToDateStr(per.fim, -89);
+      const reinc = [];
+      ativos.forEach(a => {
+        const corr = (evsPorAtivo[String(a.id)] || []).filter(e => e.tipoParada === 'Corretiva' && e.inicio && e.inicio >= ini90 && e.inicio <= per.fim);
+        if (corr.length >= 2) reinc.push({ a, corr });
+      });
+      reinc.sort((x, y) => y.corr.length - x.corr.length);
+      reinc.slice(0, 4).forEach(r => {
+        const causas = {};
+        r.corr.forEach(e => { const k = e.causaRaiz || 'Não informada'; causas[k] = (causas[k] || 0) + 1; });
+        add(r.corr.length >= 3 ? 'critico' : 'atencao', 'rotate-ccw', `${r.a.tag} com ${r.corr.length} corretivas em 90 dias`,
+          `${r.a.tipo || ''} ${r.a.marca || ''} ${r.a.modelo || ''} • ${r.a.operacao || 'sem operação'} • causas: ${Object.keys(causas).map(k => `${k} (${causas[k]})`).join(', ')} • última: ${formatDateBR(r.corr.map(e => e.inicio).sort().pop())}.`,
+          { sugestao: { tema: `Corretivas repetidas no ${r.a.tag} (${r.corr.length} em 90 dias)`, causa: Object.keys(causas).sort((x, y) => causas[y] - causas[x])[0] || '', ativos: r.a.tag, unidade: r.a.unidade || 'TODAS', tipoEquipamento: r.a.tipo || 'TODOS', operacao: r.a.operacao || '' } });
+      });
+      if (reinc.length > 4) add('atencao', 'rotate-ccw', `Outros ${plural(reinc.length - 4, 'ativo')} com 2+ corretivas em 90 dias`, reinc.slice(4).map(r => `${r.a.tag} (${r.corr.length})`).join(', ') + '.');
+
+      // 5) Concentração de corretivas por marca/modelo
+      if (nc >= 3) {
+        const pm = {};
+        cur.corretivas.forEach(x => { const k = `${x.a.marca || 'N/D'} ${x.a.modelo || ''}`.trim(); (pm[k] = pm[k] || []).push(x); });
+        const topM = Object.keys(pm).sort((a, b) => pm[b].length - pm[a].length)[0];
+        if (topM && pm[topM].length >= 3 && pm[topM].length / nc >= 0.4 && Object.keys(pm).length > 1) {
+          add('atencao', 'factory', `${topM} concentra ${Math.round((pm[topM].length / nc) * 100)}% das corretivas (${pm[topM].length} de ${nc})`,
+            `Ativos: ${listaTags(tagsDe(pm[topM]))}. Principais causas: ${topCausas(pm[topM], 3).map(c => `${c.causa} (${c.qtd})`).join(', ')}.`,
+            { sugestao: Object.assign({ tema: `Corretivas concentradas em ${topM}`, causa: (topCausas(pm[topM], 1)[0] || {}).causa || '', ativos: listaTags(tagsDe(pm[topM]), 50) }, escopoSug(pm[topM])) });
+        }
+      }
+
+      // 6) Operação com mais dias parados
+      const opsDias = {};
+      cur.porAtivo.forEach(x => { if (x.parados) { const k = x.a.operacao || 'Sem operação'; opsDias[k] = (opsDias[k] || 0) + x.parados; } });
+      const opsK = Object.keys(opsDias).sort((a, b) => opsDias[b] - opsDias[a]);
+      if (opsK.length > 1 && cur.parados > 0 && opsDias[opsK[0]] / cur.parados >= 0.3) {
+        add('info', 'map', `Operação ${opsK[0]} concentra ${Math.round((opsDias[opsK[0]] / cur.parados) * 100)}% dos dias parados (${opsDias[opsK[0]]} dias)`,
+          opsK.slice(0, 4).map(k => `${k}: ${opsDias[k]}d`).join(' • '));
+      }
+
+      // 7) Paradas sem causa raiz (atrapalha a análise)
+      const semCausa = cur.eventos.filter(x => !x.e.causaRaiz && x.e.tipoParada !== 'Preventiva' && x.e.tipoParada !== 'Documentação');
+      if (semCausa.length) {
+        add(semCausa.length >= 3 ? 'atencao' : 'info', 'help-circle', `${plural(semCausa.length, 'parada')} sem causa raiz informada`,
+          `Ativos: ${listaTags(tagsDe(semCausa))}. Preencha em Status & Paradas → Todas as Paradas para melhorar a análise.`,
+          { sugestao: Object.assign({ tema: 'Paradas registradas sem causa raiz', causa: 'Registro incompleto', acao: 'Preencher a causa raiz das paradas do período e alinhar com a equipe o preenchimento obrigatório ao registrar a parada.', ativos: listaTags(tagsDe(semCausa), 50) }, escopoSug(semCausa)) });
+      }
+
+      // 8) Situação atual (hoje): paradas longas, previsão vencida, aguardando peça/serviço/envio, reformas
+      const abertos = [];
+      ativos.forEach(a => (evsPorAtivo[String(a.id)] || []).forEach(e => { if (e.status === 'Aberto' && e.inicio) abertos.push({ e, a, dias: calcDiasParado(e.inicio, null) }); }));
+      const bloqueando = abertos.filter(x => eventoBloqueia(x.e));
+      const longas = bloqueando.filter(x => x.dias >= 30).sort((a, b) => b.dias - a.dias);
+      if (longas.length) {
+        add(longas.some(x => x.dias >= 60) ? 'critico' : 'atencao', 'hourglass', `${plural(longas.length, 'ativo parado', 'ativos parados')} há mais de 30 dias`,
+          longas.slice(0, 8).map(x => `${x.a.tag} (${x.dias}d — ${x.e.tipoParada}${x.e.situacao ? ', ' + x.e.situacao : ''})`).join(' • ') + (longas.length > 8 ? ` +${longas.length - 8}` : ''),
+          { chips: ['Hoje'], sugestao: Object.assign({ tema: `Paradas longas: ${plural(longas.length, 'ativo')} há mais de 30 dias`, causa: (topCausas(longas, 1)[0] || {}).causa || '', ativos: listaTags(tagsDe(longas), 50) }, escopoSug(longas)) });
+      }
+      const prevVencida = bloqueando.filter(x => x.e.previsao && x.e.previsao < hoje);
+      if (prevVencida.length) {
+        add('atencao', 'calendar-x', `${plural(prevVencida.length, 'parada')} com previsão de liberação vencida`,
+          prevVencida.slice(0, 8).map(x => `${x.a.tag} (previsão ${formatDateBR(x.e.previsao)})`).join(' • ') + (prevVencida.length > 8 ? ` +${prevVencida.length - 8}` : ''),
+          { chips: ['Hoje'], sugestao: Object.assign({ tema: 'Previsões de liberação vencidas', causa: 'Previsão não atualizada / atraso na execução', acao: 'Revisar a previsão de cada parada com o responsável e atualizar no sistema; escalar os atrasos.', ativos: listaTags(tagsDe(prevVencida), 50) }, escopoSug(prevVencida)) });
+      }
+      const semPrev = bloqueando.filter(x => !x.e.previsao);
+      if (semPrev.length) add('info', 'calendar-off', `${plural(semPrev.length, 'parada')} em aberto sem previsão de liberação`, `Ativos: ${listaTags(tagsDe(semPrev))}.`, { chips: ['Hoje'] });
+      const aguard = abertos.filter(x => ['Aguardando Peça', 'Aguardando Serviço Terceiros', 'Aguardando Envio'].includes(x.e.situacao) && x.dias >= 7);
+      if (aguard.length) {
+        const porSit = {};
+        aguard.forEach(x => { porSit[x.e.situacao] = (porSit[x.e.situacao] || 0) + 1; });
+        add('atencao', 'package-search', `${plural(aguard.length, 'parada')} aguardando peça / serviço / envio há 7+ dias`,
+          Object.keys(porSit).map(k => `${k}: ${porSit[k]}`).join(' • ') + ` — ${aguard.slice(0, 6).map(x => `${x.a.tag} (${x.dias}d)`).join(', ')}.`,
+          { chips: ['Hoje'], sugestao: Object.assign({ tema: 'Paradas aguardando peça / serviço / envio', causa: Object.keys(porSit).sort((a, b) => porSit[b] - porSit[a])[0], acao: 'Cobrar fornecedores/compras, definir data de entrega e alternativas (peça de outro ativo, fornecedor alternativo).', ativos: listaTags(tagsDe(aguard), 50) }, escopoSug(aguard)) });
+      }
+      const reformas = abertos.filter(x => isReformaEvent(x.e));
+      if (reformas.length) add('info', 'hammer', `${plural(reformas.length, 'reforma')} em andamento`, reformas.slice(0, 8).map(x => `${x.a.tag} (${x.dias}d)`).join(' • '), { chips: ['Hoje'] });
+
+      // 9) Liberações no período
+      if (cur.liberadas.length) {
+        const media = cur.liberadas.reduce((s, x) => s + calcDiasParado(x.e.inicio, x.e.fim), 0) / cur.liberadas.length;
+        add('positivo', 'circle-check-big', `${plural(cur.liberadas.length, 'liberação', 'liberações')} no período (anterior: ${prev.liberadas.length})`,
+          `Tempo médio parado das liberadas: ${fmtNum1(media)} dias. Ativos: ${listaTags(tagsDe(cur.liberadas))}.`);
+      }
+
+      // 10) Documentos vencidos / vencendo (ciclo atual de cada documento dos ativos filtrados)
+      const idsAtivos = new Set(ativos.map(a => String(a.id)));
+      const tagsAtivos = new Set(ativos.map(a => a.tag));
+      const docs = (window.fleetDocs || []).filter(d => d.status !== 'Realizado' && d.docName !== DOC_COMBINADO && d.expDate && (idsAtivos.has(String(d.assetId)) || tagsAtivos.has(d.tag)));
+      const docsVenc = docs.filter(d => calculateDaysRemaining(d.expDate) < 0);
+      const docs30 = docs.filter(d => { const r = calculateDaysRemaining(d.expDate); return r >= 0 && r <= 30; });
+      const resumoDocs = (lista) => { const c = {}; lista.forEach(d => { c[d.docName] = (c[d.docName] || 0) + 1; }); return Object.keys(c).map(k => `${k}: ${c[k]}`).join(' • '); };
+      if (docsVenc.length) add('critico', 'file-x', `${plural(docsVenc.length, 'documento vencido', 'documentos vencidos')}`,
+        `${resumoDocs(docsVenc)} — ${docsVenc.slice(0, 8).map(d => `${d.tag} ${d.docName}`).join(', ')}${docsVenc.length > 8 ? ` +${docsVenc.length - 8}` : ''}.`,
+        { chips: ['Hoje'], sugestao: { tema: `Documentos vencidos (${docsVenc.length})`, causa: 'Documentação / Inspeção', acao: 'Programar a renovação imediata dos documentos vencidos e bloquear a operação do ativo até a regularização.', ativos: listaTags(new Set(docsVenc.map(d => d.tag)), 50), unidade: f.unidade !== 'TODAS' ? f.unidade : 'TODAS', tipoEquipamento: f.tipo, operacao: f.operacao !== 'TODAS' ? f.operacao : '' } });
+      if (docs30.length) add('atencao', 'file-clock', `${plural(docs30.length, 'documento vence', 'documentos vencem')} nos próximos 30 dias`,
+        `${resumoDocs(docs30)} — ${docs30.slice(0, 8).map(d => `${d.tag} ${d.docName} (${formatDateBR(d.expDate)})`).join(', ')}${docs30.length > 8 ? ` +${docs30.length - 8}` : ''}.`,
+        { chips: ['Hoje'], sugestao: { tema: `Documentos vencendo em até 30 dias (${docs30.length})`, causa: 'Documentação / Inspeção', acao: 'Agendar a renovação (inspeção, calibração, tacógrafo) antes do vencimento.', ativos: listaTags(new Set(docs30.map(d => d.tag)), 50), unidade: f.unidade !== 'TODAS' ? f.unidade : 'TODAS', tipoEquipamento: f.tipo, operacao: f.operacao !== 'TODAS' ? f.operacao : '' } });
+
+      // 11) Preventivas atrasadas e aderência do período
+      const prevs = (window.maintenanceSchedule || []).filter(m => idsAtivos.has(String(m.assetId)) || tagsAtivos.has(m.tag));
+      const atrasadas = prevs.filter(m => m.status !== 'Realizado' && m.date && m.date < hoje);
+      if (atrasadas.length) add('atencao', 'calendar-clock', `${plural(atrasadas.length, 'preventiva atrasada', 'preventivas atrasadas')}`,
+        atrasadas.slice(0, 8).map(m => `${m.tag} ${m.service || ''} (${formatDateBR(m.date)})`).join(' • ') + (atrasadas.length > 8 ? ` +${atrasadas.length - 8}` : ''),
+        { chips: ['Hoje'], sugestao: { tema: `Preventivas atrasadas (${atrasadas.length})`, causa: 'Plano de manutenção não cumprido', acao: 'Reprogramar as preventivas atrasadas com data firme e liberar os ativos para a oficina.', ativos: listaTags(new Set(atrasadas.map(m => m.tag)), 50), unidade: f.unidade !== 'TODAS' ? f.unidade : 'TODAS', tipoEquipamento: f.tipo, operacao: f.operacao !== 'TODAS' ? f.operacao : '' } });
+      const progPeriodo = prevs.filter(m => { const d = m.dataOriginal || m.date; return d && d >= per.ini && d <= per.fim; });
+      if (progPeriodo.length >= 3) {
+        const realizadas = progPeriodo.filter(m => m.status === 'Realizado').length;
+        const ader = (realizadas / progPeriodo.length) * 100;
+        if (ader < 80) add('atencao', 'target', `Aderência às preventivas de ${fmtPct1(ader)} (${realizadas} de ${progPeriodo.length} programadas no período)`, 'Meta de referência: 80% ou mais.');
+        else if (ader >= 95) add('positivo', 'target', `Aderência às preventivas de ${fmtPct1(ader)} (${realizadas} de ${progPeriodo.length})`, '');
+      }
+
+      // 12) Andamento do próprio plano de ação
+      const planos = (window.planosAcao || []).filter(p => planoNoEscopo(p, f));
+      const atrasadasPA = planos.filter(p => getSituacaoPrazoPlano(p).atrasada);
+      const vencendoPA = planos.filter(p => getSituacaoPrazoPlano(p).vencendo);
+      const concluidasPA = planos.filter(p => p.status === 'Concluída' && p.dataConclusao && p.dataConclusao >= per.ini && p.dataConclusao <= per.fim);
+      if (atrasadasPA.length) add('critico', 'alarm-clock-off', `${plural(atrasadasPA.length, 'ação', 'ações')} do plano fora do prazo`,
+        atrasadasPA.slice(0, 6).map(p => `PA-${String(p.numero || '').padStart(3, '0')} ${p.tema} (${p.responsavel || 'sem responsável'}, prazo ${formatDateBR(p.prazo)})`).join(' • '), { chips: ['Plano de ação'] });
+      if (vencendoPA.length) add('atencao', 'alarm-clock', `${plural(vencendoPA.length, 'ação vence', 'ações vencem')} em até 3 dias`,
+        vencendoPA.slice(0, 6).map(p => `PA-${String(p.numero || '').padStart(3, '0')} ${p.tema} (${formatDateBR(p.prazo)})`).join(' • '), { chips: ['Plano de ação'] });
+      if (concluidasPA.length) add('positivo', 'badge-check', `${plural(concluidasPA.length, 'ação concluída', 'ações concluídas')} no período`,
+        concluidasPA.slice(0, 6).map(p => `PA-${String(p.numero || '').padStart(3, '0')} ${p.tema}`).join(' • '), { chips: ['Plano de ação'] });
+
+      const ordem = { critico: 0, atencao: 1, info: 2, positivo: 3 };
+      return fatos.map((x, i) => Object.assign(x, { idx: i })).sort((a, b) => ordem[a.sev] - ordem[b.sev] || a.idx - b.idx);
+    }
+
+    // ---------- Agrupamentos (o que mais está parando / comparativo) ----------
+    function chaveRecorrencia(x, modo) {
+      if (modo === 'causa') return x.e.causaRaiz || 'Não informada';
+      if (modo === 'motivo') return String(x.e.motivo || '(sem motivo)').trim();
+      if (modo === 'ativo') return x.a.tag || x.e.tag;
+      if (modo === 'marca') return `${x.a.marca || 'N/D'} ${x.a.modelo || ''}`.trim();
+      return `${x.e.tipoParada || 'Outros'} — ${x.e.causaRaiz || 'sem causa raiz'}`;
+    }
+
+    window.setFiltroFatos = function(f) {
+      window.fatosFiltro = f;
+      document.querySelectorAll('#acao-fatos-filtro button').forEach(b => {
+        const on = b.dataset.f === f;
+        b.classList.toggle('active', on);
+        b.classList.toggle('text-slate-600', !on);
+      });
+      renderFatosLista();
+    };
+
+    const SEV_ESTILO = {
+      critico: { borda: 'border-red-300 bg-red-50/70', icone: 'text-red-600', rotulo: 'Crítico', chip: 'bg-red-600 text-white' },
+      atencao: { borda: 'border-amber-300 bg-amber-50/70', icone: 'text-amber-600', rotulo: 'Atenção', chip: 'bg-amber-500 text-white' },
+      info: { borda: 'border-slate-200 bg-white', icone: 'text-sky-600', rotulo: 'Informativo', chip: 'bg-sky-100 text-sky-800' },
+      positivo: { borda: 'border-emerald-300 bg-emerald-50/70', icone: 'text-emerald-600', rotulo: 'Positivo', chip: 'bg-emerald-600 text-white' }
+    };
+
+    function renderFatosLista() {
+      const el = document.getElementById('acao-fatos-list');
+      if (!el) return;
+      const f = window.fatosFiltro || 'todos';
+      const lista = (window.lastFatos || []).filter(x => f === 'todos' || x.sev === f);
+      el.innerHTML = lista.map(x => {
+        const st = SEV_ESTILO[x.sev] || SEV_ESTILO.info;
+        return `<div class="border ${st.borda} rounded-lg p-3 flex gap-3 items-start">
+          <i data-lucide="${x.icone}" class="w-5 h-5 shrink-0 mt-0.5 ${st.icone}"></i>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${st.chip}">${st.rotulo}</span>
+              ${(x.chips || []).map(c => `<span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">${escapeHtml(c)}</span>`).join('')}
+              <p class="text-xs font-extrabold text-slate-900">${escapeHtml(x.titulo)}</p>
+            </div>
+            ${x.detalhe ? `<p class="text-[11px] text-slate-600 mt-1">${escapeHtml(x.detalhe)}</p>` : ''}
+          </div>
+          ${x.sugestao ? `<button onclick="criarPlanoDoFato(${x.idx})" class="no-print shrink-0 px-2 py-1 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-md text-[10px] font-bold whitespace-nowrap flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Plano de ação</button>` : ''}
+        </div>`;
+      }).join('') || `<p class="text-xs text-slate-400 italic p-3 text-center">${(window.lastFatos || []).length ? 'Nenhum fato nesta categoria.' : 'Nenhum fato relevante no período — sem ocorrências fora do padrão para os filtros escolhidos.'}</p>`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    window.renderPlanoAcao = function() {
+      if (!document.getElementById('acao-fatos-list') || !assetsLoaded) return;
+      // Operações disponíveis no filtro
+      const opSel = document.getElementById('acao-filter-operacao');
+      if (opSel) {
+        const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
+        const cur = opSel.value;
+        opSel.innerHTML = `<option value="TODAS">Todas Operações</option>` + ops.map(o => `<option value="${escapeAttr(o)}">${escapeHtml(o)}</option>`).join('');
+        opSel.value = ops.includes(cur) ? cur : 'TODAS';
+      }
+      const per = getAcaoPeriodo();
+      const f = getAcaoFiltros();
+      const ativos = getAcaoAtivos(f);
+      const idsAtivos = new Set(ativos.map(a => String(a.id)));
+      const evsPorAtivo = {};
+      (window.assetEvents || []).forEach(e => {
+        if (!idsAtivos.has(String(e.assetId))) return;
+        if (window.ignorarReforma && isReformaEvent(e)) return;
+        (evsPorAtivo[String(e.assetId)] = evsPorAtivo[String(e.assetId)] || []).push(e);
+      });
+      const cur = calcAcaoStats(ativos, evsPorAtivo, per.ini, per.fim);
+      const prev = calcAcaoStats(ativos, evsPorAtivo, per.prevIni, per.prevFim);
+      const hoje = getTodayStr();
+      const metasAtivos = ativos.map(a => getMetaForMarca(a.marca)).filter(m => typeof m === 'number');
+      const metaFrota = metasAtivos.length ? metasAtivos.reduce((s, m) => s + m, 0) / metasAtivos.length : null;
+      const ctx = { per, f, ativos, evsPorAtivo, cur, prev, hoje, metaFrota };
+      window.lastAcaoCtx = ctx;
+
+      const info = document.getElementById('acao-periodo-info');
+      const escopo = [f.unidade !== 'TODAS' ? `Unidade ${f.unidade}` : (window.selectedUnit !== 'TODAS' ? `Unidade ${window.selectedUnit}` : 'Todas as unidades'), f.tipo !== 'TODOS' ? f.tipo : 'Cavalo + Carreta', f.operacao !== 'TODAS' ? f.operacao : 'todas as operações'].join(' • ');
+      if (info) info.innerHTML = `<i data-lucide="calendar-range" class="w-3.5 h-3.5 shrink-0 text-emerald-700"></i> <span><strong>${escapeHtml(per.label)}</strong> — ${formatDateBR(per.ini)} a ${formatDateBR(per.fim)}${per.parcial ? ' (em andamento)' : ''} • comparado com <strong>${escapeHtml(per.prevLabel)}</strong> (${formatDateBR(per.prevIni)} a ${formatDateBR(per.prevFim)}${per.parcial ? ', mesmo nº de dias' : ''}) • ${escapeHtml(escopo)} • ${plural(ativos.length, 'ativo')}${window.ignorarReforma ? ' • sem Reforma' : ''}</span>`;
+      const setTxt = (id, t) => { const el = document.getElementById(id); if (el) el.innerText = t; };
+      setTxt('acao-fatos-periodo', `— ${per.label}`);
+      setTxt('acao-print-periodo', `${per.label} (${formatDateBR(per.ini)} a ${formatDateBR(per.fim)}) • ${escopo}`);
+
+      // KPIs
+      const abertosHoje = ativos.filter(a => { const st = getAssetCurrentStatus(a.id); return st.status === 'Indisponivel' && !(window.ignorarReforma && st.event && isReformaEvent(st.event)); }).length;
+      const idsSet = idsAtivos, tagsSet = new Set(ativos.map(a => a.tag));
+      const docsAtuais = (window.fleetDocs || []).filter(d => d.status !== 'Realizado' && d.docName !== DOC_COMBINADO && d.expDate && (idsSet.has(String(d.assetId)) || tagsSet.has(d.tag)));
+      const nVenc = docsAtuais.filter(d => calculateDaysRemaining(d.expDate) < 0).length;
+      const n30 = docsAtuais.filter(d => { const r = calculateDaysRemaining(d.expDate); return r >= 0 && r <= 30; }).length;
+      const planosEscopo = (window.planosAcao || []).filter(p => planoNoEscopo(p, f));
+      const abertasPA = planosEscopo.filter(p => PA_ABERTOS.includes(p.status));
+      const atrasadasPA = planosEscopo.filter(p => getSituacaoPrazoPlano(p).atrasada);
+      const deltaHtml = (a, b, maiorMelhor, sufixo) => {
+        if (b === null || b === undefined || a === null) return '<span class="text-slate-400">sem comparação</span>';
+        const d = a - b;
+        if (Math.abs(d) < 0.05) return `<span class="text-slate-500">= anterior (${sufixo === '%' ? fmtPct1(b) : b})</span>`;
+        const bom = maiorMelhor ? d > 0 : d < 0;
+        return `<span class="${bom ? 'text-emerald-700' : 'text-red-600'} font-bold">${d > 0 ? '▲' : '▼'} ${sufixo === '%' ? fmtNum1(Math.abs(d)) + ' p.p.' : Math.abs(Math.round(d))}</span> <span class="text-slate-400">vs ${sufixo === '%' ? fmtPct1(b) : b}</span>`;
+      };
+      const card = (titulo, valor, sub, cor, icone, title) => `<div class="card-executive p-3" ${title ? `title="${escapeAttr(title)}"` : ''}>
+          <p class="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="${icone}" class="w-3.5 h-3.5 ${cor}"></i> ${titulo}</p>
+          <p class="text-2xl font-black ${cor} leading-tight mt-0.5">${valor}</p>
+          <p class="text-[10px] mt-0.5">${sub}</p></div>`;
+      const kpis = document.getElementById('acao-kpis');
+      if (kpis) kpis.innerHTML = [
+        card('Disponibilidade', fmtPct1(cur.disp), deltaHtml(cur.disp, prev.disp, true, '%') + (metaFrota !== null ? ` <span class="text-slate-400">• meta ${fmtPct1(metaFrota)}</span>` : ''),
+          cur.disp === null ? 'text-slate-400' : cur.disp >= (metaFrota !== null ? metaFrota : 90) ? 'text-emerald-700' : cur.disp >= (metaFrota !== null ? metaFrota : 90) - 10 ? 'text-amber-600' : 'text-red-600', 'gauge',
+          'Dias operados ÷ dias com registro no período' + (metaFrota !== null ? ' — meta = média das metas por marca dos ativos filtrados' : '')),
+        card('Paradas iniciadas', cur.eventos.length, deltaHtml(cur.eventos.length, prev.eventos.length, false), 'text-slate-800', 'octagon-pause'),
+        card('Corretivas', cur.corretivas.length, deltaHtml(cur.corretivas.length, prev.corretivas.length, false), 'text-red-600', 'wrench'),
+        card('Dias parados', cur.parados, deltaHtml(cur.parados, prev.parados, false), 'text-orange-600', 'hourglass', 'Soma dos dias parados (Bloqueado) de todos os ativos dentro do período'),
+        card('Parados agora', abertosHoje, `<span class="text-slate-500">de ${ativos.length} ativos (hoje)</span>`, 'text-red-700', 'octagon-alert'),
+        card('Docs vencidos', nVenc, `<span class="${n30 ? 'text-amber-700 font-bold' : 'text-slate-500'}">${n30} vencem em até 30 dias</span>`, nVenc ? 'text-red-700' : 'text-slate-800', 'file-warning'),
+        card('Ações abertas', abertasPA.length, `<span class="${atrasadasPA.length ? 'text-red-600 font-bold' : 'text-slate-500'}">${atrasadasPA.length} fora do prazo</span>`, 'text-indigo-700', 'clipboard-check')
+      ].join('');
+
+      // Fatos relevantes
+      window.lastFatos = gerarFatosRelevantes(ctx);
+      renderFatosLista();
+
+      // O que mais está parando
+      const modo = document.getElementById('acao-recorr-agrup')?.value || 'tipocausa';
+      const grp = {}, grpPrev = {};
+      cur.eventos.forEach(x => {
+        const k = chaveRecorrencia(x, modo);
+        const g = grp[k] = grp[k] || { k, lista: [], dias: 0, tags: new Set() };
+        g.lista.push(x); g.dias += diasEventoNoPeriodo(x.e, per.ini, per.fim); g.tags.add(x.a.tag || x.e.tag);
+      });
+      prev.eventos.forEach(x => { const k = chaveRecorrencia(x, modo); grpPrev[k] = (grpPrev[k] || 0) + 1; });
+      const grupos = Object.values(grp).sort((a, b) => b.lista.length - a.lista.length || b.dias - a.dias);
+      window.lastAcaoRecorrencias = grupos.map(g => ({ problema: g.k, qtd: g.lista.length, anterior: grpPrev[g.k] || 0, dias: g.dias, ativos: listaTags(g.tags, 50), tags: g.tags, lista: g.lista }));
+      const rt = document.getElementById('acao-recorr-tbody');
+      if (rt) rt.innerHTML = window.lastAcaoRecorrencias.slice(0, 15).map((g, i) => {
+        const subiu = g.qtd > g.anterior;
+        return `<tr class="${g.qtd >= 3 ? 'bg-red-50/40' : ''}">
+          <td class="p-2 font-bold text-slate-900">${escapeHtml(g.problema)}</td>
+          <td class="p-2 text-center font-black">${g.qtd}</td>
+          <td class="p-2 text-center ${subiu ? 'text-red-600' : 'text-slate-500'}">${g.anterior}${subiu ? ' ▲' : (g.qtd < g.anterior ? ' ▼' : '')}</td>
+          <td class="p-2 text-center font-bold text-orange-600">${g.dias}</td>
+          <td class="p-2 text-slate-600">${escapeHtml(listaTags(g.tags, 5))}</td>
+          <td class="p-2 no-print"><button onclick="criarPlanoDaRecorrencia(${i})" title="Criar plano de ação para este problema" class="text-emerald-700 hover:text-emerald-900"><i data-lucide="circle-plus" class="w-4 h-4"></i></button></td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="6" class="p-3 text-center text-slate-400 italic">Nenhuma parada iniciada no período.</td></tr>`;
+
+      // Comparativo por unidade / tipo / operação / marca
+      const quebra = document.getElementById('acao-quebra')?.value || 'unidade';
+      const campo = { unidade: 'unidade', tipo: 'tipo', operacao: 'operacao', marca: 'marca' }[quebra];
+      const gruposQ = {};
+      ativos.forEach(a => { const k = a[campo] || 'N/D'; (gruposQ[k] = gruposQ[k] || []).push(a); });
+      const linhas = Object.keys(gruposQ).sort(naturalCompare).map(k => {
+        const lista = gruposQ[k];
+        const c = calcAcaoStats(lista, evsPorAtivo, per.ini, per.fim);
+        const p = calcAcaoStats(lista, evsPorAtivo, per.prevIni, per.prevFim);
+        const ids = new Set(lista.map(a => String(a.id))), tags = new Set(lista.map(a => a.tag));
+        const paradosAgora = lista.filter(a => getAssetCurrentStatus(a.id).status === 'Indisponivel').length;
+        const docsV = docsAtuais.filter(d => (ids.has(String(d.assetId)) || tags.has(d.tag)) && calculateDaysRemaining(d.expDate) < 0).length;
+        const acoes = abertasPA.filter(pl => {
+          const alvo = { unidade: pl.unidade, tipo: pl.tipoEquipamento, operacao: pl.operacao, marca: null }[quebra];
+          if (alvo && alvo !== 'TODAS' && alvo !== 'TODOS') return alvo === k;
+          return String(pl.ativos || '').split(',').map(t => t.trim()).some(t => tags.has(t));
+        }).length;
+        return { grupo: k, ativos: lista.length, disp: c.disp, dispAnt: p.disp, paradas: c.eventos.length, corretivas: c.corretivas.length, dias: c.parados, paradosAgora, docsV, acoes };
+      });
+      window.lastAcaoQuebra = { quebra, linhas };
+      const qt = document.getElementById('acao-quebra-tbody');
+      if (qt) {
+        const tot = { ativos: ativos.length, disp: cur.disp, dispAnt: prev.disp, paradas: cur.eventos.length, corretivas: cur.corretivas.length, dias: cur.parados, paradosAgora: abertosHoje, docsV: nVenc, acoes: abertasPA.length };
+        const linhaHtml = (r, total) => {
+          const d = (r.disp !== null && r.dispAnt !== null) ? r.disp - r.dispAnt : null;
+          const corDisp = r.disp === null ? 'text-slate-400' : r.disp >= 90 ? 'text-emerald-700' : r.disp >= 80 ? 'text-amber-600' : 'text-red-600';
+          return `<tr class="${total ? 'bg-slate-50 font-black border-t-2 border-slate-300' : ''}">
+            <td class="p-2 font-bold text-slate-900">${total ? 'TOTAL' : (quebra === 'unidade' ? getUnitBadge(r.grupo) : escapeHtml(r.grupo))}</td>
+            <td class="p-2 text-center">${r.ativos}</td>
+            <td class="p-2 text-center font-black ${corDisp}">${fmtPct1(r.disp)}</td>
+            <td class="p-2 text-center ${d === null ? 'text-slate-400' : d >= 0 ? 'text-emerald-700' : 'text-red-600'} font-bold">${d === null ? '—' : `${d >= 0 ? '▲' : '▼'} ${fmtNum1(Math.abs(d))} p.p.`}</td>
+            <td class="p-2 text-center">${r.paradas}</td>
+            <td class="p-2 text-center ${r.corretivas ? 'text-red-600 font-bold' : ''}">${r.corretivas}</td>
+            <td class="p-2 text-center text-orange-600 font-bold">${r.dias}</td>
+            <td class="p-2 text-center ${r.paradosAgora ? 'text-red-700 font-bold' : ''}">${r.paradosAgora}</td>
+            <td class="p-2 text-center ${r.docsV ? 'text-red-700 font-bold' : ''}">${r.docsV}</td>
+            <td class="p-2 text-center">${r.acoes}</td>
+          </tr>`;
+        };
+        qt.innerHTML = (linhas.map(r => linhaHtml(r, false)).join('') + (linhas.length > 1 ? linhaHtml(tot, true) : '')) || `<tr><td colspan="10" class="p-3 text-center text-slate-400 italic">Nenhum ativo nos filtros.</td></tr>`;
+      }
+
+      renderPlanoAcaoTabela();
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // ---------- Tabela do plano de ação ----------
+    function getPlanosFiltrados() {
+      const f = getAcaoFiltros();
+      const st = document.getElementById('acao-plano-status')?.value || 'ABERTAS';
+      const pz = document.getElementById('acao-plano-prazo')?.value || 'TODAS';
+      const busca = normTxt(document.getElementById('acao-plano-busca')?.value || '');
+      let lista = (window.planosAcao || []).filter(p => planoNoEscopo(p, f));
+      if (st === 'ABERTAS') lista = lista.filter(p => PA_ABERTOS.includes(p.status));
+      else if (st !== 'TODAS') lista = lista.filter(p => p.status === st);
+      if (pz !== 'TODAS') lista = lista.filter(p => getSituacaoPrazoPlano(p).grupo === pz);
+      if (busca) lista = lista.filter(p => normTxt([p.tema, p.causa, p.acao, p.responsavel, p.ativos, p.observacoes, p.operacao, 'PA-' + String(p.numero || '').padStart(3, '0')].join(' ')).includes(busca));
+      const ordemSit = { atrasada: 0, vencendo: 1, dentro: 2, semprazo: 3, 'concluida-fora': 4, 'concluida-no-prazo': 5, cancelada: 6 };
+      return lista.sort((a, b) => (ordemSit[getSituacaoPrazoPlano(a).key] - ordemSit[getSituacaoPrazoPlano(b).key]) || String(a.prazo || '9999').localeCompare(String(b.prazo || '9999')) || (b.numero || 0) - (a.numero || 0));
+    }
+
+    window.renderPlanoAcaoTabela = function() {
+      const tbody = document.getElementById('acao-plano-tbody');
+      if (!tbody) return;
+      const f = getAcaoFiltros();
+      const todos = (window.planosAcao || []).filter(p => planoNoEscopo(p, f));
+      const lista = getPlanosFiltrados();
+      window.lastPlanosFiltrados = lista;
+      const cnt = document.getElementById('acao-plano-count');
+      if (cnt) cnt.innerText = `(${lista.length} de ${todos.length})`;
+      const concl = todos.filter(p => p.status === 'Concluída');
+      const conclNoPrazo = concl.filter(p => getSituacaoPrazoPlano(p).key === 'concluida-no-prazo').length;
+      const foraPrazo = todos.filter(p => getSituacaoPrazoPlano(p).grupo === 'fora').length;
+      const k = (t, v, cor) => `<div class="bg-white border border-slate-200 rounded-lg px-3 py-2"><p class="text-[9px] font-bold text-slate-400 uppercase">${t}</p><p class="text-lg font-black ${cor}">${v}</p></div>`;
+      const kp = document.getElementById('acao-plano-kpis');
+      if (kp) kp.innerHTML = [
+        k('Total no escopo', todos.length, 'text-slate-800'),
+        k('Não iniciadas', todos.filter(p => p.status === 'Não iniciada').length, 'text-slate-600'),
+        k('Em andamento', todos.filter(p => p.status === 'Em andamento').length, 'text-blue-600'),
+        k('Concluídas', concl.length, 'text-emerald-600'),
+        k('Fora do prazo', foraPrazo, foraPrazo ? 'text-red-600' : 'text-slate-800'),
+        k('Concluídas no prazo', concl.length ? `${Math.round((conclNoPrazo / concl.length) * 100)}%` : '—', 'text-emerald-700')
+      ].join('');
+      const corPrio = { Alta: 'bg-red-100 text-red-800 border-red-300', 'Média': 'bg-amber-100 text-amber-800 border-amber-300', Baixa: 'bg-slate-100 text-slate-600 border-slate-300' };
+      const corStatus = { 'Não iniciada': 'bg-slate-100 text-slate-700 border-slate-300', 'Em andamento': 'bg-blue-100 text-blue-800 border-blue-300', 'Concluída': 'bg-emerald-100 text-emerald-800 border-emerald-300', 'Cancelada': 'bg-slate-200 text-slate-500 border-slate-300' };
+      tbody.innerHTML = lista.map(p => {
+        const sit = getSituacaoPrazoPlano(p);
+        const escopo = [p.unidade && p.unidade !== 'TODAS' ? p.unidade : 'AM+MA', p.tipoEquipamento && p.tipoEquipamento !== 'TODOS' ? p.tipoEquipamento : 'Cavalo+Carreta', p.operacao || 'Todas op.'].join(' • ');
+        return `<tr class="${sit.atrasada ? 'bg-red-50/40' : ''} align-top">
+          <td class="p-2 font-black text-slate-500 whitespace-nowrap">PA-${String(p.numero || '').padStart(3, '0')}</td>
+          <td class="p-2 font-bold text-slate-900 min-w-[180px]">${escapeHtml(p.tema)}${p.ativos ? `<p class="text-[10px] font-medium text-slate-500 mt-0.5">Ativos: ${escapeHtml(p.ativos)}</p>` : ''}</td>
+          <td class="p-2 text-slate-700 min-w-[120px]">${escapeHtml(p.causa || '-')}</td>
+          <td class="p-2 text-slate-700 min-w-[200px]">${escapeHtml(p.acao)}${p.observacoes ? `<p class="text-[10px] text-slate-500 mt-0.5 italic">${escapeHtml(p.observacoes)}</p>` : ''}</td>
+          <td class="p-2 font-bold whitespace-nowrap">${escapeHtml(p.responsavel || '-')}</td>
+          <td class="p-2 text-[10px] text-slate-600 whitespace-nowrap">${escapeHtml(escopo)}</td>
+          <td class="p-2"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${corPrio[p.prioridade] || corPrio['Média']}">${escapeHtml(p.prioridade || 'Média')}</span></td>
+          <td class="p-2 whitespace-nowrap">${formatDateBR(p.criadoEm)}</td>
+          <td class="p-2 whitespace-nowrap font-bold">${formatDateBR(p.prazo)}${p.reprogramacoes ? `<p class="text-[9px] font-bold text-amber-700" title="Prazo original: ${escapeAttr(formatDateBR(p.prazoOriginal))}">reprogramado ${p.reprogramacoes}x</p>` : ''}</td>
+          <td class="p-2">
+            <select onchange="setStatusPlanoAcao(${p.id}, this.value)" class="text-[10px] p-1 font-bold rounded border outline-none ${corStatus[p.status] || corStatus['Não iniciada']}">
+              ${['Não iniciada', 'Em andamento', 'Concluída', 'Cancelada'].map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td class="p-2"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${sit.cls}">${escapeHtml(sit.label)}</span></td>
+          <td class="p-2 whitespace-nowrap">${p.dataConclusao ? formatDateBR(p.dataConclusao) : '-'}</td>
+          <td class="p-2 text-center sticky-col-right no-print whitespace-nowrap">
+            <button onclick="openPlanoAcaoModal(${p.id})" class="text-slate-400 hover:text-blue-600 p-1" title="Editar / histórico"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+          </td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="13" class="p-4 text-center text-slate-400 italic">Nenhuma ação ${todos.length ? 'com estes filtros' : 'cadastrada ainda — use "+ Plano de ação" num fato relevante ou "Novo Plano de Ação"'}.</td></tr>`;
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // ---------- Cadastro / edição ----------
+    function preencherListasPlano() {
+      const causas = Array.from(new Set([...getCausasRaizNomes(), ...(window.planosAcao || []).map(p => p.causa).filter(Boolean)])).sort();
+      const dl = document.getElementById('pa-causas-list');
+      if (dl) dl.innerHTML = causas.map(c => `<option value="${escapeAttr(c)}"></option>`).join('');
+      const resp = Array.from(new Set([...(window.users || []).filter(u => u.status === 'Ativo').map(u => u.nome), ...(window.planosAcao || []).map(p => p.responsavel)].filter(Boolean))).sort();
+      const dr = document.getElementById('pa-resp-list');
+      if (dr) dr.innerHTML = resp.map(r => `<option value="${escapeAttr(r)}"></option>`).join('');
+      const ops = Array.from(new Set((window.assets || []).map(a => a.operacao).filter(Boolean))).sort();
+      const dop = document.getElementById('pa-operacao-list');
+      if (dop) dop.innerHTML = ops.map(o => `<option value="${escapeAttr(o)}"></option>`).join('');
+    }
+
+    window.onPlanoStatusChange = function() {
+      const st = document.getElementById('pa-status').value;
+      const c = document.getElementById('pa-conclusao');
+      c.disabled = st !== 'Concluída';
+      if (st === 'Concluída' && !c.value) c.value = getTodayStr();
+      if (st !== 'Concluída') c.value = '';
+    };
+    window.onPlanoPrazoChange = function() {
+      const id = document.getElementById('pa-editing-id').value;
+      const p = id ? (window.planosAcao || []).find(x => String(x.id) === String(id)) : null;
+      const mudou = !!(p && p.prazo && document.getElementById('pa-prazo').value !== p.prazo);
+      document.getElementById('pa-just-prazo-wrap').classList.toggle('hidden', !mudou);
+    };
+
+    window.openPlanoAcaoModal = function(id, sugestao) {
+      preencherListasPlano();
+      const form = document.getElementById('form-plano-acao');
+      form.reset();
+      const p = id ? (window.planosAcao || []).find(x => String(x.id) === String(id)) : null;
+      const setV = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v === undefined || v === null ? '' : v; };
+      setV('pa-editing-id', p ? p.id : '');
+      setV('pa-origem', p ? (p.origem || '') : (sugestao && sugestao.origem) || '');
+      document.getElementById('modal-plano-acao-title').innerText = p ? `Editar Plano de Ação PA-${String(p.numero || '').padStart(3, '0')}` : 'Novo Plano de Ação';
+      const f = getAcaoFiltros();
+      const base = p || Object.assign({
+        status: 'Não iniciada', prioridade: 'Média',
+        unidade: f.unidade !== 'TODAS' ? f.unidade : (window.selectedUnit !== 'TODAS' ? window.selectedUnit : 'TODAS'),
+        tipoEquipamento: f.tipo, operacao: f.operacao !== 'TODAS' ? f.operacao : '',
+        prazo: addDaysToDateStr(getTodayStr(), 15),
+        responsavel: window.currentLoggedUser ? (window.currentLoggedUser.nome || '') : ''
+      }, sugestao || {});
+      setV('pa-tema', base.tema); setV('pa-causa', base.causa); setV('pa-acao', base.acao); setV('pa-responsavel', base.responsavel);
+      setV('pa-prazo', base.prazo); setV('pa-status', base.status || 'Não iniciada'); setV('pa-prioridade', base.prioridade || 'Média');
+      setV('pa-conclusao', base.dataConclusao); setV('pa-unidade', base.unidade || 'TODAS'); setV('pa-tipo', base.tipoEquipamento || 'TODOS');
+      setV('pa-operacao', base.operacao); setV('pa-ativos', base.ativos); setV('pa-obs', base.observacoes); setV('pa-just-prazo', '');
+      document.getElementById('pa-conclusao').disabled = (base.status || 'Não iniciada') !== 'Concluída';
+      document.getElementById('pa-just-prazo-wrap').classList.add('hidden');
+      const origemBox = document.getElementById('pa-origem-box');
+      const origem = p ? p.origem : (sugestao && sugestao.origem);
+      origemBox.classList.toggle('hidden', !origem);
+      origemBox.innerHTML = origem ? `<strong>Gerado a partir do fato relevante:</strong> ${escapeHtml(origem)}` : '';
+      document.getElementById('pa-btn-excluir').classList.toggle('hidden', !p);
+      const hw = document.getElementById('pa-historico-wrap');
+      hw.classList.toggle('hidden', !p);
+      if (p) {
+        document.getElementById('pa-historico').innerHTML = (p.historico || []).slice().reverse().map(h => `<div class="border-b border-slate-200 pb-1"><span class="font-bold text-slate-700">${escapeHtml(h.quando || '')}</span> — <span class="text-emerald-700 font-bold">${escapeHtml(h.usuario || '')}</span>: ${escapeHtml(h.texto || '')}</div>`).join('') || '<p class="text-slate-400 italic">Sem alterações registradas.</p>';
+      }
+      document.getElementById('modal-plano-acao').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+      // Veio de um fato (problema já preenchido): o cursor vai direto para a Ação
+      setTimeout(() => { const el = document.getElementById(!p && sugestao && !sugestao.acao ? 'pa-acao' : 'pa-tema'); if (el) el.focus(); }, 30);
+    };
+    window.closePlanoAcaoModal = function() { document.getElementById('modal-plano-acao').classList.replace('flex', 'hidden'); };
+
+    window.criarPlanoDoFato = function(idx) {
+      const fato = (window.lastFatos || []).find(x => x.idx === idx);
+      if (!fato || !fato.sugestao) return;
+      const per = window.lastAcaoCtx ? window.lastAcaoCtx.per : null;
+      openPlanoAcaoModal(null, Object.assign({ prioridade: fato.sev === 'critico' ? 'Alta' : 'Média', origem: `${fato.titulo}${per ? ` — ${per.label}` : ''}` }, fato.sugestao));
+    };
+    window.criarPlanoDaRecorrencia = function(i) {
+      const g = (window.lastAcaoRecorrencias || [])[i];
+      if (!g) return;
+      const per = window.lastAcaoCtx ? window.lastAcaoCtx.per : null;
+      const causas = {};
+      g.lista.forEach(x => { if (x.e.causaRaiz) causas[x.e.causaRaiz] = (causas[x.e.causaRaiz] || 0) + 1; });
+      const un = new Set(g.lista.map(x => x.a.unidade).filter(Boolean)), tp = new Set(g.lista.map(x => x.a.tipo).filter(Boolean)), op = new Set(g.lista.map(x => x.a.operacao).filter(Boolean));
+      openPlanoAcaoModal(null, {
+        tema: `${g.problema}: ${plural(g.qtd, 'parada')} no período`,
+        causa: Object.keys(causas).sort((a, b) => causas[b] - causas[a])[0] || '',
+        ativos: g.ativos,
+        prioridade: g.qtd >= 3 ? 'Alta' : 'Média',
+        unidade: un.size === 1 ? Array.from(un)[0] : 'TODAS',
+        tipoEquipamento: tp.size === 1 ? Array.from(tp)[0] : 'TODOS',
+        operacao: op.size === 1 ? Array.from(op)[0] : '',
+        origem: `O que mais está parando — ${g.problema} (${g.qtd} no período, ${g.dias} dias parados)${per ? ` — ${per.label}` : ''}`
+      });
+    };
+
+    function usuarioAtualNome() { return window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema'; }
+    function normalizarTags(txt) { return Array.from(new Set(String(txt || '').split(/[,;\n]+/).map(t => t.trim().toUpperCase()).filter(Boolean))).join(', '); }
+    function textoDiffs(diffs) { return diffs.map(d => `${d.campo}: ${fmtAuditValue(d.de) || '—'} → ${fmtAuditValue(d.para) || '—'}`).join('; '); }
+
+    window.savePlanoAcao = function(ev) {
+      if (ev) ev.preventDefault();
+      if (!planosAcaoLoaded) { alert('Aguarde: carregando o plano de ação da nuvem...'); return; }
+      const val = (id) => (document.getElementById(id)?.value || '').trim();
+      const status = val('pa-status') || 'Não iniciada';
+      const dados = {
+        tema: val('pa-tema'), causa: val('pa-causa'), acao: val('pa-acao'), responsavel: val('pa-responsavel'), prazo: val('pa-prazo'),
+        status, prioridade: val('pa-prioridade') || 'Média',
+        dataConclusao: status === 'Concluída' ? (val('pa-conclusao') || getTodayStr()) : null,
+        unidade: val('pa-unidade') || 'TODAS', tipoEquipamento: val('pa-tipo') || 'TODOS', operacao: val('pa-operacao'),
+        ativos: normalizarTags(val('pa-ativos')), observacoes: val('pa-obs')
+      };
+      if (!dados.tema || !dados.acao || !dados.responsavel || !dados.prazo) { alert('Preencha Problema, Ação, Responsável e Data de prazo.'); return; }
+      const id = val('pa-editing-id');
+      const quando = getNowFormatted();
+      if (id) {
+        const p = (window.planosAcao || []).find(x => String(x.id) === String(id));
+        if (!p) return;
+        const antes = Object.assign({}, p);
+        const just = val('pa-just-prazo');
+        const prazoMudou = p.prazo && dados.prazo !== p.prazo;
+        if (prazoMudou && !just) { alert('Informe a justificativa da mudança de prazo.'); document.getElementById('pa-just-prazo-wrap').classList.remove('hidden'); document.getElementById('pa-just-prazo').focus(); return; }
+        Object.assign(p, dados, { atualizadoEm: new Date().toISOString(), atualizadoPor: usuarioAtualNome() });
+        if (prazoMudou) p.reprogramacoes = (p.reprogramacoes || 0) + 1;
+        const diffs = diffCampos(antes, p, PA_LABELS);
+        if (!diffs.length) { closePlanoAcaoModal(); return; }
+        p.historico = (p.historico || []).concat([{ quando, usuario: usuarioAtualNome(), texto: textoDiffs(diffs) + (prazoMudou ? ` — justificativa: ${just}` : '') }]);
+        addAuditLog(p.unidade, 'Plano de Ação', `PA-${String(p.numero).padStart(3, '0')}`, `Plano de ação atualizado: ${p.tema}${prazoMudou ? ` (prazo alterado — ${just})` : ''}`, p.prazo, p.status, p.dataConclusao, diffs);
+        showToast(`PA-${String(p.numero).padStart(3, '0')} atualizado.`, 'success');
+      } else {
+        const numero = (window.planosAcao || []).reduce((m, x) => Math.max(m, Number(x.numero) || 0), 0) + 1;
+        const p = Object.assign({
+          id: Date.now(), numero, criadoEm: getTodayStr(), criadoEmTs: new Date().toISOString(), criadoPor: usuarioAtualNome(),
+          origem: val('pa-origem'), prazoOriginal: dados.prazo, reprogramacoes: 0,
+          historico: [{ quando, usuario: usuarioAtualNome(), texto: `Ação criada (prazo ${formatDateBR(dados.prazo)}, status ${dados.status})` }]
+        }, dados);
+        window.planosAcao.push(p);
+        addAuditLog(p.unidade, 'Plano de Ação', `PA-${String(numero).padStart(3, '0')}`, `Plano de ação criado: ${p.tema} — ação: ${p.acao} (resp. ${p.responsavel})`, p.prazo, p.status);
+        showToast(`PA-${String(numero).padStart(3, '0')} criado e salvo.`, 'success');
+      }
+      saveData();
+      closePlanoAcaoModal();
+      renderPlanoAcao();
+    };
+
+    window.setStatusPlanoAcao = function(id, status) {
+      const p = (window.planosAcao || []).find(x => String(x.id) === String(id));
+      if (!p || p.status === status) return;
+      const antes = Object.assign({}, p);
+      p.status = status;
+      p.dataConclusao = status === 'Concluída' ? getTodayStr() : null;
+      p.atualizadoEm = new Date().toISOString(); p.atualizadoPor = usuarioAtualNome();
+      const diffs = diffCampos(antes, p, PA_LABELS);
+      p.historico = (p.historico || []).concat([{ quando: getNowFormatted(), usuario: usuarioAtualNome(), texto: textoDiffs(diffs) }]);
+      addAuditLog(p.unidade, 'Plano de Ação', `PA-${String(p.numero).padStart(3, '0')}`, `Status do plano de ação alterado: ${p.tema}`, p.prazo, p.status, p.dataConclusao, diffs);
+      saveData();
+      renderPlanoAcao();
+      showToast(`PA-${String(p.numero).padStart(3, '0')}: ${status}${status === 'Concluída' ? ` em ${formatDateBR(p.dataConclusao)} — ${getSituacaoPrazoPlano(p).label}` : ''}.`, 'success');
+    };
+
+    window.deletePlanoAcao = function() {
+      const id = document.getElementById('pa-editing-id').value;
+      const p = (window.planosAcao || []).find(x => String(x.id) === String(id));
+      if (!p) return;
+      if (!confirm(`Excluir o plano de ação PA-${String(p.numero).padStart(3, '0')} "${p.tema}"? Prefira "Cancelada" para manter o registro.`)) return;
+      window.planosAcao = window.planosAcao.filter(x => String(x.id) !== String(id));
+      addAuditLog(p.unidade, 'Plano de Ação', `PA-${String(p.numero).padStart(3, '0')}`, `Plano de ação excluído: ${p.tema} — ação: ${p.acao}`, p.prazo, 'Excluído');
+      saveData();
+      closePlanoAcaoModal();
+      renderPlanoAcao();
+      showToast('Plano de ação excluído.', 'info');
+    };
+
+    // ---------- Resumo, Excel ----------
+    window.copiarResumoAcao = function() {
+      renderPlanoAcao();
+      const ctx = window.lastAcaoCtx;
+      if (!ctx) return;
+      const { per, f, cur, prev } = ctx;
+      const escopo = [f.unidade !== 'TODAS' ? f.unidade : (window.selectedUnit !== 'TODAS' ? window.selectedUnit : 'AM + MA'), f.tipo !== 'TODOS' ? f.tipo : 'Cavalo + Carreta', f.operacao !== 'TODAS' ? f.operacao : 'Todas as operações'].join(' | ');
+      const ic = { critico: '🔴', atencao: '🟠', info: '🔵', positivo: '🟢' };
+      const linhas = [
+        `*FATOS RELEVANTES — ${per.label}* (${formatDateBR(per.ini)} a ${formatDateBR(per.fim)})`,
+        escopo,
+        '',
+        `• Disponibilidade: ${fmtPct1(cur.disp)}${prev.disp !== null && cur.disp !== null ? ` (${cur.disp - prev.disp >= 0 ? '▲' : '▼'} ${fmtNum1(Math.abs(cur.disp - prev.disp))} p.p.)` : ''}`,
+        `• Paradas iniciadas: ${cur.eventos.length} (anterior ${prev.eventos.length}) | Corretivas: ${cur.corretivas.length} (anterior ${prev.corretivas.length})`,
+        `• Dias parados: ${cur.parados} | Liberações: ${cur.liberadas.length}`,
+        '',
+        ...(window.lastFatos || []).filter(x => x.sev !== 'info').map(x => `${ic[x.sev]} ${x.titulo}${x.detalhe ? ' — ' + x.detalhe : ''}`)
+      ];
+      const abertas = (window.planosAcao || []).filter(p => planoNoEscopo(p, f) && PA_ABERTOS.includes(p.status));
+      if (abertas.length) {
+        linhas.push('', '*PLANO DE AÇÃO (abertas)*');
+        abertas.sort((a, b) => String(a.prazo || '').localeCompare(String(b.prazo || ''))).forEach(p => {
+          const s = getSituacaoPrazoPlano(p);
+          linhas.push(`${s.grupo === 'fora' ? '⛔' : '✅'} PA-${String(p.numero).padStart(3, '0')} ${p.tema} — ${p.acao} | Resp.: ${p.responsavel} | Prazo: ${formatDateBR(p.prazo)} | ${p.status} | ${s.label}`);
+        });
+      }
+      const texto = linhas.join('\n');
+      const ok = () => showToast('Resumo copiado — cole no WhatsApp ou e-mail.', 'success');
+      const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); ok(); } catch (e) { alert(texto); }
+        document.body.removeChild(ta);
+      };
+      window.lastResumoAcao = texto;
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texto).then(ok).catch(fallback);
+      else fallback();
+    };
+
+    window.exportAcaoToExcel = function() {
+      renderPlanoAcao();
+      const ctx = window.lastAcaoCtx;
+      if (!ctx) return;
+      const wb = XLSX.utils.book_new();
+      const sevTxt = { critico: 'Crítico', atencao: 'Atenção', info: 'Informativo', positivo: 'Positivo' };
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[`Fatos Relevantes — ${ctx.per.label} (${formatDateBR(ctx.per.ini)} a ${formatDateBR(ctx.per.fim)})`], [], ['Nível', 'Fato', 'Detalhe', 'Referência']].concat(
+        (window.lastFatos || []).map(x => [sevTxt[x.sev] || x.sev, x.titulo, x.detalhe, (x.chips || []).join(', ') || 'Período']))), 'Fatos Relevantes');
+      const planos = (window.planosAcao || []).filter(p => planoNoEscopo(p, ctx.f));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Nº', 'Problema / Fato', 'Causa', 'Ação', 'Responsável', 'Unidade', 'Tipo de Equipamento', 'Operação', 'Ativos', 'Prioridade', 'Abertura', 'Criado por', 'Prazo', 'Prazo Original', 'Reprogramações', 'Status', 'Situação do Prazo', 'Conclusão', 'Observações', 'Origem']].concat(
+        planos.map(p => [`PA-${String(p.numero).padStart(3, '0')}`, p.tema, p.causa || '', p.acao, p.responsavel, p.unidade || 'TODAS', p.tipoEquipamento || 'TODOS', p.operacao || 'Todas', p.ativos || '', p.prioridade || '', formatDateBR(p.criadoEm), p.criadoPor || '', formatDateBR(p.prazo), formatDateBR(p.prazoOriginal), p.reprogramacoes || 0, p.status, getSituacaoPrazoPlano(p).label, p.dataConclusao ? formatDateBR(p.dataConclusao) : '', p.observacoes || '', p.origem || '']))), 'Plano de Ação');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Problema', 'Paradas no Período', 'Período Anterior', 'Dias Parados', 'Ativos']].concat(
+        (window.lastAcaoRecorrencias || []).map(g => [g.problema, g.qtd, g.anterior, g.dias, g.ativos]))), 'O que mais para');
+      const q = window.lastAcaoQuebra || { linhas: [] };
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Grupo', 'Ativos', 'Disponibilidade %', 'Disponibilidade Anterior %', 'Paradas', 'Corretivas', 'Dias Parados', 'Parados Agora', 'Docs Vencidos', 'Ações Abertas']].concat(
+        q.linhas.map(r => [r.grupo, r.ativos, r.disp === null ? '' : +r.disp.toFixed(1), r.dispAnt === null ? '' : +r.dispAnt.toFixed(1), r.paradas, r.corretivas, r.dias, r.paradosAgora, r.docsV, r.acoes]))), 'Comparativo');
+      XLSX.writeFile(wb, `Plano_de_Acao_Fatos_Relevantes_${getTodayStr()}.xlsx`);
+    };
+
+    // ===================== CONGELAR TOPO (opcional) =====================
+    // Botão 📌 no cabeçalho. Ligado, o menu de abas, o título + filtros (+ indicadores) da página e o cabeçalho
+    // das tabelas ficam fixos enquanto a lista rola — como o "Congelar painéis" do Excel. Vale para todas as
+    // páginas e a escolha fica salva neste navegador para cada usuário (desligado por padrão).
+    window.freezeTopEnabled = false;
+    const FREEZE_CONTEUDO = 'table, canvas, #farol-sheet, .freeze-stop';
+    let freezeResizeObs = null;
+
+    function freezePrefKey() {
+      const u = window.currentLoggedUser;
+      return 'pcm_freeze_top' + (u && u.login ? '_' + String(u.login).toLowerCase() : '');
+    }
+    function restoreFreezeTop() {
+      let on = false;
+      try { on = localStorage.getItem(freezePrefKey()) === '1'; } catch (e) {}
+      setFreezeTop(on, false);
+    }
+    function setFreezeTop(on, salvar) {
+      window.freezeTopEnabled = !!on;
+      document.body.classList.toggle('freeze-top', window.freezeTopEnabled);
+      const btn = document.getElementById('btn-freeze-top');
+      if (btn) {
+        btn.classList.toggle('ativo', window.freezeTopEnabled);
+        btn.setAttribute('aria-pressed', window.freezeTopEnabled ? 'true' : 'false');
+      }
+      if (salvar) { try { localStorage.setItem(freezePrefKey(), window.freezeTopEnabled ? '1' : '0'); } catch (e) {} }
+      applyFreezeTop(true);
+    }
+    window.toggleFreezeTop = function() {
+      setFreezeTop(!window.freezeTopEnabled, true);
+      showToast(window.freezeTopEnabled
+        ? 'Topo congelado: menu, título, filtros e cabeçalho das tabelas ficam fixos ao rolar (clique no 📌 de novo para soltar).'
+        : 'Topo descongelado.', 'info');
+    };
+
+    // Devolve os blocos do topo para o lugar original e tira a rolagem interna das tabelas
+    function unfreezeSection(sec) {
+      sec.querySelectorAll(':scope > .freeze-head').forEach(head => {
+        while (head.firstChild) sec.insertBefore(head.firstChild, head);
+        head.remove();
+      });
+      sec.querySelectorAll('.freeze-scroll').forEach(el => el.classList.remove('freeze-scroll'));
+    }
+
+    // Agrupa os blocos do início da página (título, filtros, indicadores) numa faixa fixa. Para no primeiro bloco
+    // que tem tabela/gráfico ou quando a faixa passaria de ~45% da altura da tela (sobra espaço para a lista).
+    function freezeSection(sec) {
+      if (window.innerWidth < 640) return; // celular: fixa só o menu e o cabeçalho das tabelas
+      const limite = window.innerHeight * 0.45;
+      const cabeca = [];
+      let altura = 0, temVisivel = false;
+      for (const el of Array.from(sec.children)) {
+        if (el.matches(FREEZE_CONTEUDO) || el.querySelector(FREEZE_CONTEUDO)) break;
+        const h = el.getBoundingClientRect().height;
+        if (h > 0) {
+          if (temVisivel && altura + h > limite) break;
+          altura += h + 24;
+          temVisivel = true;
+        }
+        cabeca.push(el);
+      }
+      // Blocos ocultos no fim (painéis que abrem depois) ficam fora da faixa fixa
+      while (cabeca.length && cabeca[cabeca.length - 1].getBoundingClientRect().height === 0) cabeca.pop();
+      if (!cabeca.length || !temVisivel) return;
+      const head = document.createElement('div');
+      head.className = 'freeze-head space-y-6';
+      sec.insertBefore(head, cabeca[0]);
+      cabeca.forEach(el => head.appendChild(el));
+    }
+
+    // Tabelas da página rolam dentro da própria área, com o cabeçalho (thead) sempre visível
+    function marcarTabelasFreeze(sec) {
+      sec.querySelectorAll('.overflow-x-auto, .overflow-auto').forEach(box => {
+        if (box.closest('.freeze-head') || box.classList.contains('freeze-scroll')) return;
+        if (box.parentElement && box.parentElement.closest('.freeze-scroll')) return;
+        if (!box.querySelector('table')) return;
+        box.classList.add('freeze-scroll');
+      });
+    }
+
+    function atualizarMedidasFreeze() {
+      const header = document.querySelector('header.app-header');
+      const nav = [document.getElementById('main-tab-nav'), document.getElementById('mobile-tab-wrap')].find(el => el && el.getClientRects().length);
+      const sec = document.querySelector('.tab-content.active');
+      const head = sec ? sec.querySelector(':scope > .freeze-head') : null;
+      const hH = header && getComputedStyle(header).position === 'sticky' ? Math.round(header.getBoundingClientRect().height) : 0;
+      const nH = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
+      const headH = head ? Math.round(head.getBoundingClientRect().height) : 0;
+      const st = document.documentElement.style;
+      st.setProperty('--freeze-nav-top', hH + 'px');
+      st.setProperty('--freeze-head-top', (hH + nH) + 'px');
+      st.setProperty('--freeze-table-max', Math.max(260, window.innerHeight - hH - nH - headH - 40) + 'px');
+    }
+
+    // rebuild=true refaz a faixa fixa da aba aberta (troca de aba, liga/desliga, mudança de tamanho da tela).
+    // Sem rebuild, só inclui tabelas novas e recalcula as medidas — não mexe nos filtros (não perde o foco).
+    window.applyFreezeTop = function(rebuild) {
+      const on = !!window.freezeTopEnabled;
+      const ativa = document.querySelector('.tab-content.active');
+      document.querySelectorAll('.tab-content').forEach(sec => { if (!on || sec !== ativa) unfreezeSection(sec); });
+      if (freezeResizeObs) { freezeResizeObs.disconnect(); freezeResizeObs = null; }
+      if (!on || !ativa) {
+        ['--freeze-nav-top', '--freeze-head-top', '--freeze-table-max'].forEach(v => document.documentElement.style.removeProperty(v));
+        return;
+      }
+      const foco = document.activeElement;
+      const focoNaFaixa = foco && foco.closest && foco.closest('.freeze-head');
+      if (rebuild && !focoNaFaixa) unfreezeSection(ativa);
+      if (!ativa.querySelector(':scope > .freeze-head')) freezeSection(ativa);
+      marcarTabelasFreeze(ativa);
+      atualizarMedidasFreeze();
+      if (window.ResizeObserver) {
+        freezeResizeObs = new ResizeObserver(() => atualizarMedidasFreeze());
+        const head = ativa.querySelector(':scope > .freeze-head');
+        const header = document.querySelector('header.app-header');
+        if (head) freezeResizeObs.observe(head);
+        if (header) freezeResizeObs.observe(header);
+      }
+    };
+    // Recalcula depois de renderizações (tabelas montadas por código) sem travar a tela
+    function agendarFreezeTop(rebuild) {
+      if (!window.freezeTopEnabled) return;
+      clearTimeout(window._freezeTimer);
+      window._freezeTimer = setTimeout(() => applyFreezeTop(rebuild), rebuild ? 150 : 60);
+    }
+    let freezeUltimaLargura = window.innerWidth;
+    window.addEventListener('resize', () => {
+      if (!window.freezeTopEnabled) return;
+      const mudouLargura = Math.abs(window.innerWidth - freezeUltimaLargura) > 40;
+      freezeUltimaLargura = window.innerWidth;
+      agendarFreezeTop(mudouLargura);
+    });
+
     // ===================== INICIALIZAÇÃO =====================
     window.toggleTvMode = function() {
       document.body.classList.toggle('tv-mode');
@@ -10940,6 +12243,7 @@
       syncFornecedores();
       syncTiposDocumento();
       syncCausasRaiz();
+      syncPlanosAcao();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
       watchConnection();
