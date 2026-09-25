@@ -2200,17 +2200,38 @@
 
         <div id="fr-kpis" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div class="card-executive p-4">
-            <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
-              <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i data-lucide="line-chart" class="w-4 h-4 text-indigo-600"></i> Gráfico de acompanhamento</h3>
-              <div class="flex flex-wrap gap-2 min-w-0 max-w-full">
-                <select id="fr-graf-pergunta" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"></select>
-                <select id="fr-graf-frota" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"></select>
+        <div class="grid grid-cols-1 gap-6">
+          <div id="fr-graf-card" class="card-executive p-4 space-y-3">
+            <div class="flex items-start justify-between flex-wrap gap-2">
+              <div class="min-w-0">
+                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i data-lucide="line-chart" class="w-4 h-4 text-indigo-600"></i> Gráfico de acompanhamento</h3>
+                <p id="fr-graf-sub" class="text-[11px] text-slate-500"></p>
               </div>
+              <button type="button" onclick="exportFormularioToExcel()" class="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-[11px] font-bold flex items-center gap-1.5" title="Exporta a evolução (com estes filtros), as respostas e os filtros usados"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Excel da evolução</button>
             </div>
-            <div class="h-72"><canvas id="chartFormulario"></canvas></div>
+            <div class="flex flex-wrap items-end gap-2">
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full"><label for="fr-graf-modo" class="text-[9px] font-bold text-slate-400 uppercase">Gráfico</label>
+                <select id="fr-graf-modo" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"><option value="evolucao">Evolução no tempo (linhas)</option><option value="ultima">Última leitura por cavalo (barras)</option></select></div>
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full"><label for="fr-graf-frota" class="text-[9px] font-bold text-slate-400 uppercase">Frota</label>
+                <select id="fr-graf-frota" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"></select></div>
+              <div id="fr-graf-agr-wrap" class="flex flex-col gap-0.5 min-w-0 max-w-full"><label for="fr-graf-agr" class="text-[9px] font-bold text-slate-400 uppercase">Evolução por</label>
+                <select id="fr-graf-agr" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"><option value="auto">Automático</option><option value="resposta">Cada envio</option><option value="dia">Dia</option><option value="semana">Semana</option><option value="mes">Mês</option><option value="ano">Ano</option></select></div>
+              <div id="fr-graf-calc-wrap" class="flex flex-col gap-0.5 min-w-0 max-w-full"><label for="fr-graf-calc" class="text-[9px] font-bold text-slate-400 uppercase">Valor no período</label>
+                <select id="fr-graf-calc" onchange="renderFormularioGrafico()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none max-w-full"><option value="media">Média das leituras</option><option value="ultima">Última leitura</option><option value="min">Menor leitura</option><option value="max">Maior leitura</option></select></div>
+            </div>
+            <div>
+              <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Perguntas no gráfico</p>
+              <div id="fr-graf-perguntas" class="flex flex-wrap gap-1.5"></div>
+            </div>
+            <div class="h-80"><canvas id="chartFormulario" role="img" aria-label="Gráfico de acompanhamento do formulário"></canvas></div>
             <p id="fr-graf-vazio" class="hidden text-xs text-slate-400 italic text-center py-10">Sem respostas numéricas no período.</p>
+            <p id="fr-graf-nota" class="hidden text-[11px] text-slate-500"></p>
+            <details id="fr-graf-tabela-wrap" class="border border-slate-200 rounded-lg">
+              <summary class="cursor-pointer px-3 py-2 text-[11px] font-bold text-slate-600 select-none">Ver tabela do gráfico</summary>
+              <div class="overflow-x-auto max-h-80">
+                <table class="w-full text-left text-[11px]"><thead id="fr-graf-tabela-thead" class="bg-slate-50 text-slate-500 border-b border-slate-200"></thead><tbody id="fr-graf-tabela-tbody" class="divide-y divide-slate-100"></tbody></table>
+              </div>
+            </details>
           </div>
           <div class="card-executive overflow-hidden">
             <div class="p-3 border-b border-slate-100 flex items-center justify-between gap-2">
@@ -15478,55 +15499,300 @@
           <td class="p-2 text-center sticky-col-right whitespace-nowrap"><button onclick="verRespostaFormulario('${escapeJs(r.key)}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded text-[10px] font-bold">Ver</button></td>
         </tr>`;
       }).join('') || `<tr><td colspan="${perguntas.length + 6}" class="p-4 text-center text-slate-400 italic">Nenhuma resposta em ${escapeHtml(per.label)} com estes filtros.</td></tr>`;
-      // seletores do gráfico
-      const gp = document.getElementById('fr-graf-pergunta'), gf = document.getElementById('fr-graf-frota');
-      const curP = gp.value, curC = gf.value;
-      gp.innerHTML = numericas.map(p => `<option value="${escapeAttr(p.id)}">${escapeHtml(p.texto)}</option>`).join('') + (numericas.length > 1 ? `<option value="__todas">Todas as perguntas numéricas</option>` : '');
-      if (Array.from(gp.options).some(o => o.value === curP)) gp.value = curP;
-      gf.innerHTML = `<option value="">Todos — última do período</option>` + cavalos.map(c => `<option value="${escapeAttr(c.id)}">${escapeHtml(c.tag)}</option>`).join('');
-      if (Array.from(gf.options).some(o => o.value === curC)) gf.value = curC;
+      // seletores do gráfico (o filtro de cavalo do topo manda no gráfico)
+      window.lastFormCavalos = cavalos;
+      window.lastFormPeriodo = per;
+      const gf = document.getElementById('fr-graf-frota');
+      const curC = gf.value;
+      gf.innerHTML = `<option value="__todos">Todos os cavalos — uma linha por frota</option><option value="__media">Todos os cavalos — média da frota</option>` + cavalos.map(c => `<option value="${escapeAttr(c.id)}">${escapeHtml(c.tag)}${c.placa ? ' · ' + escapeHtml(c.placa) : ''}</option>`).join('');
+      const frotaTopo = document.getElementById('fr-filter-frota').value;
+      if (frotaTopo && cavalos.some(c => String(c.id) === frotaTopo)) gf.value = frotaTopo;
+      else if (Array.from(gf.options).some(o => o.value === curC)) gf.value = curC;
+      renderChipsGrafico(def);
       renderFormularioGrafico();
       if (window.lucide) lucide.createIcons();
     };
 
     window.chartFormularioInstance = null;
+    // Cores das séries: ordem fixa (nunca cicla). Vermelho fica reservado para "fora do limite".
+    const FR_CORES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7'];
+    const FR_COR_DEMAIS = '#94a3b8', FR_COR_ALERTA = '#dc2626', FR_COR_LIMITE = '#475569';
+    const FR_TRACOS = [[], [7, 4], [2, 3], [10, 3, 2, 3]];
+    const FR_MAX_LINHAS = 7;
+    const FR_NOME_AGR = { resposta: 'cada envio', dia: 'dia', semana: 'semana', mes: 'mês', ano: 'ano' };
+    const FR_NOME_CALC = { media: 'média', ultima: 'última leitura', min: 'menor leitura', max: 'maior leitura' };
+    const frAgrAuto = (perAgr) => ({ dia: 'resposta', semana: 'dia', mes: 'dia', ano: 'mes' })[perAgr] || 'dia';
+    const fmtNumBR = (v) => v === null || v === undefined || v === '' ? '' : String(Math.round(Number(v) * 100) / 100).replace('.', ',');
+    // "Pressão — Tanque L/D" e "Pressão — Tanque L/E" formam um grupo (atalho para marcar os dois tanques)
+    const RE_LADO = /\b(L\s*\/\s*[DE]|direit[oa]|esquerd[oa])\b/gi;
+    const chaveGrupoPergunta = (t) => String(t || '').replace(RE_LADO, ' ').replace(/[\s—–\-:]+$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    function tituloGrupoPerguntas(ps) {
+      const base = String(ps[0].texto || '').replace(RE_LADO, ' ').replace(/[\s—–\-:]+$/, '').replace(/\s+/g, ' ').trim();
+      const lados = ps.map(p => (String(p.texto).match(RE_LADO) || [''])[0].replace(/\s/g, '').toUpperCase()).filter(Boolean);
+      return `${base} (${lados.length === ps.length ? lados.join(' + ') : 'todas'})`;
+    }
+    window.frGrafSel = window.frGrafSel || {};
+    function frGrafSelecao(def) {
+      const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
+      const ids = numericas.map(p => p.id);
+      if (!Array.isArray(window.frGrafSel[def.id])) {
+        const p0 = numericas[0];
+        window.frGrafSel[def.id] = p0 ? numericas.filter(p => chaveGrupoPergunta(p.texto) === chaveGrupoPergunta(p0.texto)).map(p => p.id) : [];
+      }
+      return window.frGrafSel[def.id].filter(id => ids.includes(id));
+    }
+    window.frGrafPergunta = function(pid) {
+      const def = formDef();
+      if (!def) return;
+      const sel = frGrafSelecao(def);
+      window.frGrafSel[def.id] = sel.includes(pid) ? sel.filter(x => x !== pid) : sel.concat([pid]);
+      renderChipsGrafico(def);
+      renderFormularioGrafico();
+    };
+    window.frGrafGrupo = function(chave) {
+      const def = formDef();
+      if (!def) return;
+      const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
+      window.frGrafSel[def.id] = numericas.filter(p => chave === '__todas' || chaveGrupoPergunta(p.texto) === chave).map(p => p.id);
+      renderChipsGrafico(def);
+      renderFormularioGrafico();
+    };
+    function renderChipsGrafico(def) {
+      const box = document.getElementById('fr-graf-perguntas');
+      if (!box) return;
+      const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
+      const sel = frGrafSelecao(def);
+      const grupos = {};
+      numericas.forEach(p => { const k = chaveGrupoPergunta(p.texto); (grupos[k] = grupos[k] || []).push(p); });
+      box.innerHTML = numericas.map(p => {
+        const on = sel.includes(p.id);
+        return `<button type="button" aria-pressed="${on}" onclick="frGrafPergunta('${escapeJs(p.id)}')" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition ${on ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-slate-600 border-slate-300 hover:bg-indigo-50'}">${on ? '✓ ' : ''}${escapeHtml(p.texto)}${p.unidade ? ` <span class="${on ? 'text-indigo-100' : 'text-slate-400'} font-medium">(${escapeHtml(p.unidade)})</span>` : ''}</button>`;
+      }).join('') +
+        Object.keys(grupos).filter(k => grupos[k].length > 1).map(k => `<button type="button" onclick="frGrafGrupo('${escapeJs(k)}')" title="Marca só estas perguntas" class="px-2.5 py-1 rounded-full text-[11px] font-bold border border-dashed border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100">⇄ ${escapeHtml(tituloGrupoPerguntas(grupos[k]))}</button>`).join('') +
+        (numericas.length > 1 ? `<button type="button" onclick="frGrafGrupo('__todas')" class="px-2.5 py-1 rounded-full text-[11px] font-bold border border-dashed border-slate-300 text-slate-600 hover:bg-slate-50">Todas</button>` : '') ||
+        '<span class="text-[11px] text-slate-400 italic">Este formulário não tem perguntas de número.</span>';
+    }
+    function frGrafConfig() {
+      return {
+        modo: document.getElementById('fr-graf-modo')?.value || 'evolucao',
+        frota: document.getElementById('fr-graf-frota')?.value || '__todos',
+        agrSel: document.getElementById('fr-graf-agr')?.value || 'auto',
+        calc: document.getElementById('fr-graf-calc')?.value || 'media'
+      };
+    }
+    function agregarLeituras(lidas, calc) {
+      if (!lidas.length) return null;
+      if (calc === 'ultima') return lidas[lidas.length - 1].v;
+      if (calc === 'min') return Math.min(...lidas.map(x => x.v));
+      if (calc === 'max') return Math.max(...lidas.map(x => x.v));
+      return Math.round(lidas.reduce((s, x) => s + x.v, 0) / lidas.length * 100) / 100;
+    }
+    // Evolução (períodos x séries) com os mesmos filtros da página — alimenta o gráfico, a tabela e o Excel
+    function dadosEvolucaoFormulario(def, opts) {
+      opts = opts || {};
+      const cfg = frGrafConfig();
+      const per = window.lastFormPeriodo || frPeriodo();
+      const hoje = getTodayStr();
+      const agr = cfg.agrSel === 'auto' ? frAgrAuto(per.agr) : cfg.agrSel;
+      const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
+      const selIds = frGrafSelecao(def);
+      const alvo = numericas.filter(p => selIds.includes(p.id));
+      const rs = (window.lastFormRespostas || []).slice().sort((a, b) => (a.criadoEm || '').localeCompare(b.criadoEm || ''));
+      const temValor = (r) => alvo.some(p => numF((r.respostas || {})[p.id]) !== null);
+      const fimGraf = per.ini <= hoje && per.fim > hoje ? hoje : per.fim;
+      const buckets = [];
+      const idx = {};
+      if (agr === 'resposta') {
+        rs.filter(r => temValor(r) && (cfg.frota.startsWith('__') || String(r.assetId) === cfg.frota)).forEach(r => {
+          idx[r.key] = buckets.length;
+          buckets.push({ ini: r.data, fim: r.data, label: `${formatDateBR(r.data).slice(0, 5)} ${r.hora || ''}`.trim(), longo: `${formatDateBR(r.data)} ${r.hora || ''} — ${r.tag || ''}` });
+        });
+      } else {
+        let b = prInicioPeriodo(per.ini, agr), guard = 0;
+        while (b <= fimGraf && guard++ < 400) {
+          const ini = b < per.ini ? per.ini : b;
+          const fimB = prFimPeriodo(b, agr);
+          const fim = fimB > fimGraf ? fimGraf : fimB;
+          idx[b] = buckets.length;
+          buckets.push({ ini, fim, label: prRotulo(b, agr, true), longo: agr === 'dia' ? `${diaSemana(b)} ${formatDateBR(b)}` : prRotuloComDatas({ agr, ini, fim, label: prRotulo(b, agr) }, true) });
+          b = prDeslocar(b, agr, 1);
+        }
+      }
+      const posDe = (r) => agr === 'resposta' ? idx[r.key] : idx[prInicioPeriodo(r.data, agr)];
+      // quem entra no gráfico
+      const cavalosLista = (window.lastFormCavalos || []).slice();
+      rs.forEach(r => { if (!cavalosLista.some(c => String(c.id) === String(r.assetId))) cavalosLista.push({ id: r.assetId, tag: r.tag || String(r.assetId) }); });
+      cavalosLista.sort((a, b) => naturalCompare(a.tag, b.tag));
+      let grupos;
+      if (cfg.frota === '__media') grupos = [{ id: '__media', nome: 'Média da frota', ids: null }];
+      else if (cfg.frota === '__todos') {
+        const com = cavalosLista.filter(c => rs.some(r => String(r.assetId) === String(c.id) && temValor(r)));
+        const limite = opts.semAgrupar ? Infinity : FR_MAX_LINHAS;
+        grupos = com.slice(0, limite).map(c => ({ id: String(c.id), nome: c.tag, ids: [String(c.id)] }));
+        if (com.length > limite) grupos.push({ id: '__demais', nome: `Demais ${com.length - limite} cavalos (média)`, ids: com.slice(limite).map(c => String(c.id)), demais: true });
+      } else {
+        const c = cavalosLista.find(x => String(x.id) === cfg.frota) || { id: cfg.frota, tag: cfg.frota };
+        grupos = [{ id: String(c.id), nome: c.tag, ids: [String(c.id)] }];
+      }
+      const series = [];
+      grupos.forEach((g, gi) => alvo.forEach(p => {
+        const porBucket = buckets.map(() => []);
+        rs.forEach(r => {
+          if (g.ids && !g.ids.includes(String(r.assetId))) return;
+          const v = numF((r.respostas || {})[p.id]);
+          const i = posDe(r);
+          if (v !== null && i !== undefined) porBucket[i].push({ v, t: r.criadoEm || '' });
+        });
+        series.push({
+          grupo: g, gi, pergunta: p, pi: numericas.indexOf(p),
+          rotulo: `${g.nome} — ${p.texto}${p.unidade ? ` (${p.unidade})` : ''}`,
+          values: porBucket.map(l => agregarLeituras(l, cfg.calc)),
+          counts: porBucket.map(l => l.length),
+          menores: porBucket.map(l => l.length ? Math.min(...l.map(x => x.v)) : null),
+          maiores: porBucket.map(l => l.length ? Math.max(...l.map(x => x.v)) : null),
+          alertas: porBucket.map(l => l.some(x => perguntaAlerta(p, x.v)))
+        });
+      }));
+      return { cfg, per, agr, buckets, series, alvo, numericas, grupos };
+    }
+    function nomeFrotaGrafico(cfg) {
+      if (cfg.frota === '__todos') return 'todos os cavalos, um por linha';
+      if (cfg.frota === '__media') return 'média de todos os cavalos';
+      const c = (window.lastFormCavalos || []).find(x => String(x.id) === cfg.frota);
+      return `cavalo ${c ? c.tag : cfg.frota}`;
+    }
     window.renderFormularioGrafico = function() {
       const def = formDef();
       const canvas = document.getElementById('chartFormulario');
       if (!def || !canvas) return;
       if (window.chartFormularioInstance) { window.chartFormularioInstance.destroy(); window.chartFormularioInstance = null; }
-      const pid = document.getElementById('fr-graf-pergunta').value;
-      const frota = document.getElementById('fr-graf-frota').value;
+      const cfg = frGrafConfig();
+      const evo = cfg.modo === 'evolucao';
+      const per = window.lastFormPeriodo || frPeriodo();
+      document.getElementById('fr-graf-agr-wrap').classList.toggle('hidden', !evo);
+      document.getElementById('fr-graf-calc-wrap').classList.toggle('hidden', !evo);
+      const agSel = document.getElementById('fr-graf-agr');
+      if (agSel && agSel.options[0]) agSel.options[0].text = `Automático (${FR_NOME_AGR[frAgrAuto(per.agr)]})`;
       const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
-      const alvo = pid === '__todas' ? numericas : numericas.filter(p => p.id === pid);
+      const selIds = frGrafSelecao(def);
+      const alvo = numericas.filter(p => selIds.includes(p.id));
       const rs = (window.lastFormRespostas || []).slice().sort((a, b) => (a.criadoEm || '').localeCompare(b.criadoEm || ''));
-      const vazio = !alvo.length || !rs.some(r => alvo.some(p => numF((r.respostas || {})[p.id]) !== null));
-      document.getElementById('fr-graf-vazio').classList.toggle('hidden', !vazio);
-      canvas.parentElement.classList.toggle('hidden', vazio);
-      if (vazio) return;
-      const cores = ['#4f46e5', '#0891b2', '#16a34a', '#d97706', '#db2777', '#7c3aed'];
-      let cfg;
-      if (frota) {
-        const doCavalo = rs.filter(r => String(r.assetId) === frota);
-        const labels = doCavalo.map(r => `${formatDateBR(r.data).slice(0, 5)} ${r.hora || ''}`);
-        const datasets = alvo.map((p, i) => ({ type: 'line', label: `${p.texto}${p.unidade ? ' (' + p.unidade + ')' : ''}`, data: doCavalo.map(r => numF((r.respostas || {})[p.id])), borderColor: cores[i % cores.length], backgroundColor: cores[i % cores.length], tension: 0.25, spanGaps: true, pointRadius: 4, pointBackgroundColor: doCavalo.map(r => perguntaAlerta(p, (r.respostas || {})[p.id]) ? '#dc2626' : cores[i % cores.length]) }));
-        if (alvo.length === 1) {
-          const p = alvo[0];
-          if (numF(p.max) !== null) datasets.push({ type: 'line', label: `Máximo (${p.max})`, data: labels.map(() => numF(p.max)), borderColor: '#dc2626', borderDash: [6, 4], pointRadius: 0, datalabels: { display: false } });
-          if (numF(p.min) !== null) datasets.push({ type: 'line', label: `Mínimo (${p.min})`, data: labels.map(() => numF(p.min)), borderColor: '#f59e0b', borderDash: [6, 4], pointRadius: 0, datalabels: { display: false } });
-        }
-        cfg = { data: { labels, datasets } };
+      const nota = document.getElementById('fr-graf-nota');
+      const notas = [];
+      const unidades = [...new Set(alvo.map(p => String(p.unidade || '').trim()))];
+      if (unidades.length > 1) notas.push(`Atenção: perguntas com unidades diferentes (${unidades.map(u => u || 'sem unidade').join(', ')}) no mesmo eixo — para comparar, marque só as da mesma unidade.`);
+      let msgVazio = !numericas.length ? 'Este formulário não tem perguntas de número.' : !alvo.length ? 'Marque pelo menos uma pergunta acima.' : '';
+      let d = null;
+      if (!msgVazio) {
+        if (evo) { d = dadosEvolucaoFormulario(def); if (!d.series.some(s => s.values.some(v => v !== null))) msgVazio = 'Sem leituras destas perguntas no período com estes filtros.'; }
+        else if (!rs.some(r => (cfg.frota.startsWith('__') || String(r.assetId) === cfg.frota) && alvo.some(p => numF((r.respostas || {})[p.id]) !== null))) msgVazio = 'Sem leituras destas perguntas no período com estes filtros.';
+      }
+      document.getElementById('fr-graf-sub').innerText = evo
+        ? `Evolução por ${FR_NOME_AGR[d ? d.agr : frAgrAuto(per.agr)]} • ${FR_NOME_CALC[cfg.calc]} das leituras • ${nomeFrotaGrafico(cfg)} • ${prRotuloComDatas(per)}`
+        : `Última leitura de cada cavalo em ${prRotuloComDatas(per)}`;
+      const vazioEl = document.getElementById('fr-graf-vazio');
+      vazioEl.innerText = msgVazio;
+      vazioEl.classList.toggle('hidden', !msgVazio);
+      canvas.parentElement.classList.toggle('hidden', !!msgVazio);
+      document.getElementById('fr-graf-tabela-wrap').classList.toggle('hidden', !!msgVazio);
+      if (msgVazio) { nota.classList.add('hidden'); return; }
+      const opcoesBase = { responsive: true, maintainAspectRatio: false };
+      const unid = unidades.length === 1 ? unidades[0] : '';
+      if (evo) {
+        const multiCav = d.grupos.length > 1, multiPerg = d.alvo.length > 1;
+        const datasets = d.series.map((s, i) => {
+          const cor = s.grupo.demais ? FR_COR_DEMAIS : multiCav ? FR_CORES[s.gi % FR_CORES.length] : FR_CORES[s.pi % FR_CORES.length];
+          // com um cavalo só, o nome dele já está no subtítulo; com vários, a linha leva o nome da frota
+          const rotulo = multiCav && multiPerg ? `${s.grupo.nome} — ${s.pergunta.texto}` : multiCav ? s.grupo.nome : s.pergunta.texto;
+          return {
+            label: rotulo, serie: i, data: s.values, borderColor: cor, backgroundColor: cor, borderWidth: 2,
+            borderDash: multiCav && multiPerg ? FR_TRACOS[d.alvo.indexOf(s.pergunta) % FR_TRACOS.length] : [],
+            tension: 0.25, spanGaps: true, pointRadius: s.values.map((v, j) => v === null ? 0 : s.alertas[j] ? 7 : 4), pointHoverRadius: 8,
+            pointBackgroundColor: s.alertas.map(a => a ? FR_COR_ALERTA : cor), pointBorderColor: '#ffffff', pointBorderWidth: 2,
+            pointStyle: s.alertas.map(a => a ? 'triangle' : 'circle')
+          };
+        });
+        // Linhas de limite (mín./máx. configurados nas perguntas); se só parte das perguntas tem o limite, o nome delas vai na legenda
+        const limites = (campo, nome, traco) => {
+          const porValor = {};
+          // mínimo 0 coincide com o eixo — não precisa de linha
+          d.alvo.forEach(p => { const v = numF(p[campo]); if (v !== null && !(campo === 'min' && v === 0)) (porValor[v] = porValor[v] || []).push(p); });
+          Object.keys(porValor).slice(0, 3).forEach(v => {
+            const ps = porValor[v], u = ps[0].unidade ? ' ' + ps[0].unidade : '';
+            datasets.push({ label: `${nome}${ps.length === d.alvo.length ? '' : ' — ' + ps.map(p => p.texto).join(', ')} (${fmtNumBR(v)}${u})`, limite: true, data: d.buckets.map(() => Number(v)), borderColor: FR_COR_LIMITE, backgroundColor: FR_COR_LIMITE, borderWidth: 1.5, borderDash: traco, pointRadius: 0, pointHoverRadius: 0 });
+          });
+        };
+        limites('max', 'Limite máximo', [5, 4]);
+        limites('min', 'Limite mínimo', [1, 3]);
+        const ultimoIdx = datasets.map(ds => { let k = -1; (ds.data || []).forEach((v, j) => { if (v !== null) k = j; }); return k; });
+        const rotularUltimo = d.series.length <= 4;
+        window.chartFormularioInstance = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: { labels: d.buckets.map(b => b.label), datasets },
+          options: Object.assign({}, opcoesBase, {
+            animation: { duration: 350 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10, weight: 'bold' } } },
+              tooltip: {
+                filter: (it) => it.raw !== null && it.raw !== undefined && !it.dataset.limite,
+                callbacks: {
+                  title: (its) => its.length ? d.buckets[its[0].dataIndex].longo : '',
+                  label: (ctx) => {
+                    const s = d.series[ctx.dataset.serie];
+                    const j = ctx.dataIndex;
+                    const u = s.pergunta.unidade ? ' ' + s.pergunta.unidade : '';
+                    return `${ctx.dataset.label}: ${fmtNumBR(s.values[j])}${u}${s.counts[j] > 1 ? ` (${FR_NOME_CALC[d.cfg.calc]} de ${s.counts[j]} leituras)` : ''}${s.alertas[j] ? ' ⚠ fora do limite' : ''}`;
+                  }
+                }
+              },
+              datalabels: {
+                display: (ctx) => rotularUltimo && !ctx.dataset.limite && ctx.dataIndex === ultimoIdx[ctx.datasetIndex] ? 'auto' : false,
+                align: 'top', anchor: 'end', offset: 4, color: '#1e293b', font: { weight: 'bold', size: 10 },
+                formatter: (v) => fmtNumBR(v)
+              }
+            },
+            scales: {
+              y: { beginAtZero: true, grace: '12%', title: { display: !!unid, text: unid, font: { size: 10, weight: 'bold' }, color: '#64748b' }, grid: { color: '#eef2f6' }, ticks: { font: { size: 10 }, color: '#64748b' } },
+              x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 0, autoSkip: true, autoSkipPadding: 8 } }
+            }
+          })
+        });
+        if (d.grupos.some(g => g.demais)) notas.push(`Mostrando ${FR_MAX_LINHAS} cavalos e a média dos demais. Escolha um cavalo em "Frota" para vê-lo sozinho — o Excel traz todos separados.`);
+        if (d.series.some(s => s.alertas.some(Boolean))) notas.push('▲ vermelho = período com leitura fora do limite.');
+        renderTabelaGraficoFormulario(d);
       } else {
         const ultimo = {};
-        rs.forEach(r => { ultimo[String(r.assetId)] = r; });
+        rs.forEach(r => { if (cfg.frota.startsWith('__') || String(r.assetId) === cfg.frota) ultimo[String(r.assetId)] = r; });
         const linhas = Object.values(ultimo).sort((a, b) => naturalCompare(a.tag, b.tag));
-        const labels = linhas.map(r => r.tag);
-        cfg = { data: { labels, datasets: alvo.map((p, i) => ({ type: 'bar', label: `${p.texto}${p.unidade ? ' (' + p.unidade + ')' : ''}`, data: linhas.map(r => numF((r.respostas || {})[p.id])), backgroundColor: linhas.map(r => perguntaAlerta(p, (r.respostas || {})[p.id]) ? '#dc2626' : cores[i % cores.length]), borderRadius: 4 })) } };
+        window.chartFormularioInstance = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: { labels: linhas.map(r => r.tag), datasets: alvo.map(p => { const cor = FR_CORES[numericas.indexOf(p) % FR_CORES.length]; return { label: `${p.texto}${p.unidade ? ' (' + p.unidade + ')' : ''}`, data: linhas.map(r => numF((r.respostas || {})[p.id])), backgroundColor: linhas.map(r => perguntaAlerta(p, (r.respostas || {})[p.id]) ? FR_COR_ALERTA : cor), borderRadius: 4 }; }) },
+          options: Object.assign({}, opcoesBase, {
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } },
+              tooltip: { callbacks: { title: (its) => { const r = linhas[its[0].dataIndex]; return `${r.tag} — ${formatDateBR(r.data)} ${r.hora || ''} (${r.motorista || ''})`; } } },
+              datalabels: { display: (ctx) => linhas.length * alvo.length <= 40, anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 9 }, formatter: v => fmtNumBR(v) }
+            },
+            scales: { y: { beginAtZero: true, grace: '15%', title: { display: !!unid, text: unid, font: { size: 10, weight: 'bold' }, color: '#64748b' } }, x: { ticks: { font: { size: 10 } } } }
+          })
+        });
+        renderTabelaGraficoFormulario(null, linhas, alvo);
       }
-      window.chartFormularioInstance = new Chart(canvas.getContext('2d'), Object.assign(cfg, {
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }, datalabels: { anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 9 }, formatter: v => v === null ? '' : String(v).replace('.', ',') } }, scales: { y: { beginAtZero: true, grace: '15%' }, x: { ticks: { font: { size: 10 } } } } }
-      }));
+      nota.innerText = notas.join(' ');
+      nota.classList.toggle('hidden', !notas.length);
     };
+    function renderTabelaGraficoFormulario(d, linhas, alvo) {
+      const th = document.getElementById('fr-graf-tabela-thead'), tb = document.getElementById('fr-graf-tabela-tbody');
+      if (!th || !tb) return;
+      if (d) {
+        th.innerHTML = `<tr><th class="p-2 whitespace-nowrap">Período</th>${d.series.map(s => `<th class="p-2 whitespace-nowrap">${escapeHtml(s.rotulo)}</th>`).join('')}</tr>`;
+        tb.innerHTML = d.buckets.map((b, i) => `<tr><td class="p-2 whitespace-nowrap font-bold text-slate-700">${escapeHtml(b.longo)}</td>${d.series.map(s => s.values[i] === null ? '<td class="p-2 text-slate-300">—</td>' : `<td class="p-2 whitespace-nowrap ${s.alertas[i] ? 'text-red-700 font-black' : ''}">${escapeHtml(fmtNumBR(s.values[i]))}${s.alertas[i] ? ' ⚠' : ''}${s.counts[i] > 1 ? ` <span class="text-slate-400 font-medium">(${s.counts[i]})</span>` : ''}</td>`).join('')}</tr>`).join('');
+      } else {
+        th.innerHTML = `<tr><th class="p-2">Cavalo</th><th class="p-2">Leitura</th>${alvo.map(p => `<th class="p-2">${escapeHtml(p.texto)}</th>`).join('')}</tr>`;
+        tb.innerHTML = linhas.map(r => `<tr><td class="p-2 font-black">${escapeHtml(r.tag || '')}</td><td class="p-2 whitespace-nowrap">${dataBR(r.data)} ${escapeHtml(r.hora || '')}</td>${alvo.map(p => { const v = (r.respostas || {})[p.id]; return `<td class="p-2 ${perguntaAlerta(p, v) ? 'text-red-700 font-black' : ''}">${escapeHtml(fmtResp(p, v))}</td>`; }).join('')}</tr>`).join('');
+      }
+    }
 
     window.verRespostaFormulario = async function(key) {
       const r = (window.formRespostas || []).find(x => x.key === key);
@@ -15624,10 +15890,61 @@
       if (!def) return;
       const rs = window.lastFormRespostas || [];
       if (!rs.length) { alert('Nenhuma resposta no período/filtros para exportar.'); return; }
+      const per = window.lastFormPeriodo || frPeriodo();
+      const cfg = frGrafConfig();
+      const numericas = (def.perguntas || []).filter(p => p.tipo === 'numero');
+      const selIds = frGrafSelecao(def);
+      const alvo = numericas.filter(p => selIds.includes(p.id));
+      const wb = XLSX.utils.book_new();
+      const addAba = (nome, aoa, larguras) => {
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!cols'] = (aoa[0] || []).map((_, i) => ({ wch: (larguras && larguras[i]) || Math.min(40, Math.max(10, ...aoa.slice(0, 200).map(l => String(l[i] === undefined ? '' : l[i]).length + 2))) }));
+        XLSX.utils.book_append_sheet(wb, ws, nome);
+      };
+      const frotaTopo = document.getElementById('fr-filter-frota')?.value || '';
+      const cavTopo = (window.lastFormCavalos || []).find(c => String(c.id) === frotaTopo);
+      const agrEf = cfg.agrSel === 'auto' ? frAgrAuto(per.agr) : cfg.agrSel;
+      addAba('Filtros', [
+        ['Formulário', def.titulo],
+        ['Período', prRotuloComDatas(per, true)],
+        ['Visão por', FR_NOME_AGR[per.agr] || per.agr],
+        ['Unidade', window.selectedUnit === 'TODAS' ? 'AM + MA' : window.selectedUnit],
+        ['Cavalo (filtro)', cavTopo ? cavTopo.tag : 'Todos'],
+        ['Motorista (busca)', document.getElementById('fr-filter-motorista')?.value || '—'],
+        ['Só respostas com alerta', document.getElementById('fr-so-alertas')?.checked ? 'Sim' : 'Não'],
+        ['Desconsiderar Reforma', window.ignorarReforma ? 'Sim' : 'Não'],
+        [],
+        ['Gráfico', cfg.modo === 'evolucao' ? 'Evolução no tempo' : 'Última leitura por cavalo'],
+        ['Frota no gráfico', nomeFrotaGrafico(cfg)],
+        ['Evolução por', FR_NOME_AGR[agrEf]],
+        ['Valor no período', FR_NOME_CALC[cfg.calc]],
+        ['Perguntas', alvo.map(p => p.texto + (p.unidade ? ` (${p.unidade})` : '')).join('; ') || '—'],
+        [],
+        ['Gerado em', new Date().toLocaleString('pt-BR')],
+        ['Gerado por', nomeUsuarioAtual()]
+      ], [24, 70]);
+      if (alvo.length) {
+        const d = dadosEvolucaoFormulario(def, { semAgrupar: true });
+        addAba('Evolução', [['Período', 'Início', 'Fim', ...d.series.map(s => s.rotulo)]].concat(
+          d.buckets.map((b, i) => [b.longo, formatDateBR(b.ini), formatDateBR(b.fim), ...d.series.map(s => s.values[i] === null ? '' : s.values[i])])));
+        const lista = [['Período', 'Início', 'Fim', 'Cavalo', 'Pergunta', 'Unidade', `Valor (${FR_NOME_CALC[cfg.calc]})`, 'Nº de leituras', 'Menor leitura', 'Maior leitura', 'Limite mín.', 'Limite máx.', 'Fora do limite']];
+        d.series.forEach(s => d.buckets.forEach((b, i) => {
+          if (!s.counts[i]) return;
+          lista.push([b.longo, formatDateBR(b.ini), formatDateBR(b.fim), s.grupo.nome, s.pergunta.texto, s.pergunta.unidade || '', s.values[i], s.counts[i], s.menores[i], s.maiores[i], numF(s.pergunta.min) ?? '', numF(s.pergunta.max) ?? '', s.alertas[i] ? 'Sim' : 'Não']);
+        }));
+        addAba('Evolução (lista)', lista);
+      }
+      if (cfg.modo === 'ultima') {
+        const ultimo = {};
+        rs.slice().sort((a, b) => (a.criadoEm || '').localeCompare(b.criadoEm || '')).forEach(r => { if (cfg.frota.startsWith('__') || String(r.assetId) === cfg.frota) ultimo[String(r.assetId)] = r; });
+        addAba('Última leitura', [['Cavalo', 'Data', 'Hora', 'Motorista', ...numericas.map(p => p.texto + (p.unidade ? ` (${p.unidade})` : ''))]].concat(
+          Object.values(ultimo).sort((a, b) => naturalCompare(a.tag, b.tag)).map(r => [r.tag || '', formatDateBR(r.data), r.hora || '', r.motorista || '', ...numericas.map(p => { const v = numF((r.respostas || {})[p.id]); return v === null ? '' : v; })])));
+      }
       const ps = (def.perguntas || []).filter(p => p.tipo !== 'foto');
-      exportRowsToExcel(`Formulario_${def.titulo.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_')}_${getTodayStr()}.xlsx`, 'Respostas',
-        ['Data', 'Hora', 'Motorista', 'Cavalo', 'Placa', 'Unidade', ...ps.map(p => p.texto + (p.unidade ? ` (${p.unidade})` : '')), 'Fotos', 'Alertas', 'Localização'],
-        rs.map(r => [formatDateBR(r.data), r.hora || '', r.motorista || '', r.tag || '', r.placa || '', r.unidade || '', ...ps.map(p => { const v = (r.respostas || {})[p.id]; return v === undefined ? '' : v; }), Object.values(r.fotosQtd || {}).reduce((a, b) => a + Number(b || 0), 0), (r.alertas || []).join('; '), r.geo ? `${r.geo.lat},${r.geo.lng}` : '']));
+      addAba('Respostas', [['Data', 'Hora', 'Motorista', 'Cavalo', 'Placa', 'Unidade', ...ps.map(p => p.texto + (p.unidade ? ` (${p.unidade})` : '')), 'Fotos', 'Alertas', 'Localização']].concat(
+        rs.map(r => [formatDateBR(r.data), r.hora || '', r.motorista || '', r.tag || '', r.placa || '', r.unidade || '', ...ps.map(p => { const v = (r.respostas || {})[p.id]; return v === undefined ? '' : v; }), Object.values(r.fotosQtd || {}).reduce((a, b) => a + Number(b || 0), 0), (r.alertas || []).join('; '), r.geo ? `${r.geo.lat},${r.geo.lng}` : ''])));
+      const slug = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      XLSX.writeFile(wb, `Formulario_${slug(def.titulo)}_${slug(FR_NOME_AGR[per.agr] || per.agr)}_${per.ini}_a_${per.fim}.xlsx`);
     };
 
     // ---------- Construtor ----------
