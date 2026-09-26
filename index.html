@@ -258,7 +258,7 @@
         </div>
         <div>
           <h1 class="font-brand font-extrabold text-xl leading-tight text-slate-900 flex items-center gap-2">
-            Gestão Integrada de Ativos <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Amazonas & Maranhão</span>
+            Gestão Integrada de Ativos <span id="titulo-unidades" class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">Amazonas & Maranhão</span>
           </h1>
           <p class="text-xs text-slate-500 hidden sm:block">Ativos, Disponibilidade, Manutenção Preventiva/Corretiva e Documentação — Base Única</p>
         </div>
@@ -280,6 +280,7 @@
             <option value="AM">📍 Rio Preto / Manaus - AM</option>
             <option value="MA">📍 Parnaíba - MA</option>
           </select>
+          <span id="trava-unidade-badge" class="hidden text-[9px] font-black text-emerald-900 bg-white border border-emerald-300 rounded px-1.5 py-0.5" title="Sua visualização foi limitada a esta unidade no cadastro de usuário">🔒</span>
         </div>
 
         <label id="reforma-toggle-label" class="flex items-center gap-1.5 bg-purple-50 border border-purple-200 px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-purple-800 cursor-pointer transition" title="Remove da soma E esconde de todas as páginas os ativos parados por Reforma — mesmo padrão da Disponibilidade (Visão Geral, Status & Paradas, Farol, Disponibilidade, Paradas Detalhado, Evolução, Operação por Ativo, Plano de Ação, Painel Diretoria, Cadastro, Calendário, Documentação, Planejamento, Prog. x Realizado e Controles). Desmarque para eles voltarem.">
@@ -2462,12 +2463,30 @@
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Unidade</label>
-            <select id="user-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Unidade (base de trabalho)</label>
+            <select id="user-unidade" data-sem-trava-unidade class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
               <option value="TODAS">Todas as Unidades</option>
               <option value="AM">AM - Rio Preto/Manaus</option>
               <option value="MA">MA - Parnaíba</option>
             </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Visualização de unidade</label>
+            <select id="user-ver-unidade" data-sem-trava-unidade class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" title="O que o usuário enxerga no sistema: as duas unidades ou só uma">
+              <option value="TODAS">AM + MA — vê as duas unidades</option>
+              <option value="AM">Somente AM — Rio Preto/Manaus</option>
+              <option value="MA">Somente MA — Parnaíba</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Empresa</label>
+            <select id="user-empresa" onchange="alternarEmpresaOutra()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="">— selecione —</option>
+              <option value="GNL BRASIL">GNL Brasil</option>
+              <option value="ENEVA">Eneva</option>
+              <option value="OUTRA">Outra (digitar)</option>
+            </select>
+            <input type="text" id="user-empresa-outra" placeholder="Nome da empresa" class="hidden mt-1 w-full border border-slate-300 rounded-lg p-2 text-sm outline-none uppercase focus:ring-2 focus:ring-emerald-500">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Tipo de acesso</label>
@@ -2524,7 +2543,8 @@
                 <th class="p-3">Nome</th>
                 <th class="p-3">Login</th>
                 <th class="p-3">Função</th>
-                <th class="p-3">Unidade</th>
+                <th class="p-3">Empresa</th>
+                <th class="p-3">Unidade / visualização</th>
                 <th class="p-3">Status</th>
                 <th class="p-3">Agora</th>
                 <th class="p-3">Vê "Online"</th>
@@ -4683,7 +4703,7 @@
         if (window.currentLoggedUser) {
           const rec = (window.users || []).find(u => (u.login || '').toLowerCase() === (window.currentLoggedUser.login || '').toLowerCase());
           if (rec) {
-            Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, acesso: rec.acesso || 'editor', permissoesCustom: rec.permissoesCustom || null, permissoesVersao: rec.permissoesVersao || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
+            Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, unidade: rec.unidade || 'TODAS', verUnidade: rec.verUnidade || 'TODAS', empresa: rec.empresa || '', acesso: rec.acesso || 'editor', permissoesCustom: rec.permissoesCustom || null, permissoesVersao: rec.permissoesVersao || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
             try { sessionStorage.setItem('pcm_user', JSON.stringify(window.currentLoggedUser)); } catch (e) {}
             applyRolePermissions(rec.funcao, rec);
             if (rec.mostrarPresenca === false) stopPresence(false); else startPresence();
@@ -5573,6 +5593,7 @@
 
       if (typeof renderControlesMenu === 'function') renderControlesMenu();
       if (typeof aplicarSomenteLeituraUI === 'function') aplicarSomenteLeituraUI();
+      if (typeof aplicarVisualizacaoUnidade === 'function') aplicarVisualizacaoUnidade(true);
       const activeTabEl = document.querySelector('.tab-content.active');
       const activeTabId = activeTabEl ? activeTabEl.id.replace('tab-', '') : 'dashboard';
       if (!allowed.includes(activeTabId)) {
@@ -5593,6 +5614,7 @@
 
     window.resetUserForm = function() {
       document.getElementById('form-user').reset();
+      document.getElementById('user-empresa-outra').classList.add('hidden');
       document.querySelectorAll('#user-funcao option[data-antiga]').forEach(o => o.remove());
       document.getElementById('user-editing-id').value = '';
     };
@@ -5608,6 +5630,8 @@
         senha: document.getElementById('user-senha').value,
         funcao: document.getElementById('user-funcao').value,
         unidade: document.getElementById('user-unidade').value,
+        verUnidade: document.getElementById('user-ver-unidade').value || 'TODAS',
+        empresa: lerEmpresaForm(),
         status: document.getElementById('user-status').value,
         verPresenca: ({ SIM: true, NAO: false })[document.getElementById('user-ver-presenca').value] ?? null,
         mostrarPresenca: document.getElementById('user-mostrar-presenca').value !== 'NAO',
@@ -5616,6 +5640,7 @@
         recebeDisponibilidade: document.getElementById('user-recebe-disp').value !== 'NAO'
       };
       if (payload.email && !/^\S+@\S+\.\S+$/.test(payload.email)) { alert('E-mail inválido.'); return; }
+      if (document.getElementById('user-empresa').value === 'OUTRA' && !payload.empresa) { alert('Digite o nome da empresa.'); return; }
 
       const duplicate = (window.users || []).find(u => (u.login || '').toLowerCase() === login.toLowerCase() && String(u.id) !== String(editingId));
       if (duplicate) {
@@ -5627,7 +5652,7 @@
         const idx = window.users.findIndex(u => String(u.id) === String(editingId));
         if (idx > -1) {
           const antes = window.users[idx];
-          const alteracoes = diffCampos(antes, payload, { nome: 'Nome', login: 'Login', funcao: 'Função', unidade: 'Unidade', status: 'Status', verPresenca: 'Vê painel online', mostrarPresenca: 'Aparece como online', email: 'E-mail', recebeDisponibilidade: 'Recebe disponibilidade', acesso: 'Tipo de acesso' });
+          const alteracoes = diffCampos(antes, payload, { nome: 'Nome', login: 'Login', funcao: 'Função', unidade: 'Unidade', verUnidade: 'Visualização de unidade', empresa: 'Empresa', status: 'Status', verPresenca: 'Vê painel online', mostrarPresenca: 'Aparece como online', email: 'E-mail', recebeDisponibilidade: 'Recebe disponibilidade', acesso: 'Tipo de acesso' });
           if (antes.senha !== payload.senha) alteracoes.push({ campo: 'Senha', de: '••••', para: '•••• (alterada)' });
           window.users[idx] = { ...antes, ...payload };
           addAuditLog('TODAS', 'Usuários', payload.login, `Usuário ${payload.nome} atualizado`, getTodayStr(), payload.status, null, alteracoes);
@@ -5658,6 +5683,8 @@
       }
       selFuncao.value = u.funcao || 'Assistente Administrativo';
       document.getElementById('user-unidade').value = u.unidade || 'TODAS';
+      document.getElementById('user-ver-unidade').value = u.verUnidade === 'AM' || u.verUnidade === 'MA' ? u.verUnidade : 'TODAS';
+      preencherEmpresaForm(u.empresa);
       document.getElementById('user-status').value = u.status || 'Ativo';
       document.getElementById('user-ver-presenca').value = u.verPresenca === true ? 'SIM' : u.verPresenca === false ? 'NAO' : 'PADRAO';
       document.getElementById('user-mostrar-presenca').value = u.mostrarPresenca === false ? 'NAO' : 'SIM';
@@ -5701,7 +5728,8 @@
             ${u.permissoesCustom && u.permissoesCustom.length ? '<span class="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200" title="Permissões personalizadas, diferentes do padrão da função">Personalizado</span>' : ''}
             ${u.acesso === 'leitor' ? '<span class="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300" title="Só visualiza — não cadastra, edita nem exclui">Somente leitura</span>' : ''}
           </td>
-          <td class="p-3 text-slate-600">${u.unidade === 'TODAS' ? 'Todas' : u.unidade}</td>
+          <td class="p-3 text-slate-600">${u.empresa ? `<span class="text-[10px] font-black px-2 py-1 rounded-full border ${String(u.empresa).toUpperCase() === 'ENEVA' ? 'bg-sky-50 text-sky-800 border-sky-300' : 'bg-emerald-50 text-emerald-800 border-emerald-300'}">${escapeHtml(nomeEmpresa(u.empresa))}</span>` : '<span class="text-slate-300">—</span>'}</td>
+          <td class="p-3 text-slate-600">${u.unidade === 'TODAS' || !u.unidade ? 'Todas' : escapeHtml(u.unidade)}${u.verUnidade === 'AM' || u.verUnidade === 'MA' ? `<span class="block text-[10px] font-black text-amber-700" title="Visualização limitada a esta unidade">🔒 vê só ${u.verUnidade}</span>` : '<span class="block text-[10px] text-slate-400">vê AM + MA</span>'}</td>
           <td class="p-3">
             <button onclick="toggleUserStatus(${u.id})" class="text-[10px] font-black px-2 py-1 rounded-full border ${u.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}">${u.status}</button>
           </td>
@@ -5817,11 +5845,12 @@
     function getISOWeekInfo(dateStr) { return window.getISOWeekInfo(dateStr); }
 
     function populateParadasLocalFilter() {
-      const locais = Array.from(new Set((window.assetEvents || []).filter(e => e.status === 'Aberto').map(e => e.local).filter(Boolean))).sort();
+      const unLocal = document.getElementById('pd-filter-unidade')?.value || 'TODAS';
+      const locais = Array.from(new Set((window.assetEvents || []).filter(e => e.status === 'Aberto' && (window.selectedUnit === 'TODAS' || e.unit === window.selectedUnit) && (unLocal === 'TODAS' || e.unit === unLocal)).map(e => e.local).filter(Boolean))).sort();
       const el = document.getElementById('pd-filter-local');
       if (!el) return;
       const current = el.value;
-      el.innerHTML = `<option value="TODOS">Todos os Locais</option>` + locais.map(l => `<option value="${l}">${l}</option>`).join('');
+      el.innerHTML = `<option value="TODOS">Todos os Locais</option>` + locais.map(l => `<option value="${escapeAttr(l)}">${escapeHtml(l)}</option>`).join('');
       if (locais.includes(current)) el.value = current;
     }
 
@@ -5961,7 +5990,7 @@
       const badge = document.getElementById('logged-user-badge');
       if (!userObj) { badge.classList.add('hidden'); return; }
       document.getElementById('logged-user-name').innerText = userObj.nome || userObj.login;
-      document.getElementById('logged-user-role').innerText = userObj.funcao || '';
+      document.getElementById('logged-user-role').innerText = [userObj.funcao || '', nomeEmpresa(userObj.empresa)].filter(Boolean).join(' • ');
       badge.classList.remove('hidden');
       if (typeof aplicarSomenteLeituraUI === 'function') aplicarSomenteLeituraUI();
     };
@@ -5981,7 +6010,7 @@
       const user = (window.users || []).find(u => (u.login || '').toLowerCase() === loginInput && u.senha === passInput && u.status === 'Ativo');
 
       if (user) {
-        const sessaoUser = { login: user.login, nome: user.nome, funcao: user.funcao, acesso: user.acesso || 'editor', permissoesCustom: user.permissoesCustom || null, permissoesVersao: user.permissoesVersao || null, verPresenca: user.verPresenca, mostrarPresenca: user.mostrarPresenca };
+        const sessaoUser = { login: user.login, nome: user.nome, funcao: user.funcao, unidade: user.unidade || 'TODAS', verUnidade: user.verUnidade || 'TODAS', empresa: user.empresa || '', acesso: user.acesso || 'editor', permissoesCustom: user.permissoesCustom || null, permissoesVersao: user.permissoesVersao || null, verPresenca: user.verPresenca, mostrarPresenca: user.mostrarPresenca };
         sessionStorage.setItem('pcm_auth', 'true');
         sessionStorage.setItem('pcm_user', JSON.stringify(sessaoUser));
         document.getElementById('login-overlay').classList.add('hidden');
@@ -6019,6 +6048,7 @@
       sessionStorage.removeItem('pcm_auth');
       sessionStorage.removeItem('pcm_user');
       window.currentLoggedUser = null;
+      if (typeof aplicarVisualizacaoUnidade === 'function') aplicarVisualizacaoUnidade(false);
       document.getElementById('login-pass').value = '';
       document.getElementById('logged-user-badge').classList.add('hidden');
       checkAuth();
@@ -6170,7 +6200,7 @@
     };
 
     window.filterByUnit = function() {
-      window.selectedUnit = document.getElementById('global-unit-filter').value;
+      window.selectedUnit = (typeof unidadeTravada === 'function' && unidadeTravada()) || document.getElementById('global-unit-filter').value;
       renderAll();
     };
 
@@ -6759,11 +6789,12 @@
     }
 
     function refreshHistoryTagFilter() {
-      const tags = Array.from(new Set((window.globalAuditHistory || []).map(h => h.tag).filter(Boolean))).sort();
+      const daUnidade = (h) => window.selectedUnit === 'TODAS' || h.unit === window.selectedUnit || h.unit === 'TODAS' || !h.unit;
+      const tags = Array.from(new Set((window.globalAuditHistory || []).filter(daUnidade).map(h => h.tag).filter(Boolean))).sort();
       const el = document.getElementById('history-tag-filter');
       if (el) {
         const current = el.value;
-        el.innerHTML = `<option value="TODOS">Todos os Ativos</option>` + tags.map(t => `<option value="${t}">${t}</option>`).join('');
+        el.innerHTML = `<option value="TODOS">Todos os Ativos</option>` + tags.map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`).join('');
         if (tags.includes(current)) el.value = current;
       }
 
@@ -7341,7 +7372,7 @@
               </select>
             </td>
             <td class="p-2">
-              <select onchange="updateImportField(${idx},'unidade',this.value)" class="border border-slate-200 rounded p-1 text-xs outline-none">
+              <select onchange="updateImportField(${idx},'unidade',this.value)" data-sem-trava-unidade class="border border-slate-200 rounded p-1 text-xs outline-none">
                 <option value="AM" ${row.unidade === 'AM' ? 'selected' : ''}>AM</option>
                 <option value="MA" ${row.unidade === 'MA' ? 'selected' : ''}>MA</option>
               </select>
@@ -7362,9 +7393,15 @@
       const proprietarioPadrao = document.getElementById('import-default-proprietario').value.trim();
       let importados = 0, atualizados = 0, ignorados = 0;
 
+      const travaUn = typeof unidadeTravada === 'function' ? unidadeTravada() : null;
       window.pendingImportRows.forEach(row => {
         if (row._removed) return;
         if (row._status === 'erro' || row._status === 'duplicado') { ignorados++; return; }
+        // Visualização limitada a uma unidade: a carga só cria/atualiza ativos dessa unidade
+        if (travaUn) {
+          const existente = row._status === 'atualizar' ? getAssetByTag(row.tag) : null;
+          if ((row.unidade && row.unidade !== travaUn) || (existente && existente.unidade !== travaUn)) { ignorados++; return; }
+        }
 
         if (row._status === 'atualizar') {
           const existing = getAssetByTag(row.tag);
@@ -15167,7 +15204,9 @@
       const grupos = {};
       destinos.forEach(d => {
         const u = d.login ? (window.users || []).find(x => (x.login || '') === d.login) : null;
-        const un = porUsuario && f.unidade === 'TODAS' && u && (u.unidade === 'AM' || u.unidade === 'MA') ? u.unidade : f.unidade;
+        // quem tem visualização limitada a uma unidade só recebe essa unidade
+        const unVer = u && (u.verUnidade === 'AM' || u.verUnidade === 'MA') ? u.verUnidade : null;
+        const un = unVer || (porUsuario && f.unidade === 'TODAS' && u && (u.unidade === 'AM' || u.unidade === 'MA') ? u.unidade : f.unidade);
         (grupos[un] = grupos[un] || []).push(d);
       });
       const resultados = [];
@@ -16345,6 +16384,80 @@
       window.scrollTo(0, 0);
     };
 
+
+    // ===================== VISUALIZAÇÃO DE UNIDADE (por usuário) =====================
+    // Usuário com visualização "só AM" ou "só MA": o filtro global fica travado nessa unidade e todo filtro/campo
+    // de unidade das páginas (inclusive os de cadastro) só oferece ela. Os dados continuam completos na nuvem —
+    // só a visualização é limitada. Campos do cadastro de usuários ficam fora (data-sem-trava-unidade).
+    const NOME_UNIDADE_VIS = { AM: 'Rio Preto / Manaus - AM', MA: 'Parnaíba - MA', TODAS: 'AM + MA' };
+    window.unidadeTravada = function() {
+      const u = window.currentLoggedUser;
+      return u && (u.verUnidade === 'AM' || u.verUnidade === 'MA') ? u.verUnidade : null;
+    };
+    function ehSelectDeUnidade(sel) {
+      if (!sel || sel.tagName !== 'SELECT' || sel.hasAttribute('data-sem-trava-unidade')) return false;
+      const vs = Array.from(sel.options).map(o => o.value);
+      return vs.includes('AM') && vs.includes('MA');
+    }
+    // Aplica a trava nos seletores; com "avisar", dispara o change dos filtros que mudaram (a página se redesenha)
+    window.aplicarTravaUnidade = function(avisar) {
+      const trava = unidadeTravada();
+      document.querySelectorAll('select').forEach(sel => {
+        if (!ehSelectDeUnidade(sel)) return;
+        Array.from(sel.options).forEach(o => {
+          if (trava && ['TODAS', 'AM', 'MA'].includes(o.value) && o.value !== trava) { o.hidden = true; o.disabled = true; o.dataset.travaUnidade = '1'; }
+          else if (o.dataset.travaUnidade) { o.hidden = false; o.disabled = false; delete o.dataset.travaUnidade; }
+        });
+        if (trava && sel.value !== trava) {
+          sel.value = trava;
+          if (avisar && sel.id !== 'global-unit-filter') sel.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (trava) sel.title = `Sua visualização é só ${NOME_UNIDADE_VIS[trava]}`;
+        else if (sel.title && sel.title.startsWith('Sua visualização')) sel.removeAttribute('title');
+      });
+    };
+    window.aplicarVisualizacaoUnidade = function(redesenhar) {
+      const trava = unidadeTravada();
+      const antes = window.selectedUnit;
+      aplicarTravaUnidade(false);
+      const g = document.getElementById('global-unit-filter');
+      if (g) { g.disabled = !!trava; g.classList.toggle('cursor-not-allowed', !!trava); g.classList.toggle('cursor-pointer', !trava); }
+      window.selectedUnit = trava || (g ? g.value : 'TODAS');
+      const selo = document.getElementById('titulo-unidades');
+      if (selo) selo.innerText = trava === 'AM' ? 'Amazonas' : trava === 'MA' ? 'Maranhão' : 'Amazonas & Maranhão';
+      const cad = document.getElementById('trava-unidade-badge');
+      if (cad) { cad.classList.toggle('hidden', !trava); cad.innerText = trava ? `🔒 SÓ ${trava}` : ''; }
+      if (redesenhar && antes !== window.selectedUnit && (window.assets || []).length && typeof renderAll === 'function') renderAll();
+    };
+    let _travaUnTimer = null;
+    new MutationObserver(() => {
+      if (!unidadeTravada()) return;
+      clearTimeout(_travaUnTimer);
+      _travaUnTimer = setTimeout(() => aplicarTravaUnidade(true), 50);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+
+    // Empresa do usuário (o grupo tem duas empresas; "Outra" permite digitar)
+    const EMPRESAS_PADRAO = ['GNL BRASIL', 'ENEVA'];
+    const NOME_EMPRESA = { 'GNL BRASIL': 'GNL Brasil', 'ENEVA': 'Eneva' };
+    window.nomeEmpresa = (e) => e ? (NOME_EMPRESA[String(e).toUpperCase()] || e) : '';
+    window.alternarEmpresaOutra = function() {
+      const sel = document.getElementById('user-empresa');
+      const outra = document.getElementById('user-empresa-outra');
+      if (!sel || !outra) return;
+      outra.classList.toggle('hidden', sel.value !== 'OUTRA');
+      if (sel.value === 'OUTRA') outra.focus();
+    };
+    function lerEmpresaForm() {
+      const sel = document.getElementById('user-empresa').value;
+      return sel === 'OUTRA' ? (document.getElementById('user-empresa-outra').value || '').trim().toUpperCase() : sel;
+    }
+    function preencherEmpresaForm(emp) {
+      const sel = document.getElementById('user-empresa'), outra = document.getElementById('user-empresa-outra');
+      const e = String(emp || '').toUpperCase();
+      if (!e || EMPRESAS_PADRAO.includes(e)) { sel.value = e; outra.value = ''; }
+      else { sel.value = 'OUTRA'; outra.value = emp; }
+      outra.classList.toggle('hidden', sel.value !== 'OUTRA');
+    }
 
     // ===================== CONGELAR TOPO (opcional) =====================
     // Botão 📌 no cabeçalho. Ligado, o menu de abas, o título + filtros (+ indicadores) da página e o cabeçalho
