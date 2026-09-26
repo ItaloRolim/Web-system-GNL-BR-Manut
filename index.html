@@ -177,21 +177,62 @@
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
-    /* Navegação: no celular, um seletor compacto substitui a faixa de abas (que só mostraria ícones) */
+    /* Navegação: no celular, o menu lateral vira gaveta (botão "Menu") e há também o seletor compacto */
     @media (max-width: 639px) {
-      #main-tab-nav { display:none; }
       header.app-header { position: static; }
     }
+    /* ===== MENU LATERAL (ícones; abre ao passar o mouse ou fixo) ===== */
+    :root { --sb-fechado: 68px; --sb-aberto: 288px; }
+    body.com-sidebar { padding-left: var(--sb-fechado); }
+    body.com-sidebar.menu-fixo { padding-left: var(--sb-aberto); }
+    #app-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sb-fechado); z-index: 45; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; transition: width .18s ease, box-shadow .18s ease, transform .2s ease; }
+    #app-sidebar:not(.recolher):hover, #app-sidebar:not(.recolher):focus-within, #app-sidebar.fixo, #app-sidebar.aberto-mobile { width: var(--sb-aberto); }
+    #app-sidebar:not(.fixo):not(.recolher):hover { transition-delay: .1s; }
+    #app-sidebar:not(.fixo):not(.recolher):hover, #app-sidebar:not(.fixo):not(.recolher):focus-within, #app-sidebar.aberto-mobile { box-shadow: 14px 0 34px -14px rgba(15,23,42,.30); }
+    #app-sidebar .sb-topo { display: flex; align-items: center; gap: .7rem; padding: .85rem .7rem; border-bottom: 1px solid var(--line); min-height: 64px; }
+    #app-sidebar .sb-logo { width: 44px; height: 44px; flex-shrink: 0; border-radius: .7rem; object-fit: contain; border: 1px solid var(--brand-200); background: #fff; }
+    #app-sidebar .sb-marca { display: flex; flex-direction: column; line-height: 1.15; white-space: nowrap; }
+    #app-sidebar .sb-marca strong { font-family: 'Lexend', 'Inter', sans-serif; font-size: .95rem; color: var(--ink-900); }
+    #app-sidebar .sb-marca span { font-size: .68rem; color: var(--ink-500); font-weight: 600; }
+    #app-sidebar .sb-fechar-mobile { display: none; margin-left: auto; color: var(--ink-500); }
+    #main-tab-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: .35rem .6rem .8rem; display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; }
+    #main-tab-nav .tab-btn { width: 100%; justify-content: flex-start; gap: .8rem !important; padding: .55rem .72rem !important; border-radius: .7rem !important; font-size: .82rem; white-space: nowrap; }
+    #main-tab-nav .tab-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    #main-tab-nav .tab-btn span { display: inline !important; overflow: hidden; text-overflow: ellipsis; transition: opacity .12s ease; }
+    #main-tab-nav .ctl-pin-btn { padding-left: 1.1rem !important; font-size: .78rem; }
+    #app-sidebar .sb-grupo { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--ink-400); text-transform: uppercase; padding: .8rem .72rem .25rem; white-space: nowrap; margin: 0; }
+    #app-sidebar .sb-rodape { border-top: 1px solid var(--line); padding: .5rem .6rem; }
+    #app-sidebar .sb-acao { display: flex; align-items: center; gap: .8rem; width: 100%; padding: .55rem .72rem; border-radius: .7rem; font-size: .78rem; font-weight: 700; color: var(--ink-500); white-space: nowrap; }
+    #app-sidebar .sb-acao:hover { background: var(--brand-50); color: var(--brand-700); }
+    #app-sidebar .sb-acao svg { flex-shrink: 0; }
+    #app-sidebar .sb-texto { transition: opacity .12s ease; }
+    #app-sidebar:not(.fixo):not(.aberto-mobile):is(.recolher, :not(:hover):not(:focus-within)) .tab-btn span,
+    #app-sidebar:not(.fixo):not(.aberto-mobile):is(.recolher, :not(:hover):not(:focus-within)) .sb-texto { opacity: 0; }
+    #app-sidebar:not(.fixo):not(.aberto-mobile):is(.recolher, :not(:hover):not(:focus-within)) .sb-grupo { color: transparent; height: 1px; padding: 0; margin: .55rem .55rem; background: var(--line); overflow: hidden; }
+    #app-sidebar.fixo #sb-btn-fixar { color: var(--brand-700); background: var(--brand-50); }
+    #sb-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.4); z-index: 44; }
+    body.tv-mode #main-tab-nav .tab-btn { font-size: .95rem; }
+    @media (max-width: 639px) {
+      body.com-sidebar, body.com-sidebar.menu-fixo { padding-left: 0; }
+      #app-sidebar { width: var(--sb-aberto); transform: translateX(-100%); }
+      #app-sidebar.aberto-mobile { transform: none; }
+      #app-sidebar .sb-fechar-mobile { display: block; }
+      #app-sidebar .sb-rodape { display: none; }
+    }
+    @media print {
+      #app-sidebar, #sb-backdrop { display: none !important; }
+      body.com-sidebar { padding-left: 0 !important; }
+    }
+    html.modo-formulario body { padding-left: 0 !important; }
     /* ===== CONGELAR TOPO (opcional, botão 📌 no cabeçalho): menu de abas, título/filtros da página e cabeçalho
        das tabelas ficam fixos; a tabela rola dentro da própria área ===== */
-    body.freeze-top #main-tab-nav, body.freeze-top #mobile-tab-wrap { position: sticky; top: var(--freeze-nav-top, 64px); z-index: 35; background: var(--canvas); }
-    body.freeze-top #main-tab-nav { padding-top: .5rem; box-shadow: 0 6px 8px -8px rgba(15,23,42,.25); }
+    body.freeze-top #mobile-tab-wrap { position: sticky; top: var(--freeze-nav-top, 64px); z-index: 35; background: var(--canvas); }
     body.freeze-top .freeze-head { position: sticky; top: var(--freeze-head-top, 120px); z-index: 30; background: var(--canvas); padding-bottom: .75rem; box-shadow: 0 10px 12px -12px rgba(15,23,42,.35); }
     body.freeze-top .freeze-scroll { max-height: var(--freeze-table-max, 60vh); overflow: auto; }
     body.freeze-top .freeze-scroll table > thead { position: sticky; top: 0; z-index: 6; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
     body.freeze-top .freeze-scroll table > thead th:not(.sticky-col-right):not(.sticky) { position: static; }
     @media print {
-      body.freeze-top #main-tab-nav, body.freeze-top #mobile-tab-wrap, body.freeze-top .freeze-head { position: static !important; box-shadow: none !important; }
+      body.freeze-top #mobile-tab-wrap, body.freeze-top .freeze-head { position: static !important; box-shadow: none !important; }
       body.freeze-top .freeze-scroll { max-height: none !important; overflow: visible !important; }
     }
     body.somente-leitura .ro-oculto { display: none !important; }
@@ -204,7 +245,7 @@
     .diff-chip ins { color:#047857; text-decoration: none; font-weight:700; }
   </style>
 </head>
-<body class="text-slate-800 font-sans min-h-screen flex flex-col relative">
+<body class="com-sidebar text-slate-800 font-sans min-h-screen flex flex-col relative">
   <div id="form-publico"></div>
 
   <!-- OVERLAY DE LOGIN -->
@@ -247,6 +288,89 @@
       </form>
     </div>
   </div>
+
+  <!-- MENU LATERAL: ícones na lateral; abre ao passar o mouse (ou fixo, pelo botão do rodapé). No celular vira gaveta. -->
+  <div id="sb-backdrop" class="hidden" onclick="fecharMenuMobile()"></div>
+  <aside id="app-sidebar" aria-label="Menu principal">
+    <div class="sb-topo">
+      <img src="Img/Logo Gnl Brasil.jpg" alt="" class="sb-logo" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src=window.LOGO_DATA_URI;}else{this.style.display='none';}">
+      <div class="sb-texto sb-marca"><strong>GNL Brasil</strong><span>Gestão de Ativos</span></div>
+      <button type="button" class="sb-fechar-mobile" onclick="fecharMenuMobile()" aria-label="Fechar menu"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <nav id="main-tab-nav">
+      <p class="sb-grupo">Início</p>
+      <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span>Visão Geral</span>
+      </button>
+      <button onclick="switchTab('executive')" id="btn-tab-executive" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> <span>Painel Diretoria</span>
+      </button>
+      <p class="sb-grupo">Frota</p>
+      <button onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span>Cadastro de Ativos</span>
+      </button>
+      <button onclick="switchTab('status')" id="btn-tab-status" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span>Status &amp; Paradas</span>
+      </button>
+      <button onclick="switchTab('farol')" id="btn-tab-farol" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="traffic-cone" class="w-4 h-4"></i> <span>Farol de Manutenção</span>
+      </button>
+      <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="gauge" class="w-4 h-4"></i> <span>Disponibilidade</span>
+      </button>
+      <button onclick="switchTab('paradasdetalhado')" id="btn-tab-paradasdetalhado" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span>Paradas Detalhado</span>
+      </button>
+      <button onclick="switchTab('operacao')" id="btn-tab-operacao" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="activity" class="w-4 h-4"></i> <span>Operação por Ativo</span>
+      </button>
+      <p class="sb-grupo">Manutenção</p>
+      <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="calendar" class="w-4 h-4"></i> <span>Calendário de Preventivas</span>
+      </button>
+      <button onclick="switchTab('planning')" id="btn-tab-planning" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="calendar-check-2" class="w-4 h-4"></i> <span>Planejamento</span>
+      </button>
+      <button onclick="switchTab('progrealizado')" id="btn-tab-progrealizado" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="bar-chart-4" class="w-4 h-4"></i> <span>Programado x Realizado</span>
+      </button>
+      <button onclick="switchTab('documents')" id="btn-tab-documents" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="file-text" class="w-4 h-4"></i> <span>Documentação &amp; Auditoria</span>
+      </button>
+      <button onclick="switchTab('controles')" id="btn-tab-controles" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="layout-template" class="w-4 h-4"></i> <span>Controles Personalizados</span>
+      </button>
+      <button onclick="switchTab('formularios')" id="btn-tab-formularios" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="smartphone" class="w-4 h-4"></i> <span>Formulários de Campo</span>
+      </button>
+      <p class="sb-grupo">Análises</p>
+      <button onclick="switchTab('falhas')" id="btn-tab-falhas" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="microscope" class="w-4 h-4"></i> <span>Análise de Falhas</span>
+      </button>
+      <button onclick="switchTab('custos')" id="btn-tab-custos" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i> <span>Análise de Custo de Frota</span>
+      </button>
+      <button onclick="switchTab('acao')" id="btn-tab-acao" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="list-checks" class="w-4 h-4"></i> <span>Plano de Ação &amp; Fatos</span>
+      </button>
+      <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="line-chart" class="w-4 h-4"></i> <span>Evolução</span>
+      </button>
+      <p class="sb-grupo">Sistema</p>
+      <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="history" class="w-4 h-4"></i> <span>Histórico Consolidado</span>
+      </button>
+      <button onclick="switchTab('online')" id="btn-tab-online" class="tab-btn hidden rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="radio" class="w-4 h-4"></i> <span>Usuários Online</span>
+      </button>
+      <button onclick="switchTab('users')" id="btn-tab-users" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="users" class="w-4 h-4"></i> <span>Usuários &amp; Permissões</span>
+      </button>
+    </nav>
+    <div class="sb-rodape">
+      <button type="button" id="sb-btn-fixar" onclick="alternarMenuFixo()" class="sb-acao" title="Deixar o menu sempre aberto (ou voltar a abrir só ao passar o mouse)"><i data-lucide="panel-left-open" class="w-5 h-5"></i> <span class="sb-texto">Manter menu aberto</span></button>
+    </div>
+  </aside>
 
   <!-- CABEÇALHO DA APLICAÇÃO -->
   <header class="app-header border-b border-slate-200/80 sticky top-0 z-40">
@@ -319,73 +443,10 @@
 
     <!-- MENU DE NAVEGAÇÃO (CELULAR): seletor compacto com o nome das abas liberadas para o usuário -->
     <div id="mobile-tab-wrap" class="sm:hidden flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
-      <i data-lucide="menu" class="w-4 h-4 text-emerald-700 shrink-0"></i>
-      <select id="mobile-tab-select" onchange="switchTab(this.value)" class="flex-1 bg-transparent text-sm font-extrabold text-slate-800 outline-none"></select>
+      <button type="button" onclick="abrirMenuMobile()" class="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 text-white text-xs font-black shrink-0" aria-label="Abrir menu"><i data-lucide="menu" class="w-4 h-4"></i> Menu</button>
+      <select id="mobile-tab-select" onchange="switchTab(this.value)" class="flex-1 min-w-0 w-full bg-transparent text-sm font-extrabold text-slate-800 outline-none"></select>
     </div>
 
-    <!-- MENU DE NAVEGAÇÃO POR ABAS -->
-    <nav id="main-tab-nav" class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
-      <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm whitespace-nowrap">
-        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="hidden sm:inline">Visão Geral</span>
-      </button>
-      <button onclick="switchTab('assets')" id="btn-tab-assets" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span class="hidden sm:inline">Cadastro de Ativos</span>
-      </button>
-      <button onclick="switchTab('status')" id="btn-tab-status" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span class="hidden sm:inline">Status & Paradas</span>
-      </button>
-      <button onclick="switchTab('farol')" id="btn-tab-farol" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="traffic-cone" class="w-4 h-4"></i> <span class="hidden sm:inline">Farol de Manutenção</span>
-      </button>
-      <button onclick="switchTab('availability')" id="btn-tab-availability" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="gauge" class="w-4 h-4"></i> <span class="hidden sm:inline">Disponibilidade</span>
-      </button>
-      <button onclick="switchTab('paradasdetalhado')" id="btn-tab-paradasdetalhado" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="octagon-pause" class="w-4 h-4"></i> <span class="hidden sm:inline">Paradas Detalhado</span>
-      </button>
-      <button onclick="switchTab('operacao')" id="btn-tab-operacao" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="activity" class="w-4 h-4"></i> <span class="hidden sm:inline">Operação por Ativo</span>
-      </button>
-      <button onclick="switchTab('falhas')" id="btn-tab-falhas" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="microscope" class="w-4 h-4"></i> <span class="hidden sm:inline">Análise de Falhas</span>
-      </button>
-      <button onclick="switchTab('acao')" id="btn-tab-acao" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="list-checks" class="w-4 h-4"></i> <span class="hidden sm:inline">Plano de Ação</span>
-      </button>
-      <button onclick="switchTab('evolution')" id="btn-tab-evolution" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="hidden sm:inline">Evolução</span>
-      </button>
-      <button onclick="switchTab('executive')" id="btn-tab-executive" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="trending-up" class="w-4 h-4"></i> <span class="hidden sm:inline">Painel Diretoria</span>
-      </button>
-      <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="calendar" class="w-4 h-4"></i> <span class="hidden sm:inline">Calendário de Preventivas</span>
-      </button>
-      <button onclick="switchTab('documents')" id="btn-tab-documents" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="file-text" class="w-4 h-4"></i> <span class="hidden sm:inline">Documentação & Auditoria</span>
-      </button>
-      <button onclick="switchTab('planning')" id="btn-tab-planning" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="calendar-check-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Planejamento</span>
-      </button>
-      <button onclick="switchTab('controles')" id="btn-tab-controles" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="layout-template" class="w-4 h-4"></i> <span class="hidden sm:inline">Controles</span>
-      </button>
-      <button onclick="switchTab('formularios')" id="btn-tab-formularios" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="smartphone" class="w-4 h-4"></i> <span class="hidden sm:inline">Formulários</span>
-      </button>
-      <button onclick="switchTab('progrealizado')" id="btn-tab-progrealizado" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="bar-chart-4" class="w-4 h-4"></i> <span class="hidden sm:inline">Prog. x Realizado</span>
-      </button>
-      <button onclick="switchTab('history')" id="btn-tab-history" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="history" class="w-4 h-4"></i> <span class="hidden sm:inline">Histórico Consolidado</span>
-      </button>
-      <button onclick="switchTab('online')" id="btn-tab-online" class="tab-btn hidden px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="radio" class="w-4 h-4"></i> <span class="hidden sm:inline">Usuários Online</span>
-      </button>
-      <button onclick="switchTab('users')" id="btn-tab-users" class="tab-btn px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
-        <i data-lucide="users" class="w-4 h-4"></i> <span class="hidden sm:inline">Usuários & Permissões</span>
-      </button>
-    </nav>
 
     <!-- ABA 1: VISÃO GERAL -->
     <section id="tab-dashboard" class="tab-content active fade-in space-y-6">
@@ -637,7 +698,7 @@
                 <tr>
                   <th class="p-2">TAG</th><th class="p-2">Unidade</th><th class="p-2">Tipo</th><th class="p-2">Motivo</th><th class="p-2">Causa Raiz</th>
                   <th class="p-2">Data da Parada</th><th class="p-2">Entrada</th><th class="p-2">Previsão</th><th class="p-2">Saída</th>
-                  <th class="p-2">Dias Parado</th><th class="p-2">Farol</th><th class="p-2">Status</th><th class="p-2 text-center sticky-col-right">Ações</th>
+                  <th class="p-2">Dias Parado</th><th class="p-2">Farol</th><th class="p-2">Custo</th><th class="p-2">Status</th><th class="p-2 text-center sticky-col-right">Ações</th>
                 </tr>
               </thead>
               <tbody id="st-historico-tbody" class="divide-y divide-slate-100"></tbody>
@@ -2263,6 +2324,106 @@
       </div>
     </section>
 
+    <!-- ABA: ANÁLISE DE CUSTO DE FROTA — alimentada pelo custo lançado no registro de parada (Status & Paradas → Liberar) -->
+    <section id="tab-custos" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 space-y-3">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-emerald-600"></i> Análise de Custo de Frota</h2>
+            <p class="text-xs text-slate-500">Tudo aqui vem do <strong>registro de parada</strong>: ao liberar o ativo em Status &amp; Paradas, informe se o veículo tem plano de manutenção, se foi coberto e o valor. Clique na TAG ou no serviço para abrir a parada.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="switchTab('status')" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="octagon-pause" class="w-4 h-4"></i> Status &amp; Paradas</button>
+            <button onclick="exportCustosToExcel()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+          </div>
+        </div>
+        <div class="flex flex-col xl:flex-row xl:items-end gap-3">
+          <div class="flex flex-wrap items-end gap-2">
+            <div class="flex flex-col gap-0.5"><label for="cst-agrupamento" class="text-[9px] font-bold text-slate-400 uppercase">Visão por</label>
+              <select id="cst-agrupamento" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="dia">Dia</option><option value="semana">Semana</option><option value="mes" selected>Mês</option><option value="ano">Ano</option></select></div>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="cstNavegar(-1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Período anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <span id="cst-periodo-label" class="text-xs font-bold text-slate-800 px-2 min-w-[170px] text-center"></span>
+              <button type="button" onclick="cstNavegar(1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Próximo período"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              <button type="button" onclick="cstNavegar(0)" class="px-3 py-2 border border-emerald-300 bg-emerald-50 rounded-lg text-[11px] font-bold text-emerald-800">Hoje</button>
+            </div>
+            <div class="flex flex-col gap-0.5"><label for="cst-base" class="text-[9px] font-bold text-slate-400 uppercase">Data considerada</label>
+              <select id="cst-base" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="liberacao">Data da liberação</option><option value="parada">Data da parada</option></select></div>
+          </div>
+        </div>
+        <div class="filter-grid">
+          <select id="cst-filter-unidade" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas as unidades</option><option value="AM">AM</option><option value="MA">MA</option></select>
+          <select id="cst-filter-tipo" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Cavalo + Carreta</option><option value="Cavalo">Cavalo</option><option value="Carreta">Carreta</option></select>
+          <select id="cst-filter-operacao" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <select id="cst-filter-fabricante" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <select id="cst-filter-marca" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <select id="cst-filter-modelo" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <select id="cst-filter-tipo-parada" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODOS">Todos os tipos de parada</option><option>Preventiva</option><option>Corretiva</option><option>Reforma</option><option>Documentação</option><option>Outros</option></select>
+          <select id="cst-filter-cobertura" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Pagas + cobertas</option><option value="paga">Só pagas (sem plano / não coberta)</option><option value="parcial">Coberta em parte</option><option value="coberta">Coberta pelo plano</option><option value="pendente">Custo pendente</option></select>
+          <select id="cst-filter-local" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <select id="cst-filter-responsavel" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <input id="cst-filter-tag" oninput="renderCustos()" placeholder="Buscar TAG / placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+        </div>
+      </div>
+
+      <div id="cst-pendentes" class="hidden card-executive p-3 border-amber-300 bg-amber-50 flex flex-wrap items-center justify-between gap-2">
+        <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5"><i data-lucide="triangle-alert" class="w-4 h-4"></i> <span id="cst-pendentes-texto"></span></p>
+        <button onclick="document.getElementById('cst-filter-cobertura').value = 'pendente'; renderCustos(); document.getElementById('cst-detalhe-card').scrollIntoView({ behavior: 'smooth' })" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold">Ver e preencher</button>
+      </div>
+
+      <div id="cst-kpis" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card-executive p-4">
+          <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2 mb-1"><i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600"></i> Evolução do custo</h3>
+          <p id="cst-evo-sub" class="text-[11px] text-slate-500 mb-2"></p>
+          <div class="h-72"><canvas id="chartCustoEvolucao" role="img" aria-label="Evolução do custo de manutenção"></canvas></div>
+        </div>
+        <div class="card-executive p-4">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-indigo-600"></i> Custo por</h3>
+            <select id="cst-agrupar" onchange="renderCustos()" class="border border-slate-300 rounded-lg p-1.5 text-[11px] font-bold outline-none">
+              <option value="tag">Veículo (TAG) — top 10</option><option value="operacao" selected>Operação</option><option value="marca">Marca</option><option value="fabricante">Fabricante</option><option value="modelo">Modelo</option><option value="tipo">Tipo de veículo</option><option value="tipoParada">Tipo de parada</option><option value="local">Local da manutenção</option><option value="responsavel">Responsável</option><option value="responsabilidade">Responsabilidade</option><option value="causaRaiz">Causa raiz</option><option value="unidade">Unidade</option>
+            </select>
+          </div>
+          <div class="h-72"><canvas id="chartCustoGrupo" role="img" aria-label="Custo por agrupamento"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700">Indicador por veículo <span id="cst-veic-count" class="text-slate-400 font-medium"></span></h3><p class="text-[11px] text-slate-400">Custo de manutenção de cada veículo no período</p></div>
+          <div class="overflow-x-auto max-h-[420px]">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"><tr><th class="p-2">Veículo</th><th class="p-2">Operação</th><th class="p-2 text-right">Manut.</th><th class="p-2 text-right">Cobertas</th><th class="p-2 text-right">Dias parado</th><th class="p-2 text-right">Custo total</th><th class="p-2 text-right">Média / manut.</th><th class="p-2 text-right">% do custo</th></tr></thead>
+              <tbody id="cst-veic-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700">Indicador por operação</h3><p class="text-[11px] text-slate-400">Custo da frota de cada operação e custo médio por veículo</p></div>
+          <div class="overflow-x-auto max-h-[420px]">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"><tr><th class="p-2">Operação</th><th class="p-2 text-right">Frota</th><th class="p-2 text-right">Com manut.</th><th class="p-2 text-right">Manut.</th><th class="p-2 text-right">Custo total</th><th class="p-2 text-right">Custo / veículo</th><th class="p-2 text-right">% do custo</th></tr></thead>
+              <tbody id="cst-op-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="cst-detalhe-card" class="card-executive overflow-hidden">
+        <div class="p-3 border-b border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <div><h3 class="text-sm font-bold text-slate-700">Detalhamento dos serviços <span id="cst-det-count" class="text-slate-400 font-medium"></span></h3><p class="text-[11px] text-slate-400">Registros de parada do período: serviço, local, responsável e custo</p></div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"><tr><th class="p-2">Veículo</th><th class="p-2">Parada</th><th class="p-2">Liberação</th><th class="p-2">Tipo</th><th class="p-2">Serviço / motivo</th><th class="p-2">Local</th><th class="p-2">Responsável</th><th class="p-2">Plano</th><th class="p-2 text-right">Custo</th><th class="p-2">NF / OS</th><th class="p-2 text-center sticky-col-right">Ações</th></tr></thead>
+            <tbody id="cst-det-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ABA 8: HISTÓRICO CONSOLIDADO -->
     <section id="tab-history" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2935,7 +3096,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-700 mb-1">Data de Saída</label>
-              <input type="date" id="event-saida" onchange="updateEventDiasPreview()" title="Preencha somente quando o ativo for liberado — isso encerra a parada" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+              <input type="date" id="event-saida" onchange="updateEventDiasPreview(); const o = document.getElementById('event-custo-obrig'); if (o) o.innerText = this.value ? 'Obrigatório — a Data de Saída libera o ativo' : 'Obrigatório ao liberar (pode preencher agora ou na liberação)';" title="Preencha somente quando o ativo for liberado — isso encerra a parada" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
           </div>
           <p id="event-dias-preview" class="text-[11px] font-bold text-slate-600"></p>
@@ -2995,6 +3156,7 @@
           <label class="block text-xs font-bold text-slate-700 mb-1">Observações</label>
           <textarea id="event-observacoes" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
         </div>
+        <div id="event-custo-box"></div>
         <div class="flex justify-between items-center gap-2 pt-2 border-t flex-wrap">
           <button type="button" id="event-delete-btn" onclick="deleteEditingEvent()" class="hidden px-3 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold">Excluir parada (registrada por engano)</button>
           <div class="flex gap-2 ml-auto">
@@ -3729,7 +3891,7 @@
   <!-- MODAL LIBERAR ATIVO — pergunta a data real de liberação, permitindo retroagir (ex.: ativo liberado no
        sábado/domingo mas só registrado na segunda), para a disponibilidade refletir a realidade. -->
   <div id="modal-liberar" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[94vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-slate-900 text-lg">Liberar Ativo <span id="liberar-tag" class="text-emerald-700"></span></h3>
         <button onclick="closeLiberarModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
@@ -3747,6 +3909,8 @@
         <input type="date" id="liberar-data-custom" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
         <p class="text-[11px] text-slate-400 mt-1">Ex.: liberado no sábado ou domingo, mesmo sem ninguém ter registrado naquele dia — isso corrige a disponibilidade retroativamente na Evolução, Disponibilidade e no Painel Detalhado de Paradas.</p>
       </div>
+      <p id="liberar-servico" class="text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5"></p>
+      <div id="liberar-custo-box"></div>
       <div class="flex justify-end gap-2 pt-2 border-t">
         <button type="button" onclick="closeLiberarModal()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
         <button type="button" onclick="confirmLiberarEvento()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Confirmar Liberação</button>
@@ -4639,10 +4803,10 @@
     // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
     // Abas liberadas por função. As funções antigas (Analista Planejamento, Supervisor, Gerente, Diretor) continuam
     // valendo para quem já está cadastrado com elas.
-    const ABAS_ANALISTA = ['dashboard', 'farol', 'operacao', 'falhas', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'evolution', 'history'];
-    const ABAS_CONTROLADOR = ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'calendar', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
-    const ABAS_SUPERVISOR = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
-    const ABAS_GERENTE = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
+    const ABAS_ANALISTA = ['dashboard', 'farol', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'evolution', 'history'];
+    const ABAS_CONTROLADOR = ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
+    const ABAS_SUPERVISOR = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
+    const ABAS_GERENTE = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
     const ABAS_DIRETOR = ABAS_GERENTE.concat(['users']);
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'farol', 'documents', 'history'],
@@ -4678,7 +4842,8 @@
     }
     function permissoesDaFuncao(f) { return ROLE_PERMISSIONS[f] || ROLE_PERMISSIONS[funcaoCanonica(f)] || null; }
     const FUNCOES_VEEM_ONLINE = ['Diretor', 'Gerente', 'Desenvolvedor', 'Gerente de Operações', 'Gerente de Manutenção', 'Coordenador de Operações', 'Coordenador de Manutenção', 'Diretor de Operações', 'Ceo'];
-    const ALL_TABS = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history', 'online', 'users'];
+    // mesma ordem do menu lateral (grupos Início, Frota, Manutenção, Análises, Sistema)
+    const ALL_TABS = ['dashboard', 'executive', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'calendar', 'planning', 'progrealizado', 'documents', 'controles', 'formularios', 'falhas', 'custos', 'acao', 'evolution', 'history', 'online', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -5562,9 +5727,9 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    const PERMISSOES_VERSAO = 4; // 2 = já conhece a aba Plano de Ação; 3 = Controles Personalizados; 4 = Formulários
+    const PERMISSOES_VERSAO = 5; // 2 = já conhece a aba Plano de Ação; 3 = Controles Personalizados; 4 = Formulários; 5 = Custo de Frota
     // Abas criadas depois das permissões individuais: quem salvou antes delas recebe o padrão da função
-    const ABAS_NOVAS_VERSAO = { acao: 2, controles: 3, formularios: 4 };
+    const ABAS_NOVAS_VERSAO = { acao: 2, controles: 3, formularios: 4, custos: 5 };
     function abasNovasParaPermissoesAntigas(u, funcao) {
       const v = Number((u && u.permissoesVersao) || 0);
       return Object.keys(ABAS_NOVAS_VERSAO).filter(t => v < ABAS_NOVAS_VERSAO[t] && (permissoesDaFuncao(funcao) || []).includes(t));
@@ -5594,6 +5759,7 @@
       if (typeof renderControlesMenu === 'function') renderControlesMenu();
       if (typeof aplicarSomenteLeituraUI === 'function') aplicarSomenteLeituraUI();
       if (typeof aplicarVisualizacaoUnidade === 'function') aplicarVisualizacaoUnidade(true);
+      if (typeof atualizarGruposMenu === 'function') atualizarGruposMenu();
       const activeTabEl = document.querySelector('.tab-content.active');
       const activeTabId = activeTabEl ? activeTabEl.id.replace('tab-', '') : 'dashboard';
       if (!allowed.includes(activeTabId)) {
@@ -5753,7 +5919,7 @@
     // ===================== PERMISSÕES INDIVIDUAIS (SOMENTE CONTA DESENVOLVEDOR) =====================
     const TAB_LABELS_MAP = {
       dashboard: 'Visão Geral', assets: 'Cadastro de Ativos', status: 'Status & Paradas', farol: 'Farol de Manutenção', availability: 'Disponibilidade',
-      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', acao: 'Plano de Ação & Fatos Relevantes', evolution: 'Evolução', executive: 'Painel Diretoria',
+      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', custos: 'Análise de Custo de Frota', acao: 'Plano de Ação & Fatos Relevantes', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento', controles: 'Controles Personalizados', formularios: 'Formulários de Campo',
       progrealizado: 'Programado x Realizado',
       history: 'Histórico Consolidado', online: 'Usuários Online', users: 'Usuários & Permissões'
@@ -6263,6 +6429,7 @@
       if (!activeTab || activeTab === 'evolution') renderEvolutionChart();
       if (!activeTab || activeTab === 'operacao') renderOperacaoAtivos();
       if (!activeTab || activeTab === 'falhas') renderFalhas();
+      if (!activeTab || activeTab === 'custos') renderCustos();
       if (!activeTab || activeTab === 'acao') renderPlanoAcao();
       if (!activeTab || activeTab === 'controles') renderControles();
       if (!activeTab || activeTab === 'formularios') renderFormularios();
@@ -6828,6 +6995,8 @@
       const asset = getAssetById(document.getElementById('event-asset').value);
       const respEl = document.getElementById('event-responsabilidade');
       if (asset && respEl && !respEl.value && !document.getElementById('event-editing-id').value) respEl.placeholder = `Em branco = ${asset.proprietario || 'proprietário do ativo'}`;
+      // Novo registro: sugere a resposta de "tem plano de manutenção" pela última parada do veículo
+      if (asset && !document.getElementById('event-editing-id').value && document.getElementById('event-custo-plano') && (!document.getElementById('event-custo-plano').value || document.getElementById('event-custo-plano').dataset.sugerido === '1')) preencherBlocoCusto('event', null, asset.id, asset.tag, !!document.getElementById('event-saida').value);
     };
     window.onDocAssetChange = function() {
       const assetId = document.getElementById('doc-tag').value;
@@ -6864,6 +7033,7 @@
       }
       const mobileSel = document.getElementById('mobile-tab-select');
       if (mobileSel && mobileSel.value !== tabId) mobileSel.value = tabId;
+      if (typeof fecharMenuMobile === 'function') fecharMenuMobile();
       try { sessionStorage.setItem('pcm_last_tab', tabId); } catch (e) {}
       if (typeof updatePresencePage === 'function') updatePresencePage(tabId);
       if (tabId === 'online') renderPresenca();
@@ -6879,6 +7049,7 @@
       if (tabId === 'paradasdetalhado') renderParadasDetalhado();
       if (tabId === 'operacao') renderOperacaoAtivos();
       if (tabId === 'falhas') renderFalhas();
+      if (tabId === 'custos') renderCustos();
       if (tabId === 'acao') renderPlanoAcao();
       if (tabId === 'planning') renderPlanejamento();
       if (tabId === 'calendar') renderCalendar();
@@ -6967,6 +7138,7 @@
       document.getElementById('event-responsabilidade').value = evt ? (evt.responsabilidade || '') : '';
       document.getElementById('event-acoes').value = evt ? (evt.acoesRealizadas || '') : '';
       document.getElementById('event-observacoes').value = evt ? (evt.observacoes || '') : '';
+      preencherBlocoCusto('event', evt, evt ? evt.assetId : document.getElementById('event-asset').value, evt ? evt.tag : '', !!(evt && evt.fim));
       updateEventDiasPreview();
     }
 
@@ -7795,7 +7967,8 @@
       tipoParada: 'Tipo de parada', situacao: 'Situação', farolStatus: 'Condição no Farol', local: 'Local/Localização',
       inicio: 'Data da parada', dataEntrada: 'Data de entrada', previsao: 'Previsão', fim: 'Data de saída', motivo: 'Motivo',
       causaRaiz: 'Causa raiz', causaRaizDetalhe: 'Detalhe da causa', responsabilidade: 'Responsabilidade', responsavel: 'Responsável',
-      acoesRealizadas: 'Ações realizadas', observacoes: 'Observações', status: 'Status da parada'
+      acoesRealizadas: 'Ações realizadas', observacoes: 'Observações', status: 'Status da parada',
+      custoTemPlano: 'Tem plano de manutenção', custoCobertura: 'Coberto pelo plano', custoValor: 'Valor da manutenção (R$)', custoDocumento: 'NF/OS', custoObs: 'Obs. do custo'
     };
 
     // Se o usuário digitou um local/responsável novo em "Outro" e marcou "salvar na lista", cadastra o fornecedor
@@ -7861,6 +8034,9 @@
       if (erro) { alert(erro); return; }
 
       const encerrada = !!f.fim;
+      const custoNovo = lerBlocoCusto('event', encerrada);
+      if (custoNovo.erro) { alert(custoNovo.erro); return; }
+      Object.assign(f, custoNovo.dados);
       if (!encerrada && getOpenEventForAsset(assetId)) {
         alert('Este ativo já possui uma parada em aberto. Atualize/libere a parada atual antes de registrar uma nova (ou informe a Data de Saída para registrar uma parada já encerrada).');
         return;
@@ -7888,6 +8064,7 @@
         registradoPor: window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema',
         registradoEm: getNowFormatted()
       };
+      carimbarCusto(newEvent, null);
 
       // Vínculo explícito com a programação que originou esta parada (botão "Registrar Parada" do Planejamento/Calendário)
       const link = window.pendingEventLink;
@@ -7955,6 +8132,10 @@
       const antes = { ...evt };
       const reabrir = antes.status === 'Encerrado' && !f.fim;
       const encerrar = antes.status !== 'Encerrado' && !!f.fim;
+      // Custo: obrigatório ao liberar pela Data de Saída (e não pode ser apagado depois de informado)
+      const custoEd = lerBlocoCusto('event', !!f.fim && (encerrar || custoCompleto(antes)));
+      if (custoEd.erro) { alert(custoEd.erro); return; }
+      Object.assign(f, custoEd.dados);
       if (reabrir) {
         const outraAberta = (window.assetEvents || []).find(ev => String(ev.assetId) === String(evt.assetId) && ev.status === 'Aberto' && String(ev.id) !== String(evt.id));
         if (outraAberta) { alert(`Não é possível reabrir: ${evt.tag} já tem outra parada em aberto (${formatDateBR(outraAberta.inicio)}).`); return; }
@@ -7970,6 +8151,7 @@
       else { evt.status = 'Aberto'; if (evt.situacao === 'Concluído') evt.situacao = 'Em Execução'; evt.diasParado = 0; }
       evt.atualizadoPor = window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema';
       evt.atualizadoEm = getNowFormatted();
+      carimbarCusto(evt, antes);
 
       const alteracoes = diffCampos(antes, evt, EVENT_FIELD_LABELS);
       const acao = encerrar ? 'encerrada (liberado) na edição' : reabrir ? 'reaberta' : 'atualizada';
@@ -8025,7 +8207,10 @@
       document.getElementById('liberar-data-custom').min = evt.inicio || '';
       document.getElementById('liberar-data-custom').value = '';
       setLiberarModo('hoje');
+      document.getElementById('liberar-servico').innerHTML = `<strong>${escapeHtml(evt.tipoParada || '')}</strong> — ${escapeHtml(evt.motivo || '')} • desde ${formatDateBR(evt.inicio)}${evt.local ? ' • ' + escapeHtml(evt.local) : ''}${evt.responsavel ? ' • ' + escapeHtml(evt.responsavel) : ''}`;
+      preencherBlocoCusto('liberar', evt, evt.assetId, evt.tag, true);
       document.getElementById('modal-liberar').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
     };
 
     window.closeLiberarModal = function() {
@@ -8099,6 +8284,12 @@
         if (evt.inicio && custom < evt.inicio) { alert('A data de liberação não pode ser antes da Data da Parada (' + formatDateBR(evt.inicio) + ').'); return; }
         dataLiberacao = custom;
       }
+      const custoLib = lerBlocoCusto('liberar', true);
+      if (custoLib.erro) { alert(custoLib.erro); document.getElementById('liberar-custo-plano').focus(); return; }
+      const antesCusto = { ...evt };
+      Object.assign(evt, custoLib.dados);
+      carimbarCusto(evt, antesCusto);
+      const altCusto = diffCampos(antesCusto, evt, { custoTemPlano: EVENT_FIELD_LABELS.custoTemPlano, custoCobertura: EVENT_FIELD_LABELS.custoCobertura, custoValor: EVENT_FIELD_LABELS.custoValor, custoDocumento: EVENT_FIELD_LABELS.custoDocumento });
 
       evt.fim = dataLiberacao;
       evt.status = 'Encerrado';
@@ -8106,7 +8297,8 @@
       evt.diasParado = calcDiasParado(evt.inicio, evt.fim);
       evt.liberadoPor = window.currentLoggedUser ? (window.currentLoggedUser.nome || window.currentLoggedUser.login) : 'Sistema';
       evt.liberadoEm = getNowFormatted();
-      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado desde ${formatDateBR(evt.inicio)}${dataLiberacao !== getTodayStr() ? ` — data informada retroativamente: ${formatDateBR(dataLiberacao)}` : ''}`, evt.inicio, 'Encerrado', evt.fim, [{ campo: 'Data de saída', de: '', para: evt.fim }]);
+      const txtCusto = coberturaCusto(evt) === 'coberta' ? 'coberta pelo plano' : `custo ${fmtBRL(valorCustoParada(evt))}${coberturaCusto(evt) === 'parcial' ? ' (parte pelo plano)' : ''}`;
+      addAuditLog(evt.unit, 'Parada/Manutenção', evt.tag, `${evt.tipoParada} encerrada (liberado) — ${evt.diasParado} dia(s) parado desde ${formatDateBR(evt.inicio)} — ${txtCusto}${dataLiberacao !== getTodayStr() ? ` — data informada retroativamente: ${formatDateBR(dataLiberacao)}` : ''}`, evt.inicio, 'Encerrado', evt.fim, [{ campo: 'Data de saída', de: '', para: evt.fim }].concat(altCusto));
 
       let diasCorrigidos = 0;
       if (dataLiberacao < getTodayStr()) {
@@ -8179,6 +8371,7 @@
             <p class="text-slate-500">Parada: ${formatDateBR(e.inicio)} • Entrada: ${formatDateBR(e.dataEntrada)} • Previsão: ${formatDateBR(e.previsao)} • Saída: ${e.fim ? formatDateBR(e.fim) : '—'} • Dias parado: <strong>${calcDiasParado(e.inicio, e.fim || null)}</strong></p>
             <p class="text-slate-500">Causa raiz: <strong>${escapeHtml(e.causaRaiz || 'não informada')}</strong>${e.causaRaizDetalhe ? ' — ' + escapeHtml(e.causaRaizDetalhe) : ''} • Local: ${escapeHtml(e.local || '-')} • Responsável: ${escapeHtml(e.responsavel || '-')}</p>
             ${e.acoesRealizadas ? `<p class="text-slate-500">Ações: ${escapeHtml(e.acoesRealizadas)}</p>` : ''}
+            ${e.status === 'Encerrado' || custoCompleto(e) ? `<p class="text-slate-500">Custo: ${chipCustoParada(e)}${e.custoTemPlano ? ` • plano de manutenção: ${escapeHtml(e.custoTemPlano)}` : ''}${e.custoDocumento ? ` • NF/OS ${escapeHtml(e.custoDocumento)}` : ''}</p>` : ''}
             ${e.observacoes ? `<p class="text-slate-400 italic">${escapeHtml(e.observacoes)}</p>` : ''}
           </div>
         `).join('');
@@ -8337,10 +8530,11 @@
           <td class="p-2 ${e.fim ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${e.fim ? formatDateBR(e.fim) : 'em aberto'}</td>
           <td class="p-2 font-bold ${calcDiasParado(e.inicio, e.fim || null) > 3 ? 'text-red-600' : ''}">${calcDiasParado(e.inicio, e.fim || null)}</td>
           <td class="p-2">${farolBadge(e)}</td>
+          <td class="p-2">${chipCustoParada(e)}</td>
           <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${e.status === 'Aberto' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300'}">${e.status}</span></td>
           <td class="p-2 text-center sticky-col-right"><button onclick="editOpenEvent(${e.id})" class="text-slate-400 hover:text-blue-600" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button></td>
-        </tr>`).join('') || `<tr><td colspan="13" class="p-4 text-center text-slate-400 italic">Nenhuma parada encontrada com os filtros atuais.</td></tr>`;
-      if (total > 500) tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="13" class="p-2 text-center text-[11px] text-slate-400">Mostrando 500 de ${total} — use os filtros de data para refinar.</td></tr>`);
+        </tr>`).join('') || `<tr><td colspan="14" class="p-4 text-center text-slate-400 italic">Nenhuma parada encontrada com os filtros atuais.</td></tr>`;
+      if (total > 500) tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="14" class="p-2 text-center text-[11px] text-slate-400">Mostrando 500 de ${total} — use os filtros de data para refinar.</td></tr>`);
       lucide.createIcons();
     };
 
@@ -14196,6 +14390,7 @@
         ancora.after(b);
         ancora = b;
       });
+      if (typeof atualizarGruposMenu === 'function') atualizarGruposMenu();
       if (window.lucide) lucide.createIcons();
     };
     window.abrirControle = function(id) {
@@ -16459,6 +16654,457 @@
       outra.classList.toggle('hidden', sel.value !== 'OUTRA');
     }
 
+    // ===================== CUSTO DA MANUTENÇÃO (registro de parada) =====================
+    // O custo fica no próprio registro de parada: "tem plano de manutenção?", "foi coberto pelo plano?" e o valor.
+    // É obrigatório ao liberar o ativo (botão Liberar ou Data de Saída) e alimenta a página Análise de Custo de Frota.
+    window.parseValorBR = function(v) {
+      let s = String(v === undefined || v === null ? '' : v).trim().replace(/R\$|\s/g, '');
+      if (!s) return null;
+      if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+      const n = Number(s);
+      return isNaN(n) ? NaN : Math.round(n * 100) / 100;
+    };
+    window.fmtBRL = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const fmtValorCampo = (v) => v === null || v === undefined || v === '' || isNaN(Number(v)) ? '' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Custo completo: respondeu o plano e (coberto integralmente pelo plano OU informou o valor)
+    window.custoCompleto = function(e) {
+      if (!e || (e.custoTemPlano !== 'Sim' && e.custoTemPlano !== 'Não')) return false;
+      if (e.custoTemPlano === 'Sim' && !e.custoCobertura) return false;
+      if (e.custoTemPlano === 'Sim' && e.custoCobertura === 'Total') return true;
+      return e.custoValor !== null && e.custoValor !== undefined && e.custoValor !== '' && !isNaN(Number(e.custoValor));
+    };
+    window.valorCustoParada = (e) => custoCompleto(e) && !(e.custoTemPlano === 'Sim' && e.custoCobertura === 'Total') ? Number(e.custoValor) || 0 : 0;
+    window.coberturaCusto = function(e) {
+      if (!custoCompleto(e)) return e && e.status === 'Encerrado' ? 'pendente' : 'aberta';
+      if (e.custoTemPlano === 'Sim' && e.custoCobertura === 'Total') return 'coberta';
+      if (e.custoTemPlano === 'Sim' && e.custoCobertura === 'Parcial') return 'parcial';
+      return 'paga';
+    };
+    window.chipCustoParada = function(e) {
+      const c = coberturaCusto(e);
+      if (c === 'aberta') return '<span class="text-slate-300">—</span>';
+      if (c === 'pendente') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-amber-100 text-amber-800 border-amber-300" title="Parada encerrada sem o custo informado">custo pendente</span>';
+      if (c === 'coberta') return '<span class="px-2 py-0.5 rounded-full text-[10px] font-black border bg-sky-100 text-sky-800 border-sky-300" title="Manutenção coberta pelo plano">coberta pelo plano</span>';
+      return `<span class="font-black text-slate-900 whitespace-nowrap">${fmtBRL(valorCustoParada(e))}</span>${c === 'parcial' ? '<span class="block text-[9px] font-bold text-sky-700">parte pelo plano</span>' : ''}`;
+    };
+    function htmlBlocoCusto(p) {
+      const sel = 'w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500';
+      return `<div class="bg-amber-50/60 border border-amber-200 rounded-lg p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <p class="text-xs font-black text-amber-900 flex items-center gap-1.5"><i data-lucide="circle-dollar-sign" class="w-4 h-4"></i> Custo da manutenção</p>
+          <span id="${p}-custo-obrig" class="text-[10px] font-bold text-amber-800"></span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label for="${p}-custo-plano" class="block text-[11px] font-bold text-slate-700 mb-1">O veículo tem plano de manutenção?</label>
+            <select id="${p}-custo-plano" onchange="this.dataset.sugerido = ''; atualizarBlocoCusto('${p}')" class="${sel}"><option value="">— responda —</option><option value="Sim">Sim, tem plano</option><option value="Não">Não tem plano</option></select>
+          </div>
+          <div id="${p}-custo-cob-wrap" class="hidden">
+            <label for="${p}-custo-cobertura" class="block text-[11px] font-bold text-slate-700 mb-1">Foi coberto pelo plano?</label>
+            <select id="${p}-custo-cobertura" onchange="atualizarBlocoCusto('${p}')" class="${sel}"><option value="">— responda —</option><option value="Total">Sim — coberta pelo plano (sem custo)</option><option value="Parcial">Em parte — teve custo fora do plano</option><option value="Não">Não — paga à parte</option></select>
+          </div>
+          <div id="${p}-custo-valor-wrap" class="hidden">
+            <label for="${p}-custo-valor" id="${p}-custo-valor-label" class="block text-[11px] font-bold text-slate-700 mb-1">Valor da manutenção (R$)</label>
+            <div class="relative"><span class="absolute left-2.5 top-2 text-sm font-bold text-slate-400">R$</span><input type="text" id="${p}-custo-valor" inputmode="decimal" placeholder="0,00" onblur="this.value = (v => v === null || isNaN(v) ? this.value : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))(parseValorBR(this.value))" class="${sel} pl-9 font-bold"></div>
+          </div>
+          <div>
+            <label for="${p}-custo-doc" class="block text-[11px] font-bold text-slate-700 mb-1">Nº da NF / OS <span class="font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="${p}-custo-doc" class="${sel}">
+          </div>
+          <div class="sm:col-span-2">
+            <label for="${p}-custo-obs" class="block text-[11px] font-bold text-slate-700 mb-1">Observação do custo <span class="font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="${p}-custo-obs" placeholder="Ex.: peças + mão de obra; cobertura do contrato X" class="${sel}">
+          </div>
+        </div>
+        <p id="${p}-custo-dica" class="text-[11px] text-slate-600"></p>
+      </div>`;
+    }
+    ['event', 'liberar'].forEach(p => { const box = document.getElementById(p + '-custo-box'); if (box) box.innerHTML = htmlBlocoCusto(p); });
+
+    window.atualizarBlocoCusto = function(p) {
+      const plano = document.getElementById(`${p}-custo-plano`).value;
+      const cob = document.getElementById(`${p}-custo-cobertura`).value;
+      document.getElementById(`${p}-custo-cob-wrap`).classList.toggle('hidden', plano !== 'Sim');
+      const pedeValor = plano === 'Não' || (plano === 'Sim' && (cob === 'Parcial' || cob === 'Não'));
+      document.getElementById(`${p}-custo-valor-wrap`).classList.toggle('hidden', !pedeValor);
+      document.getElementById(`${p}-custo-valor-label`).innerText = plano === 'Sim' && cob === 'Parcial' ? 'Valor pago fora do plano (R$)' : 'Valor da manutenção (R$)';
+      const dica = document.getElementById(`${p}-custo-dica`);
+      const base = dica.dataset.base || '';
+      dica.innerText = plano === 'Sim' && cob === 'Total' ? 'Manutenção coberta pelo plano — entra na análise como R$ 0,00 (coberta).' : base;
+    };
+    function ultimoPlanoDoAtivo(assetId, tag, excetoId) {
+      const evs = (window.assetEvents || []).filter(e => (String(e.assetId) === String(assetId) || (tag && e.tag === tag)) && String(e.id) !== String(excetoId) && (e.custoTemPlano === 'Sim' || e.custoTemPlano === 'Não'));
+      evs.sort((a, b) => (b.fim || b.inicio || '').localeCompare(a.fim || a.inicio || ''));
+      return evs[0] ? evs[0].custoTemPlano : '';
+    }
+    // Preenche o bloco; sem resposta na parada, sugere a última resposta de plano do mesmo veículo
+    window.preencherBlocoCusto = function(p, evt, assetId, tag, obrigatorio) {
+      const ultimo = ultimoPlanoDoAtivo(evt ? evt.assetId : assetId, evt ? evt.tag : tag, evt ? evt.id : null);
+      const plano = evt && evt.custoTemPlano ? evt.custoTemPlano : ultimo;
+      const planoEl = document.getElementById(`${p}-custo-plano`);
+      planoEl.value = plano || '';
+      planoEl.dataset.sugerido = !(evt && evt.custoTemPlano) && ultimo ? '1' : '';
+      document.getElementById(`${p}-custo-cobertura`).value = evt ? (evt.custoCobertura || '') : '';
+      document.getElementById(`${p}-custo-valor`).value = evt ? fmtValorCampo(evt.custoValor) : '';
+      document.getElementById(`${p}-custo-doc`).value = evt ? (evt.custoDocumento || '') : '';
+      document.getElementById(`${p}-custo-obs`).value = evt ? (evt.custoObs || '') : '';
+      const dica = document.getElementById(`${p}-custo-dica`);
+      dica.dataset.base = !(evt && evt.custoTemPlano) && ultimo ? `Sugestão pela última parada deste veículo: ${ultimo === 'Sim' ? 'tem' : 'não tem'} plano de manutenção — confira.` : '';
+      document.getElementById(`${p}-custo-obrig`).innerText = obrigatorio ? 'Obrigatório para liberar o ativo' : 'Obrigatório ao liberar (pode preencher agora ou na liberação)';
+      atualizarBlocoCusto(p);
+    };
+    // Lê o bloco. obrigatorio=true exige o custo completo (liberação). Devolve { erro, dados }.
+    window.lerBlocoCusto = function(p, obrigatorio) {
+      const plano = document.getElementById(`${p}-custo-plano`).value;
+      const cob = plano === 'Sim' ? document.getElementById(`${p}-custo-cobertura`).value : '';
+      const pedeValor = plano === 'Não' || (plano === 'Sim' && (cob === 'Parcial' || cob === 'Não'));
+      const bruto = document.getElementById(`${p}-custo-valor`).value;
+      const valor = pedeValor ? parseValorBR(bruto) : null;
+      if (pedeValor && (valor !== null && (isNaN(valor) || valor < 0))) return { erro: 'Valor da manutenção inválido. Use números, ex.: 1.250,00' };
+      const dados = {
+        custoTemPlano: plano || null, custoCobertura: cob || null,
+        custoValor: plano === 'Sim' && cob === 'Total' ? 0 : (valor === null ? null : valor),
+        custoDocumento: document.getElementById(`${p}-custo-doc`).value.trim(), custoObs: document.getElementById(`${p}-custo-obs`).value.trim()
+      };
+      if (obrigatorio) {
+        if (!plano) return { erro: 'Custo da manutenção: responda se o veículo tem plano de manutenção.' };
+        if (plano === 'Sim' && !cob) return { erro: 'Custo da manutenção: responda se a manutenção foi coberta pelo plano.' };
+        if (pedeValor && valor === null) return { erro: `Custo da manutenção: informe o ${cob === 'Parcial' ? 'valor pago fora do plano' : 'valor da manutenção'} (use 0,00 se não houve custo).` };
+      }
+      return { erro: null, dados };
+    };
+    function carimbarCusto(evt, antes) {
+      const mudou = ['custoTemPlano', 'custoCobertura', 'custoValor', 'custoDocumento', 'custoObs'].some(k => (antes ? antes[k] : null) !== evt[k] && !((antes ? antes[k] : null) == null && (evt[k] == null || evt[k] === '')));
+      if (custoCompleto(evt) && (mudou || !evt.custoInformadoEm)) { evt.custoInformadoEm = getNowFormatted(); evt.custoInformadoPor = nomeUsuarioAtual(); }
+    }
+
+    // ===================== ANÁLISE DE CUSTO DE FROTA =====================
+    // Lê o custo dos registros de parada (assetEvents). Período por dia/semana/mês/ano (data da liberação ou da parada),
+    // filtros de frota, indicadores por veículo e por operação, evolução e detalhamento dos serviços.
+    window.cstRef = null;
+    window.chartCustoEvolucaoInstance = null;
+    window.chartCustoGrupoInstance = null;
+    const CST_ROTULO_GRUPO = { tag: 'Veículo', operacao: 'Operação', marca: 'Marca', fabricante: 'Fabricante', modelo: 'Modelo', tipo: 'Tipo de veículo', tipoParada: 'Tipo de parada', local: 'Local da manutenção', responsavel: 'Responsável', responsabilidade: 'Responsabilidade', causaRaiz: 'Causa raiz', unidade: 'Unidade' };
+    const cstVal = (id, pad) => document.getElementById(id)?.value || pad;
+    const brlCurto = (v) => Math.abs(v) >= 1000 ? `R$ ${(v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil` : fmtBRL(v);
+    window.cstNavegar = function(n) {
+      const agr = cstVal('cst-agrupamento', 'mes');
+      window.cstRef = n === 0 ? getTodayStr() : prDeslocar(window.cstRef || getTodayStr(), agr, n);
+      renderCustos();
+    };
+    function cstPeriodo(ref) {
+      const agr = cstVal('cst-agrupamento', 'mes');
+      const ini = prInicioPeriodo(ref || window.cstRef || getTodayStr(), agr);
+      return { agr, ini, fim: prFimPeriodo(ini, agr), label: prRotulo(ini, agr), rel: prRelacao(ini, agr) };
+    }
+    const cstAtivo = (e) => getAssetById(e.assetId) || getAssetByTag(e.tag) || {};
+    function cstCampo(e, campo) {
+      const a = cstAtivo(e);
+      switch (campo) {
+        case 'tag': return e.tag || a.tag;
+        case 'operacao': return e.operacao || a.operacao;
+        case 'marca': return a.marca;
+        case 'fabricante': return a.fabricante;
+        case 'modelo': return a.modelo;
+        case 'tipo': return e.tipo || a.tipo;
+        case 'unidade': return e.unit || a.unidade;
+        case 'responsabilidade': return e.responsabilidade || (a.proprietario ? String(a.proprietario).toUpperCase() : '');
+        default: return e[campo];
+      }
+    }
+    function cstLerFiltros() {
+      return {
+        base: cstVal('cst-base', 'liberacao'), unidade: cstVal('cst-filter-unidade', 'TODAS'), tipo: cstVal('cst-filter-tipo', 'TODOS'),
+        operacao: cstVal('cst-filter-operacao', 'TODAS'), fabricante: cstVal('cst-filter-fabricante', 'TODAS'), marca: cstVal('cst-filter-marca', 'TODAS'),
+        modelo: cstVal('cst-filter-modelo', 'TODOS'), tipoParada: cstVal('cst-filter-tipo-parada', 'TODOS'), cobertura: cstVal('cst-filter-cobertura', 'TODAS'),
+        local: cstVal('cst-filter-local', 'TODOS'), responsavel: cstVal('cst-filter-responsavel', 'TODOS'), busca: (document.getElementById('cst-filter-tag')?.value || '').trim().toUpperCase()
+      };
+    }
+    // Filtros de frota (valem para eventos e para contar a frota)
+    function cstAtivoPassa(a, f, ignorarOperacao) {
+      if (!a) return false;
+      if (window.selectedUnit !== 'TODAS' && a.unidade !== window.selectedUnit) return false;
+      if (f.unidade !== 'TODAS' && a.unidade !== f.unidade) return false;
+      if (f.tipo !== 'TODOS' && a.tipo !== f.tipo) return false;
+      if (!ignorarOperacao && f.operacao !== 'TODAS' && a.operacao !== f.operacao) return false;
+      if (f.fabricante !== 'TODAS' && a.fabricante !== f.fabricante) return false;
+      if (f.marca !== 'TODAS' && a.marca !== f.marca) return false;
+      if (f.modelo !== 'TODOS' && a.modelo !== f.modelo) return false;
+      if (f.busca && !`${a.tag || ''} ${a.placa || ''}`.toUpperCase().includes(f.busca)) return false;
+      if (window.ignorarReforma && itemOcultoPorReforma(a.id, a.tag)) return false;
+      return true;
+    }
+    const cstDataDe = (e, base) => base === 'parada' ? e.inicio : e.fim;
+    // Paradas do período: encerradas (com ou sem custo) e, pela data da parada, abertas que já têm custo
+    function cstEventos(f, ini, fim, semFiltroCobertura) {
+      return (window.assetEvents || []).filter(e => {
+        if (!(e.status === 'Encerrado' || custoCompleto(e))) return false;
+        const d = cstDataDe(e, f.base);
+        if (!d || d < ini || d > fim) return false;
+        const a = Object.assign({}, cstAtivo(e));
+        if (!a.id) Object.assign(a, { id: e.assetId, tag: e.tag, unidade: e.unit, tipo: e.tipo, operacao: e.operacao });
+        if (e.unit) a.unidade = e.unit;
+        if (e.operacao) a.operacao = e.operacao;
+        if (!cstAtivoPassa(a, f)) return false;
+        if (window.ignorarReforma && isReformaEvent(e)) return false;
+        if (f.tipoParada !== 'TODOS' && e.tipoParada !== f.tipoParada) return false;
+        if (f.local !== 'TODOS' && (e.local || '') !== f.local) return false;
+        if (f.responsavel !== 'TODOS' && (e.responsavel || '') !== f.responsavel) return false;
+        if (!semFiltroCobertura && f.cobertura !== 'TODAS' && coberturaCusto(e) !== f.cobertura) return false;
+        return true;
+      });
+    }
+    function cstPreencherSelect(id, valores, rotuloTodos, valorTodos) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const cur = el.value;
+      el.innerHTML = `<option value="${valorTodos}">${rotuloTodos}</option>` + valores.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
+      el.value = valores.includes(cur) ? cur : valorTodos;
+    }
+    function cstSomar(evs) {
+      const inf = evs.filter(custoCompleto);
+      const total = inf.reduce((s, e) => s + valorCustoParada(e), 0);
+      return { inf, total, pagas: inf.filter(e => valorCustoParada(e) > 0).length, cobertas: inf.filter(e => coberturaCusto(e) === 'coberta').length, parciais: inf.filter(e => coberturaCusto(e) === 'parcial').length };
+    }
+    window.renderCustos = function() {
+      const sec = document.getElementById('tab-custos');
+      if (!sec) return;
+      const f = cstLerFiltros();
+      // opções dos filtros (só da unidade visível)
+      const frotaVis = (window.assets || []).filter(a => window.selectedUnit === 'TODAS' || a.unidade === window.selectedUnit);
+      const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
+      cstPreencherSelect('cst-filter-operacao', uniq(frotaVis.map(a => a.operacao)), 'Todas as operações', 'TODAS');
+      cstPreencherSelect('cst-filter-fabricante', uniq(frotaVis.map(a => a.fabricante)), 'Todos os fabricantes', 'TODAS');
+      cstPreencherSelect('cst-filter-marca', uniq(frotaVis.map(a => a.marca)), 'Todas as marcas', 'TODAS');
+      cstPreencherSelect('cst-filter-modelo', uniq(frotaVis.map(a => a.modelo)), 'Todos os modelos', 'TODOS');
+      const evsVis = (window.assetEvents || []).filter(e => window.selectedUnit === 'TODAS' || e.unit === window.selectedUnit);
+      cstPreencherSelect('cst-filter-local', uniq(evsVis.map(e => e.local)), 'Todos os locais', 'TODOS');
+      cstPreencherSelect('cst-filter-responsavel', uniq(evsVis.map(e => e.responsavel)), 'Todos os responsáveis', 'TODOS');
+      Object.assign(f, cstLerFiltros());
+
+      const per = cstPeriodo();
+      document.getElementById('cst-periodo-label').innerText = prRotuloComDatas(per);
+      const todos = cstEventos(f, per.ini, per.fim, true);
+      const evs = f.cobertura === 'TODAS' ? todos : todos.filter(e => coberturaCusto(e) === f.cobertura);
+      const pend = todos.filter(e => coberturaCusto(e) === 'pendente');
+      const soma = cstSomar(evs);
+      const prevIni = prDeslocar(per.ini, per.agr, -1);
+      const somaAnt = cstSomar(cstEventos(f, prevIni, prFimPeriodo(prevIni, per.agr), false));
+      window.lastCustosCtx = { f, per, evs, soma };
+
+      // aviso de pendências
+      const avisoP = document.getElementById('cst-pendentes');
+      avisoP.classList.toggle('hidden', !pend.length || f.cobertura === 'pendente');
+      document.getElementById('cst-pendentes-texto').innerText = `${plural(pend.length, 'parada encerrada', 'paradas encerradas')} no período sem o custo informado — elas ficam fora dos indicadores até o custo ser preenchido.`;
+
+      // frota considerada (para custo por veículo)
+      const frota = getActiveAssets().filter(a => cstAtivoPassa(a, f));
+      const porVeic = {};
+      soma.inf.forEach(e => {
+        const k = String(e.assetId || e.tag);
+        const a = cstAtivo(e);
+        const r = porVeic[k] = porVeic[k] || { assetId: e.assetId, tag: e.tag, placa: a.placa || '', tipo: e.tipo || a.tipo || '', operacao: e.operacao || a.operacao || '', unidade: e.unit || a.unidade || '', marca: a.marca || '', modelo: a.modelo || '', n: 0, cobertas: 0, dias: 0, total: 0 };
+        r.n++; r.total += valorCustoParada(e); r.dias += calcDiasParado(e.inicio, e.fim || null);
+        if (coberturaCusto(e) === 'coberta') r.cobertas++;
+      });
+      const veics = Object.values(porVeic).sort((a, b) => b.total - a.total || naturalCompare(a.tag, b.tag));
+      const topo = veics[0];
+      const delta = somaAnt.total ? ((soma.total - somaAnt.total) / somaAnt.total) * 100 : null;
+      const pctCob = soma.inf.length ? (soma.cobertas / soma.inf.length) * 100 : 0;
+      const k = (t, v, cor, icone, sub, title) => `<div class="card-executive p-3" ${title ? `title="${escapeAttr(title)}"` : ''}><p class="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="${icone}" class="w-3.5 h-3.5 ${cor}"></i> ${t}</p><p class="text-xl font-black ${cor} truncate">${v}</p>${sub ? `<p class="text-[10px] text-slate-500">${sub}</p>` : ''}</div>`;
+      document.getElementById('cst-kpis').innerHTML = [
+        k('Custo total', fmtBRL(soma.total), 'text-slate-900', 'wallet', delta === null ? `período anterior: ${fmtBRL(somaAnt.total)}` : `${delta > 0 ? '▲' : delta < 0 ? '▼' : '='} ${Math.abs(delta).toFixed(1).replace('.', ',')}% vs anterior (${brlCurto(somaAnt.total)})`),
+        k('Manutenções', soma.inf.length, 'text-slate-800', 'wrench', `${soma.pagas} com custo • ${soma.cobertas} cobertas pelo plano`),
+        k('Cobertas pelo plano', `${pctCob.toFixed(0)}%`, 'text-sky-700', 'shield-check', `${soma.cobertas} de ${soma.inf.length}${soma.parciais ? ` • +${soma.parciais} em parte` : ''}`),
+        k('Média por manutenção paga', fmtBRL(soma.pagas ? soma.total / soma.pagas : 0), 'text-indigo-700', 'receipt', `${soma.pagas} manutenção(ões) com custo`),
+        k('Custo por veículo', fmtBRL(frota.length ? soma.total / frota.length : 0), 'text-emerald-700', 'truck', `frota de ${frota.length} • ${veics.length} com manutenção`, 'Custo total dividido pelos veículos ativos da frota filtrada'),
+        k('Maior custo', topo ? escapeHtml(topo.tag) : '—', 'text-red-700', 'trending-up', topo ? `${fmtBRL(topo.total)} (${soma.total ? ((topo.total / soma.total) * 100).toFixed(0) : 0}% do total)` : 'sem custo no período')
+      ].join('');
+
+      renderGraficosCustos(f, per, soma);
+
+      // indicador por veículo
+      document.getElementById('cst-veic-count').innerText = `(${veics.length})`;
+      document.getElementById('cst-veic-tbody').innerHTML = veics.map(r => `<tr>
+          <td class="p-2 whitespace-nowrap"><button type="button" onclick="openAssetHistory(${JSON.stringify(String(r.assetId)).replace(/"/g, '&quot;')})" class="font-black text-slate-900 hover:text-emerald-700 hover:underline">${escapeHtml(r.tag)}</button><span class="block text-[10px] text-slate-400">${escapeHtml([r.placa, r.tipo, r.marca].filter(Boolean).join(' • '))}</span></td>
+          <td class="p-2">${escapeHtml(r.operacao || '-')} ${getUnitBadge(r.unidade)}</td>
+          <td class="p-2 text-right font-bold">${r.n}</td>
+          <td class="p-2 text-right text-sky-700">${r.cobertas || '—'}</td>
+          <td class="p-2 text-right">${r.dias}</td>
+          <td class="p-2 text-right font-black whitespace-nowrap">${fmtBRL(r.total)}</td>
+          <td class="p-2 text-right whitespace-nowrap">${fmtBRL(r.n ? r.total / r.n : 0)}</td>
+          <td class="p-2 text-right"><div class="flex items-center justify-end gap-1.5"><span class="mini-bar w-12 inline-block"><span style="width:${soma.total ? Math.round((r.total / soma.total) * 100) : 0}%;background:#059669"></span></span>${soma.total ? ((r.total / soma.total) * 100).toFixed(1).replace('.', ',') : '0'}%</div></td>
+        </tr>`).join('') || `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Nenhum custo informado em ${escapeHtml(per.label)} com estes filtros.</td></tr>`;
+
+      // indicador por operação
+      const ops = {};
+      getActiveAssets().filter(a => cstAtivoPassa(a, f, true)).forEach(a => { const o = a.operacao || 'Sem operação'; (ops[o] = ops[o] || { frota: 0, com: new Set(), n: 0, total: 0 }).frota++; });
+      soma.inf.forEach(e => { const o = cstCampo(e, 'operacao') || 'Sem operação'; const r = ops[o] = ops[o] || { frota: 0, com: new Set(), n: 0, total: 0 }; r.n++; r.total += valorCustoParada(e); r.com.add(String(e.assetId || e.tag)); });
+      const opsLin = Object.entries(ops).filter(([o, r]) => f.operacao === 'TODAS' || o === f.operacao).sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]));
+      window.lastCustosCtx.ops = opsLin;
+      window.lastCustosCtx.veics = veics;
+      document.getElementById('cst-op-tbody').innerHTML = opsLin.map(([o, r]) => `<tr>
+          <td class="p-2 font-bold text-slate-800">${escapeHtml(o)}</td>
+          <td class="p-2 text-right">${r.frota}</td>
+          <td class="p-2 text-right">${r.com.size}</td>
+          <td class="p-2 text-right">${r.n}</td>
+          <td class="p-2 text-right font-black whitespace-nowrap">${fmtBRL(r.total)}</td>
+          <td class="p-2 text-right whitespace-nowrap font-bold text-emerald-700">${r.frota ? fmtBRL(r.total / r.frota) : '—'}</td>
+          <td class="p-2 text-right">${soma.total ? ((r.total / soma.total) * 100).toFixed(1).replace('.', ',') : '0'}%</td>
+        </tr>`).join('') || '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Sem dados.</td></tr>';
+
+      // detalhamento dos serviços
+      const det = evs.slice().sort((a, b) => (cstDataDe(b, f.base) || '').localeCompare(cstDataDe(a, f.base) || ''));
+      document.getElementById('cst-det-count').innerText = `(${det.length})`;
+      document.getElementById('cst-det-tbody').innerHTML = det.slice(0, 500).map(e => {
+        const a = cstAtivo(e);
+        const c = coberturaCusto(e);
+        return `<tr class="${c === 'pendente' ? 'bg-amber-50/60' : ''}">
+          <td class="p-2 whitespace-nowrap"><span class="font-black text-slate-900">${escapeHtml(e.tag)}</span><span class="block text-[10px] text-slate-400">${escapeHtml([a.placa, e.tipo || a.tipo, cstCampo(e, 'operacao')].filter(Boolean).join(' • '))}</span></td>
+          <td class="p-2 whitespace-nowrap">${formatDateBR(e.inicio)}</td>
+          <td class="p-2 whitespace-nowrap ${e.fim ? 'text-emerald-700 font-bold' : 'text-slate-400'}">${e.fim ? formatDateBR(e.fim) : 'em aberto'}<span class="block text-[10px] text-slate-400 font-medium">${calcDiasParado(e.inicio, e.fim || null)} dia(s)</span></td>
+          <td class="p-2">${escapeHtml(e.tipoParada || '')}</td>
+          <td class="p-2 max-w-[260px]"><span class="font-bold text-slate-800">${escapeHtml(e.motivo || '')}</span>${e.acoesRealizadas ? `<span class="block text-[10px] text-slate-500">${escapeHtml(e.acoesRealizadas)}</span>` : ''}${e.causaRaiz ? `<span class="block text-[10px] text-slate-400">Causa: ${escapeHtml(e.causaRaiz)}</span>` : ''}</td>
+          <td class="p-2">${escapeHtml(e.local || '-')}</td>
+          <td class="p-2">${escapeHtml(e.responsavel || '-')}${e.responsabilidade ? `<span class="block text-[10px] text-slate-400">${escapeHtml(e.responsabilidade)}</span>` : ''}</td>
+          <td class="p-2 whitespace-nowrap">${e.custoTemPlano ? `${escapeHtml(e.custoTemPlano === 'Sim' ? 'Tem plano' : 'Sem plano')}${e.custoTemPlano === 'Sim' && e.custoCobertura ? `<span class="block text-[10px] ${e.custoCobertura === 'Total' ? 'text-sky-700 font-bold' : 'text-slate-500'}">${escapeHtml(({ Total: 'coberta', Parcial: 'coberta em parte', 'Não': 'não coberta' })[e.custoCobertura] || '')}</span>` : ''}` : '—'}</td>
+          <td class="p-2 text-right">${chipCustoParada(e)}</td>
+          <td class="p-2">${escapeHtml(e.custoDocumento || '')}${e.custoObs ? `<span class="block text-[10px] text-slate-400">${escapeHtml(e.custoObs)}</span>` : ''}</td>
+          <td class="p-2 text-center sticky-col-right whitespace-nowrap"><button onclick="editOpenEvent(${JSON.stringify(String(e.id)).replace(/"/g, '&quot;')})" class="px-2 py-1 rounded text-[10px] font-bold ${c === 'pendente' ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-800 hover:bg-slate-900 text-white'}">${c === 'pendente' ? 'Informar custo' : 'Abrir parada'}</button></td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="11" class="p-4 text-center text-slate-400 italic">Nenhuma parada em ${escapeHtml(per.label)} com estes filtros.</td></tr>`;
+      if (det.length > 500) document.getElementById('cst-det-tbody').insertAdjacentHTML('beforeend', `<tr><td colspan="11" class="p-2 text-center text-[11px] text-slate-400">Mostrando 500 de ${det.length} — o Excel traz todos.</td></tr>`);
+      if (window.lucide) lucide.createIcons();
+    };
+
+    function renderGraficosCustos(f, per, soma) {
+      // Evolução: últimos períodos do mesmo tamanho, terminando no período escolhido
+      const n = ({ dia: 14, semana: 12, mes: 12, ano: 5 })[per.agr] || 12;
+      const pers = [];
+      let ini = per.ini;
+      for (let i = 0; i < n; i++) { pers.unshift(ini); ini = prDeslocar(ini, per.agr, -1); }
+      const serie = pers.map(pi => { const s = cstSomar(cstEventos(f, pi, prFimPeriodo(pi, per.agr), false)); return { ini: pi, label: prRotulo(pi, per.agr, true), longo: prRotuloComDatas({ agr: per.agr, ini: pi, fim: prFimPeriodo(pi, per.agr), label: prRotulo(pi, per.agr) }, true), total: s.total, n: s.inf.length, cobertas: s.cobertas }; });
+      window.lastCustosCtx.serie = serie;
+      document.getElementById('cst-evo-sub').innerText = `Últimos ${n} ${({ dia: 'dias', semana: 'semanas', mes: 'meses', ano: 'anos' })[per.agr]} até ${per.label} • custo pago (coberturas do plano entram como R$ 0)`;
+      const c1 = document.getElementById('chartCustoEvolucao');
+      if (window.chartCustoEvolucaoInstance) window.chartCustoEvolucaoInstance.destroy();
+      const atual = serie.length - 1;
+      window.chartCustoEvolucaoInstance = new Chart(c1.getContext('2d'), {
+        type: 'bar',
+        data: { labels: serie.map(s => s.label), datasets: [{ label: 'Custo', data: serie.map(s => Math.round(s.total * 100) / 100), backgroundColor: serie.map((s, i) => i === atual ? '#047857' : '#6ee7b7'), borderRadius: 4, maxBarThickness: 42 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { title: (its) => serie[its[0].dataIndex].longo, label: (ctx) => { const s = serie[ctx.dataIndex]; return [`${fmtBRL(s.total)}`, `${s.n} manutenção(ões)${s.cobertas ? ` • ${s.cobertas} coberta(s) pelo plano` : ''}`]; } } },
+            datalabels: { display: (ctx) => ctx.dataIndex === atual || (serie[ctx.dataIndex].total > 0 && serie[ctx.dataIndex].total === Math.max(...serie.map(s => s.total))), anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: (v) => v ? brlCurto(v) : '' }
+          },
+          scales: { y: { beginAtZero: true, grace: '15%', ticks: { callback: (v) => brlCurto(v), font: { size: 10 }, color: '#64748b' }, grid: { color: '#eef2f6' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 0, autoSkip: true } } }
+        }
+      });
+      // Custo por agrupamento
+      const campo = cstVal('cst-agrupar', 'operacao');
+      const grupos = {};
+      soma.inf.forEach(e => { const g = cstCampo(e, campo) || 'Não informado'; const r = grupos[g] = grupos[g] || { total: 0, n: 0 }; r.total += valorCustoParada(e); r.n++; });
+      let lin = Object.entries(grupos).sort((a, b) => b[1].total - a[1].total);
+      if (lin.length > 10) { const resto = lin.slice(9); lin = lin.slice(0, 9).concat([[`Demais (${resto.length})`, { total: resto.reduce((s, x) => s + x[1].total, 0), n: resto.reduce((s, x) => s + x[1].n, 0) }]]); }
+      window.lastCustosCtx.grupos = { campo, lin };
+      const c2 = document.getElementById('chartCustoGrupo');
+      if (window.chartCustoGrupoInstance) window.chartCustoGrupoInstance.destroy();
+      window.chartCustoGrupoInstance = new Chart(c2.getContext('2d'), {
+        type: 'bar',
+        data: { labels: lin.map(x => x[0]), datasets: [{ label: 'Custo', data: lin.map(x => Math.round(x[1].total * 100) / 100), backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 26 }] },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => { const r = lin[ctx.dataIndex][1]; return [`${fmtBRL(r.total)} (${soma.total ? ((r.total / soma.total) * 100).toFixed(1).replace('.', ',') : 0}%)`, `${r.n} manutenção(ões)`]; } } },
+            datalabels: { anchor: 'end', align: 'right', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: (v) => v ? brlCurto(v) : '' }
+          },
+          layout: { padding: { right: 56 } },
+          scales: { x: { beginAtZero: true, ticks: { callback: (v) => brlCurto(v), font: { size: 10 }, color: '#64748b' }, grid: { color: '#eef2f6' } }, y: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#334155' } } }
+        }
+      });
+    }
+
+    window.exportCustosToExcel = function() {
+      const ctx = window.lastCustosCtx;
+      if (!ctx) { renderCustos(); }
+      const { f, per, evs, soma, veics, ops, serie, grupos } = window.lastCustosCtx;
+      if (!evs.length) { alert('Nenhuma parada no período/filtros para exportar.'); return; }
+      const wb = XLSX.utils.book_new();
+      const aba = (nome, aoa) => { const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = (aoa[0] || []).map((_, i) => ({ wch: Math.min(45, Math.max(10, ...aoa.slice(0, 200).map(l => String(l[i] === undefined || l[i] === null ? '' : l[i]).length + 2))) })); XLSX.utils.book_append_sheet(wb, ws, nome); };
+      const nomeSel = (id) => { const el = document.getElementById(id); return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : ''; };
+      aba('Filtros', [['Relatório', 'Análise de Custo de Frota'], ['Período', prRotuloComDatas(per, true)], ['Data considerada', nomeSel('cst-base')], ['Unidade', window.selectedUnit === 'TODAS' ? nomeSel('cst-filter-unidade') : window.selectedUnit], ['Tipo de veículo', nomeSel('cst-filter-tipo')], ['Operação', nomeSel('cst-filter-operacao')], ['Fabricante', nomeSel('cst-filter-fabricante')], ['Marca', nomeSel('cst-filter-marca')], ['Modelo', nomeSel('cst-filter-modelo')], ['Tipo de parada', nomeSel('cst-filter-tipo-parada')], ['Cobertura', nomeSel('cst-filter-cobertura')], ['Local', nomeSel('cst-filter-local')], ['Responsável', nomeSel('cst-filter-responsavel')], ['Busca', f.busca || '—'], ['Desconsiderar Reforma', window.ignorarReforma ? 'Sim' : 'Não'], [], ['Custo total', soma.total], ['Manutenções com custo informado', soma.inf.length], ['Cobertas pelo plano', soma.cobertas], [], ['Gerado em', new Date().toLocaleString('pt-BR')], ['Gerado por', nomeUsuarioAtual()]]);
+      aba('Serviços', [['Veículo', 'Placa', 'Unidade', 'Tipo', 'Operação', 'Marca', 'Modelo', 'Tipo de parada', 'Motivo / serviço', 'Ações realizadas', 'Causa raiz', 'Local', 'Responsável', 'Responsabilidade', 'Data da parada', 'Liberação', 'Dias parado', 'Tem plano', 'Cobertura', 'Custo (R$)', 'Situação do custo', 'NF / OS', 'Obs. do custo', 'Custo informado por', 'Custo informado em']].concat(
+        evs.slice().sort((a, b) => (cstDataDe(b, f.base) || '').localeCompare(cstDataDe(a, f.base) || '')).map(e => { const a = cstAtivo(e); const c = coberturaCusto(e); return [e.tag, a.placa || '', cstCampo(e, 'unidade') || '', cstCampo(e, 'tipo') || '', cstCampo(e, 'operacao') || '', a.marca || '', a.modelo || '', e.tipoParada || '', e.motivo || '', e.acoesRealizadas || '', e.causaRaiz || '', e.local || '', e.responsavel || '', cstCampo(e, 'responsabilidade') || '', formatDateBR(e.inicio), e.fim ? formatDateBR(e.fim) : '', calcDiasParado(e.inicio, e.fim || null), e.custoTemPlano || '', e.custoTemPlano === 'Sim' ? (e.custoCobertura || '') : '', c === 'pendente' ? '' : valorCustoParada(e), ({ paga: 'Paga', parcial: 'Coberta em parte', coberta: 'Coberta pelo plano', pendente: 'Pendente' })[c] || '', e.custoDocumento || '', e.custoObs || '', e.custoInformadoPor || '', e.custoInformadoEm || '']; })));
+      aba('Por veículo', [['Veículo', 'Placa', 'Tipo', 'Marca', 'Modelo', 'Operação', 'Unidade', 'Manutenções', 'Cobertas pelo plano', 'Dias parado', 'Custo total (R$)', 'Média por manutenção (R$)', '% do custo']].concat(veics.map(r => [r.tag, r.placa, r.tipo, r.marca, r.modelo, r.operacao, r.unidade, r.n, r.cobertas, r.dias, Math.round(r.total * 100) / 100, r.n ? Math.round((r.total / r.n) * 100) / 100 : 0, soma.total ? Math.round((r.total / soma.total) * 1000) / 10 : 0])));
+      aba('Por operação', [['Operação', 'Veículos da frota', 'Veículos com manutenção', 'Manutenções', 'Custo total (R$)', 'Custo por veículo (R$)', '% do custo']].concat(ops.map(([o, r]) => [o, r.frota, r.com.size, r.n, Math.round(r.total * 100) / 100, r.frota ? Math.round((r.total / r.frota) * 100) / 100 : '', soma.total ? Math.round((r.total / soma.total) * 1000) / 10 : 0])));
+      if (grupos && grupos.campo !== 'operacao') aba(`Por ${CST_ROTULO_GRUPO[grupos.campo] || grupos.campo}`.slice(0, 31), [[CST_ROTULO_GRUPO[grupos.campo] || grupos.campo, 'Manutenções', 'Custo total (R$)']].concat(grupos.lin.map(([g, r]) => [g, r.n, Math.round(r.total * 100) / 100])));
+      aba('Evolução', [['Período', 'Manutenções', 'Cobertas pelo plano', 'Custo (R$)']].concat(serie.map(s => [s.longo, s.n, s.cobertas, Math.round(s.total * 100) / 100])));
+      const slug = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      XLSX.writeFile(wb, `Custo_Frota_${slug(per.label)}.xlsx`);
+    };
+
+    // ===================== MENU LATERAL =====================
+    // Fechado mostra só os ícones; passar o mouse (ou navegar pelo teclado) abre com os nomes. "Manter menu aberto"
+    // fixa o menu (lembrado neste navegador). No celular o menu vira gaveta (botão "Menu").
+    window.aplicarMenuFixo = function(fixo) {
+      const sb = document.getElementById('app-sidebar');
+      if (!sb) return;
+      sb.classList.toggle('fixo', !!fixo);
+      document.body.classList.toggle('menu-fixo', !!fixo);
+      const b = document.getElementById('sb-btn-fixar');
+      if (b) {
+        const t = b.querySelector('.sb-texto');
+        if (t) t.innerText = fixo ? 'Recolher menu' : 'Manter menu aberto';
+        b.setAttribute('aria-pressed', fixo ? 'true' : 'false');
+      }
+      // gráficos se ajustam à nova largura
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 220);
+    };
+    window.alternarMenuFixo = function() {
+      const fixo = !document.getElementById('app-sidebar').classList.contains('fixo');
+      try { localStorage.setItem('pcm_menu_fixo', fixo ? '1' : '0'); } catch (e) {}
+      aplicarMenuFixo(fixo);
+    };
+    window.abrirMenuMobile = function() {
+      document.getElementById('app-sidebar').classList.add('aberto-mobile');
+      document.getElementById('sb-backdrop').classList.remove('hidden');
+    };
+    window.fecharMenuMobile = function() {
+      const sb = document.getElementById('app-sidebar');
+      if (sb) sb.classList.remove('aberto-mobile');
+      const bd = document.getElementById('sb-backdrop');
+      if (bd) bd.classList.add('hidden');
+    };
+    // Esconde o título do grupo quando o usuário não tem nenhuma página dele
+    window.atualizarGruposMenu = function() {
+      const nav = document.getElementById('main-tab-nav');
+      if (!nav) return;
+      let grupo = null, visivel = false;
+      const fechar = () => { if (grupo) grupo.classList.toggle('hidden', !visivel); };
+      Array.from(nav.children).forEach(el => {
+        if (el.classList.contains('sb-grupo')) { fechar(); grupo = el; visivel = false; }
+        else if (el.classList.contains('tab-btn') && !el.classList.contains('hidden')) visivel = true;
+      });
+      fechar();
+    };
+    try { aplicarMenuFixo(localStorage.getItem('pcm_menu_fixo') === '1'); } catch (e) { aplicarMenuFixo(false); }
+    // Clique com o mouse não deixa o foco preso no menu (senão ele continuaria aberto ao tirar o mouse);
+    // pelo teclado (Tab) o foco fica e o menu abre normalmente
+    // Depois de escolher uma página com o mouse, o menu recolhe na hora (para não cobrir a página);
+    // volta a abrir quando o mouse sai e passa de novo sobre ele
+    const sbEl = document.getElementById('app-sidebar');
+    sbEl?.addEventListener('click', (ev) => {
+      if (ev.detail > 0 && document.activeElement && document.activeElement.closest && document.activeElement.closest('#app-sidebar')) document.activeElement.blur();
+      // composedPath: o ícone clicado pode ser redesenhado pela troca de página antes deste ponto
+      const noItem = (ev.composedPath ? ev.composedPath() : [ev.target]).some(el => el && el.classList && el.classList.contains('tab-btn'));
+      if (ev.detail > 0 && noItem && !sbEl.classList.contains('fixo') && !sbEl.classList.contains('aberto-mobile')) sbEl.classList.add('recolher');
+    });
+    sbEl?.addEventListener('mouseleave', () => sbEl.classList.remove('recolher'));
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') fecharMenuMobile(); });
+
     // ===================== CONGELAR TOPO (opcional) =====================
     // Botão 📌 no cabeçalho. Ligado, o menu de abas, o título + filtros (+ indicadores) da página e o cabeçalho
     // das tabelas ficam fixos enquanto a lista rola — como o "Congelar painéis" do Excel. Vale para todas as
@@ -16541,7 +17187,8 @@
 
     function atualizarMedidasFreeze() {
       const header = document.querySelector('header.app-header');
-      const nav = [document.getElementById('main-tab-nav'), document.getElementById('mobile-tab-wrap')].find(el => el && el.getClientRects().length);
+      // o menu fica na lateral; só a faixa do celular (Menu + seletor) ocupa altura no topo
+      const nav = [document.getElementById('mobile-tab-wrap')].find(el => el && el.getClientRects().length);
       const sec = document.querySelector('.tab-content.active');
       const head = sec ? sec.querySelector(':scope > .freeze-head') : null;
       const hH = header && getComputedStyle(header).position === 'sticky' ? Math.round(header.getBoundingClientRect().height) : 0;
