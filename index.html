@@ -224,6 +224,19 @@
       body.com-sidebar { padding-left: 0 !important; }
     }
     html.modo-formulario body { padding-left: 0 !important; }
+    /* Escala de trabalho */
+    .esc-grid td.esc-cel { min-width: 30px; text-align: center; font-size: 10px; font-weight: 800; cursor: pointer; border: 1px solid #eef2f6; padding: 5px 2px; white-space: nowrap; }
+    .esc-grid td.esc-cel:hover { outline: 2px solid #059669; outline-offset: -2px; }
+    .esc-grid td.esc-cel sup { font-size: 9px; margin-left: 1px; }
+    .esc-grid .esc-fds { background: #f8fafc; }
+    .esc-grid .esc-hoje { box-shadow: inset 0 0 0 2px #059669; }
+    .esc-grid .esc-seq7 { box-shadow: inset 0 0 0 2px #dc2626; }
+    .esc-grid .esc-sticky { position: sticky; left: 0; background: #fff; z-index: 2; box-shadow: 1px 0 0 #e2e8f0; min-width: 190px; }
+    .esc-grid thead .esc-sticky { background: #f8fafc; }
+    /* bolinha de alerta no menu lateral */
+    #main-tab-nav .tab-btn .sb-badge { position: absolute; top: 2px; left: 27px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff; }
+    #main-tab-nav .tab-btn .sb-badge.hidden { display: none; }
+    @media print { .esc-grid td.esc-cel { font-size: 8px; padding: 2px 1px; } }
     /* ===== CONGELAR TOPO (opcional, botão 📌 no cabeçalho): menu de abas, título/filtros da página e cabeçalho
        das tabelas ficam fixos; a tabela rola dentro da própria área ===== */
     body.freeze-top #mobile-tab-wrap { position: sticky; top: var(--freeze-nav-top, 64px); z-index: 35; background: var(--canvas); }
@@ -328,6 +341,9 @@
       <button onclick="switchTab('calendar')" id="btn-tab-calendar" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="calendar" class="w-4 h-4"></i> <span>Calendário de Preventivas</span>
       </button>
+      <button onclick="switchTab('prevcavalos')" id="btn-tab-prevcavalos" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="gauge-circle" class="w-4 h-4"></i> <span>Preventiva Cavalos (KM)</span>
+      </button>
       <button onclick="switchTab('planning')" id="btn-tab-planning" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="calendar-check-2" class="w-4 h-4"></i> <span>Planejamento</span>
       </button>
@@ -342,6 +358,10 @@
       </button>
       <button onclick="switchTab('formularios')" id="btn-tab-formularios" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
         <i data-lucide="smartphone" class="w-4 h-4"></i> <span>Formulários de Campo</span>
+      </button>
+      <p class="sb-grupo">Equipe</p>
+      <button onclick="switchTab('escala')" id="btn-tab-escala" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+        <i data-lucide="calendar-clock" class="w-4 h-4"></i> <span>Escala de Trabalho</span>
       </button>
       <p class="sb-grupo">Análises</p>
       <button onclick="switchTab('falhas')" id="btn-tab-falhas" class="tab-btn rounded-lg font-bold text-sm transition flex items-center gap-3 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
@@ -2424,6 +2444,132 @@
       </div>
     </section>
 
+    <!-- ABA: GESTÃO DE ESCALA DE TRABALHO — colaboradores, funções, turnos e a escala mensal/semanal/diária -->
+    <section id="tab-escala" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 space-y-3">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-5 h-5 text-emerald-600"></i> Gestão de Escala de Trabalho</h2>
+            <p class="text-xs text-slate-500">Monte a escala do mês (e, se quiser, a do mês seguinte). Escolha um turno ou folga em <strong>Marcar com</strong> e clique nos dias. Alterar um dia já escalado pede <strong>justificativa</strong> (fica na auditoria) e o 7º dia seguido de trabalho gera alerta (regra 6x1).</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="escAbrirColabs()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4"></i> Colaboradores</button>
+            <button onclick="escAbrirFuncoes()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="briefcase" class="w-4 h-4"></i> Funções</button>
+            <button onclick="escAbrirTurnos()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4"></i> Turnos</button>
+            <button onclick="escAbrirConfig()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="settings-2" class="w-4 h-4"></i> Regras</button>
+            <button onclick="escAbrirPreencher()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="wand-2" class="w-4 h-4"></i> Montar escala do mês</button>
+            <button onclick="exportEscalaToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+            <button onclick="printArea('esc-grade-card')" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="printer" class="w-4 h-4"></i> Imprimir</button>
+          </div>
+        </div>
+        <div class="flex flex-col xl:flex-row xl:items-end gap-3">
+          <div class="flex flex-wrap items-end gap-2">
+            <div class="flex flex-col gap-0.5"><label for="esc-visao" class="text-[9px] font-bold text-slate-400 uppercase">Visão</label>
+              <select id="esc-visao" onchange="renderEscala()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="mes" selected>Mês</option><option value="semana">Semana</option><option value="dia">Dia</option></select></div>
+            <div class="flex flex-wrap items-center gap-1">
+              <button type="button" onclick="escNavegar(-1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <span id="esc-periodo-label" class="text-xs font-bold text-slate-800 px-2 min-w-[170px] text-center"></span>
+              <button type="button" onclick="escNavegar(1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Próximo"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              <button type="button" onclick="escNavegar(0)" class="px-3 py-2 border border-emerald-300 bg-emerald-50 rounded-lg text-[11px] font-bold text-emerald-800">Hoje</button>
+              <button type="button" onclick="escIrMesSeguinte()" class="px-3 py-2 border border-indigo-300 bg-indigo-50 rounded-lg text-[11px] font-bold text-indigo-800">Mês seguinte</button>
+            </div>
+          </div>
+          <div class="filter-grid flex-1">
+            <select id="esc-filter-unidade" onchange="renderEscala()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas as unidades</option><option value="AM">AM</option><option value="MA">MA</option></select>
+            <select id="esc-filter-funcao" onchange="renderEscala()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <select id="esc-filter-turno" onchange="renderEscala()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+            <input id="esc-filter-busca" oninput="renderEscala()" placeholder="Buscar colaborador..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-2">
+          <span class="text-[10px] font-black text-slate-500 uppercase mr-1">Marcar com:</span>
+          <div id="esc-pinceis" class="flex flex-wrap gap-1.5"></div>
+          <span id="esc-lote-aviso" class="hidden ml-auto text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded px-2 py-1"></span>
+        </div>
+      </div>
+
+      <div id="esc-kpis" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+      <div id="esc-alertas" class="hidden card-executive p-3 border-amber-300 bg-amber-50 text-xs text-amber-900 space-y-1"></div>
+
+      <div id="esc-grade-card" class="card-executive overflow-hidden print-target">
+        <div class="p-3 border-b border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i data-lucide="table-2" class="w-4 h-4 text-indigo-600"></i> <span id="esc-grade-titulo">Escala</span></h3>
+          <div id="esc-legenda" class="flex flex-wrap gap-2 text-[10px]"></div>
+        </div>
+        <div id="esc-grade" class="overflow-x-auto"></div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700">Pessoas trabalhando por turno</h3><p class="text-[11px] text-slate-400">Clique no número para ver quem está escalado</p></div>
+          <div class="overflow-x-auto max-h-[460px]"><table class="w-full text-left text-xs"><thead id="esc-cob-thead" class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"></thead><tbody id="esc-cob-tbody" class="divide-y divide-slate-100"></tbody><tfoot id="esc-cob-tfoot" class="bg-slate-50 font-bold"></tfoot></table></div>
+          <div id="esc-cob-detalhe" class="hidden border-t border-slate-100 p-3 text-xs bg-emerald-50/40"></div>
+        </div>
+        <div class="card-executive overflow-hidden">
+          <div class="p-3 border-b border-slate-100"><h3 class="text-sm font-bold text-slate-700">Resumo por colaborador</h3><p class="text-[11px] text-slate-400">Dias trabalhados, folgas e sequência no período</p></div>
+          <div class="overflow-x-auto max-h-[460px]"><table class="w-full text-left text-xs"><thead id="esc-res-thead" class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"></thead><tbody id="esc-res-tbody" class="divide-y divide-slate-100"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: CONTROLE DE PREVENTIVA — CAVALOS (KM atual x próxima preventiva, KM rodado) -->
+    <section id="tab-prevcavalos" class="tab-content fade-in space-y-6">
+      <div class="card-executive p-4 space-y-3">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="gauge-circle" class="w-5 h-5 text-emerald-600"></i> Controle de Preventiva — Cavalos</h2>
+            <p class="text-xs text-slate-500">KM atual de cada cavalo x próxima preventiva. A última preventiva vem de <strong>Status &amp; Paradas</strong> (parada do tipo Preventiva liberada) e do Calendário. Atualize o KM com as planilhas da <strong>Telemetria</strong> e do <strong>Prolog</strong> — o sistema compara as duas.</p>
+            <p id="pcv-meta" class="text-[11px] text-slate-400 mt-0.5"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="kmiAbrir()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="upload" class="w-4 h-4"></i> Atualizar KM</button>
+            <button onclick="pcvAbrirConfig()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="bell-ring" class="w-4 h-4"></i> Alertas e intervalo</button>
+            <button onclick="exportPrevCavalosToExcel()" class="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+          </div>
+        </div>
+        <div class="filter-grid">
+          <select id="pcv-filter-unidade" onchange="renderPrevCavalos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="TODAS">Todas as unidades</option><option value="AM">AM</option><option value="MA">MA</option></select>
+          <select id="pcv-filter-status" onchange="renderPrevCavalos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="">Todas as situações</option><option value="vencida">Vencidas</option><option value="proxima">Próximas (alerta)</option><option value="ok">Em dia</option><option value="semdados">Sem dados</option></select>
+          <select id="pcv-filter-modelo" onchange="renderPrevCavalos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"></select>
+          <input id="pcv-filter-busca" oninput="renderPrevCavalos()" placeholder="Buscar frota / placa..." class="border border-slate-300 rounded-lg p-2 text-xs outline-none">
+        </div>
+      </div>
+
+      <div id="pcv-kpis" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+
+      <div class="card-executive overflow-hidden">
+        <div class="p-3 border-b border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <div><h3 class="text-sm font-bold text-slate-700">Próximas preventivas <span id="pcv-count" class="text-slate-400 font-medium"></span></h3><p class="text-[11px] text-slate-400">Ordenado pelo que falta rodar</p></div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"><tr><th class="p-2">Frota</th><th class="p-2 text-right">KM atual</th><th class="p-2">Última preventiva</th><th class="p-2 text-right">KM última prev.</th><th class="p-2">Local / responsável</th><th class="p-2 text-right">Intervalo</th><th class="p-2 text-right">Próxima (KM)</th><th class="p-2">Falta rodar</th><th class="p-2">Previsão</th><th class="p-2">Situação</th><th class="p-2 text-center sticky-col-right">Ações</th></tr></thead>
+            <tbody id="pcv-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-executive p-4 space-y-3">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+          <div><h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i data-lucide="route" class="w-4 h-4 text-indigo-600"></i> Quilometragem rodada</h3><p class="text-[11px] text-slate-400">Calculada pelas atualizações de KM (KM final − KM inicial de cada período)</p></div>
+          <div class="flex flex-wrap items-end gap-2">
+            <select id="pcv-rod-agr" onchange="renderPrevCavalos()" class="border border-slate-300 rounded-lg p-2 text-xs font-bold outline-none"><option value="dia">Dia</option><option value="semana">Semana</option><option value="mes" selected>Mês</option><option value="ano">Ano</option></select>
+            <button type="button" onclick="pcvNavegar(-1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="pcv-rod-label" class="text-xs font-bold text-slate-800 px-2 min-w-[170px] text-center self-center"></span>
+            <button type="button" onclick="pcvNavegar(1)" class="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-emerald-50" title="Próximo"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            <button type="button" onclick="pcvNavegar(0)" class="px-3 py-2 border border-emerald-300 bg-emerald-50 rounded-lg text-[11px] font-bold text-emerald-800">Hoje</button>
+          </div>
+        </div>
+        <div id="pcv-rod-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div><p class="text-[11px] font-bold text-slate-500 mb-1" id="pcv-rod-graf-sub"></p><div class="h-72"><canvas id="chartKmRodado" role="img" aria-label="KM rodado consolidado por período"></canvas></div></div>
+          <div class="overflow-x-auto max-h-[330px] border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-xs"><thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200"><tr><th class="p-2">Frota</th><th class="p-2 text-right">KM inicial</th><th class="p-2 text-right">KM final</th><th class="p-2 text-right">KM rodado</th><th class="p-2 text-right">Média/dia</th></tr></thead><tbody id="pcv-rod-tbody" class="divide-y divide-slate-100"></tbody><tfoot id="pcv-rod-tfoot" class="bg-slate-50 font-black"></tfoot></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ABA 8: HISTÓRICO CONSOLIDADO -->
     <section id="tab-history" class="tab-content fade-in space-y-6">
       <div class="card-executive p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -3854,6 +4000,209 @@
     </div>
   </div>
 
+  <!-- MODAIS DA ESCALA -->
+  <div id="modal-esc-colab" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-emerald-600"></i> Colaboradores da escala</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-colab')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="escc-id" value="">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+        <div class="sm:col-span-2"><label for="escc-nome" class="block text-[11px] font-bold text-slate-700 mb-1">Nome *</label><input id="escc-nome" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></div>
+        <div><label for="escc-matricula" class="block text-[11px] font-bold text-slate-700 mb-1">Matrícula</label><input id="escc-matricula" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="escc-funcao" class="block text-[11px] font-bold text-slate-700 mb-1">Função *</label><select id="escc-funcao" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></select></div>
+        <div><label for="escc-unidade" class="block text-[11px] font-bold text-slate-700 mb-1">Unidade</label><select id="escc-unidade" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"><option value="MA">MA - Parnaíba</option><option value="AM">AM - Rio Preto/Manaus</option></select></div>
+        <div><label for="escc-turno" class="block text-[11px] font-bold text-slate-700 mb-1">Turno padrão</label><select id="escc-turno" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></select></div>
+        <label class="flex items-center gap-2 text-xs font-bold text-slate-700"><input type="checkbox" id="escc-ativo" checked> Ativo (aparece na escala)</label>
+        <div class="sm:col-span-2 flex justify-end gap-2">
+          <button type="button" onclick="escLimparColabForm()" class="px-3 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-white">Limpar</button>
+          <button type="button" onclick="escSalvarColab()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Salvar colaborador</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-[45vh]">
+        <table class="w-full text-left text-xs"><thead class="bg-slate-50 text-slate-500 uppercase border-b"><tr><th class="p-2">Nome</th><th class="p-2">Função</th><th class="p-2">Unidade</th><th class="p-2">Turno padrão</th><th class="p-2">Situação</th><th class="p-2 text-center">Ações</th></tr></thead><tbody id="escc-tbody" class="divide-y divide-slate-100"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-esc-funcoes" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="briefcase" class="w-5 h-5 text-emerald-600"></i> Funções</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-funcoes')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="flex gap-2"><input id="escf-nome" placeholder="Nova função (ex.: Soldador)" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm outline-none" onkeydown="if(event.key==='Enter') escSalvarFuncao()"><button type="button" onclick="escSalvarFuncao()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Adicionar</button></div>
+      <ul id="escf-lista" class="divide-y divide-slate-100 border border-slate-200 rounded-lg"></ul>
+    </div>
+  </div>
+
+  <div id="modal-esc-turnos" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5 text-emerald-600"></i> Turnos</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-turnos')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="esct-id" value="">
+      <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3 items-end">
+        <div class="col-span-2"><label for="esct-nome" class="block text-[11px] font-bold text-slate-700 mb-1">Nome *</label><input id="esct-nome" placeholder="Primeiro turno" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="esct-sigla" class="block text-[11px] font-bold text-slate-700 mb-1">Sigla *</label><input id="esct-sigla" maxlength="4" placeholder="T1" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none uppercase"></div>
+        <div><label for="esct-inicio" class="block text-[11px] font-bold text-slate-700 mb-1">Início</label><input type="time" id="esct-inicio" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="esct-fim" class="block text-[11px] font-bold text-slate-700 mb-1">Fim</label><input type="time" id="esct-fim" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="esct-cor" class="block text-[11px] font-bold text-slate-700 mb-1">Cor</label><input type="color" id="esct-cor" value="#2a78d6" class="w-full h-[38px] border border-slate-300 rounded-lg p-1"></div>
+        <div class="col-span-2 sm:col-span-6 flex justify-end gap-2"><button type="button" onclick="escLimparTurnoForm()" class="px-3 py-2 border rounded-lg text-xs font-bold text-slate-600">Limpar</button><button type="button" onclick="escSalvarTurno()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Salvar turno</button></div>
+      </div>
+      <ul id="esct-lista" class="divide-y divide-slate-100 border border-slate-200 rounded-lg"></ul>
+    </div>
+  </div>
+
+  <div id="modal-esc-config" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5 text-emerald-600"></i> Regras da escala</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-config')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+        <p class="text-xs font-black text-slate-700">Preventiva de carretas</p>
+        <p class="text-[11px] text-slate-500">Ao agendar uma preventiva de carreta, o sistema confere quantos mecânicos estão escalados naquele dia (na unidade da carreta) e avisa quando ficar abaixo do mínimo.</p>
+        <div><label for="escg-min" class="block text-[11px] font-bold text-slate-700 mb-1">Mínimo de mecânicos por dia</label><input type="number" min="1" id="escg-min" class="w-32 border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <p class="text-[11px] font-bold text-slate-700">Funções que contam como mecânico</p>
+        <div id="escg-funcoes" class="grid grid-cols-2 gap-1"></div>
+      </div>
+      <p class="text-[11px] text-slate-500">Regra 6x1: ao escalar o 7º dia seguido de trabalho o sistema sempre avisa e só aceita com justificativa.</p>
+      <div class="flex justify-end gap-2 pt-2 border-t"><button type="button" onclick="escFecharModal('modal-esc-config')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button><button type="button" onclick="escSalvarConfig()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Salvar</button></div>
+    </div>
+  </div>
+
+  <div id="modal-esc-preencher" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="wand-2" class="w-5 h-5 text-emerald-600"></i> Montar escala do mês</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-preencher')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label for="escp-mes" class="block text-[11px] font-bold text-slate-700 mb-1">Mês</label><select id="escp-mes" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></select></div>
+        <div><label for="escp-padrao" class="block text-[11px] font-bold text-slate-700 mb-1">Padrão</label>
+          <select id="escp-padrao" onchange="escAtualizarPreencherUI()" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none">
+            <option value="6x1c">6x1 contínuo (6 dias de trabalho e 1 de folga, continuando do mês anterior)</option>
+            <option value="6x1f">6x1 com folga fixa num dia da semana</option>
+            <option value="5x2">5x2 (folga sábado e domingo)</option>
+            <option value="12x36">12x36 (dia sim, dia não)</option>
+            <option value="copiar">Repetir as 4 semanas anteriores</option>
+          </select></div>
+        <div id="escp-folga-wrap" class="hidden"><label for="escp-folga" class="block text-[11px] font-bold text-slate-700 mb-1">Dia da folga</label><select id="escp-folga" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"><option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option></select></div>
+        <div id="escp-inicio-wrap" class="hidden"><label for="escp-inicio" class="block text-[11px] font-bold text-slate-700 mb-1">Dia 1 do mês</label><select id="escp-inicio" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"><option value="trab">Começa trabalhando</option><option value="folga">Começa de folga</option></select></div>
+        <div><label for="escp-turno" class="block text-[11px] font-bold text-slate-700 mb-1">Turno</label><select id="escp-turno" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></select></div>
+        <label id="escp-escalonar-wrap" class="flex items-center gap-2 text-xs font-bold text-slate-700 sm:col-span-2"><input type="checkbox" id="escp-escalonar" checked> Escalonar as folgas entre os colaboradores (evita todo mundo de folga no mesmo dia)</label>
+        <label class="flex items-center gap-2 text-xs font-bold text-slate-700 sm:col-span-2"><input type="checkbox" id="escp-sobrescrever"> Substituir dias já preenchidos (pede uma justificativa)</label>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1"><p class="text-xs font-bold text-slate-700">Colaboradores <span id="escp-count" class="font-medium text-slate-400"></span></p>
+          <div class="flex gap-2"><button type="button" onclick="escMarcarPreencher(true)" class="text-[11px] font-bold text-emerald-700 hover:underline">marcar todos</button><button type="button" onclick="escMarcarPreencher(false)" class="text-[11px] font-bold text-slate-500 hover:underline">desmarcar</button></div></div>
+        <div id="escp-colabs" class="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-56 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50"></div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t"><button type="button" onclick="escFecharModal('modal-esc-preencher')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button><button type="button" onclick="escAplicarPreencher()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Montar escala</button></div>
+    </div>
+  </div>
+
+  <div id="modal-esc-celula" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-base" id="escl-titulo">Dia da escala</h3>
+        <button type="button" onclick="escFecharModal('modal-esc-celula')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p id="escl-atual" class="text-xs text-slate-600"></p>
+      <div id="escl-opcoes" class="flex flex-wrap gap-1.5"></div>
+      <div id="escl-hist" class="text-[11px] text-slate-500 space-y-1"></div>
+    </div>
+  </div>
+
+  <div id="modal-esc-just" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-3">
+      <h3 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="message-square-warning" class="w-5 h-5 text-amber-600"></i> <span id="escj-titulo">Justificar alteração da escala</span></h3>
+      <p id="escj-texto" class="text-xs text-slate-700 whitespace-pre-line"></p>
+      <div id="escj-aviso" class="hidden text-xs font-bold text-red-800 bg-red-50 border border-red-200 rounded-lg p-2"></div>
+      <div><label for="escj-just" class="block text-[11px] font-bold text-slate-700 mb-1">Justificativa *</label><textarea id="escj-just" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500" placeholder="Ex.: troca de folga a pedido do colaborador; demanda extra de preventivas"></textarea></div>
+      <label id="escj-lote-wrap" class="flex items-center gap-2 text-[11px] font-bold text-slate-600"><input type="checkbox" id="escj-lote"> Usar esta justificativa nas próximas alterações (15 min)</label>
+      <div class="flex flex-wrap justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="escJustResponder(null)" class="px-3 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button>
+        <button type="button" id="escj-btn-folga" onclick="escJustResponder('folga')" class="hidden px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold">Colocar folga neste dia</button>
+        <button type="button" onclick="escJustResponder('ok')" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold" id="escj-btn-ok">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ATUALIZAR KM (planilhas Telemetria + Prolog) -->
+  <div id="modal-km-import" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-5xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="upload" class="w-5 h-5 text-emerald-600"></i> Atualizar KM dos cavalos</h3>
+        <button type="button" onclick="document.getElementById('modal-km-import').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <p class="text-xs text-slate-500">Envie o relatório da <strong>Telemetria</strong> e/ou do <strong>Prolog</strong> (Excel ou CSV, do jeito que sai do sistema). O sistema encontra a frota ou a placa e o KM (Odômetro / KM coletado), compara as duas fontes e sugere o <strong>KM a considerar</strong> (o maior). Confira e salve.</p>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+        <div><label for="kmi-telemetria" class="block text-[11px] font-bold text-slate-700 mb-1">Relatório da Telemetria</label><input type="file" id="kmi-telemetria" accept=".xlsx,.xls,.csv" class="w-full text-xs"></div>
+        <div><label for="kmi-prolog" class="block text-[11px] font-bold text-slate-700 mb-1">Relatório do Prolog</label><input type="file" id="kmi-prolog" accept=".xlsx,.xls,.csv" class="w-full text-xs"></div>
+        <div><label for="kmi-data" class="block text-[11px] font-bold text-slate-700 mb-1">Data das leituras</label><input type="date" id="kmi-data" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div class="flex gap-2"><button type="button" onclick="kmiLer()" class="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Ler planilhas</button><button type="button" onclick="kmiLer(true)" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700" title="Montar a lista para digitar o KM à mão">Digitar</button></div>
+      </div>
+      <p id="kmi-status" class="text-[11px] font-bold text-slate-600"></p>
+      <div id="kmi-previa" class="hidden space-y-2">
+        <div class="overflow-x-auto max-h-[52vh] border border-slate-200 rounded-lg">
+          <table class="w-full text-left text-xs"><thead class="bg-slate-50 text-slate-500 uppercase border-b border-slate-200 sticky top-0"><tr><th class="p-2"><input type="checkbox" id="kmi-todos" onchange="document.querySelectorAll('.kmi-inc').forEach(cb => { cb.checked = this.checked; }); kmiContar()" title="Marcar/desmarcar todos"></th><th class="p-2">Frota</th><th class="p-2">Placa</th><th class="p-2 text-right">Prolog</th><th class="p-2 text-right">Telemetria</th><th class="p-2 text-right">Dif.</th><th class="p-2">Check</th><th class="p-2 text-right">KM no sistema</th><th class="p-2">KM a considerar</th></tr></thead><tbody id="kmi-tbody" class="divide-y divide-slate-100"></tbody></table>
+        </div>
+        <p id="kmi-naorec" class="text-[11px] text-slate-500"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="document.getElementById('modal-km-import').classList.replace('flex', 'hidden')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button>
+        <button type="button" id="kmi-btn-salvar" onclick="kmiSalvar()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold disabled:opacity-50" disabled>Salvar KM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR CONTROLE DE UM CAVALO -->
+  <div id="modal-pcv-editar" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg" id="pcve-titulo">Cavalo</h3>
+        <button type="button" onclick="document.getElementById('modal-pcv-editar').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="pcve-id">
+      <p id="pcve-auto" class="text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2"></p>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label for="pcve-intervalo" class="block text-[11px] font-bold text-slate-700 mb-1">Intervalo da preventiva (km)</label><input type="text" inputmode="numeric" id="pcve-intervalo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none" placeholder="padrão"></div>
+        <div><label for="pcve-km-ult" class="block text-[11px] font-bold text-slate-700 mb-1">KM da última preventiva</label><input type="text" inputmode="numeric" id="pcve-km-ult" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none" placeholder="automático"></div>
+        <div><label for="pcve-data-ult" class="block text-[11px] font-bold text-slate-700 mb-1">Data da última preventiva</label><input type="date" id="pcve-data-ult" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="pcve-local" class="block text-[11px] font-bold text-slate-700 mb-1">Local (se lançada aqui)</label><input type="text" id="pcve-local" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div class="col-span-2"><label for="pcve-obs" class="block text-[11px] font-bold text-slate-700 mb-1">Observação</label><input type="text" id="pcve-obs" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+      </div>
+      <p class="text-[10px] text-slate-400">Deixe a data em branco para usar a última preventiva registrada em Status &amp; Paradas. Preencha a data só para uma preventiva feita fora do sistema.</p>
+      <div><p class="text-[11px] font-bold text-slate-600 mb-1">Últimas leituras de KM</p><div id="pcve-leituras" class="max-h-40 overflow-y-auto border border-slate-200 rounded-lg text-[11px]"></div></div>
+      <div class="flex justify-end gap-2 pt-2 border-t"><button type="button" onclick="document.getElementById('modal-pcv-editar').classList.replace('flex', 'hidden')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button><button type="button" onclick="pcvSalvarEditar()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL ALERTAS E INTERVALO -->
+  <div id="modal-pcv-config" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="bell-ring" class="w-5 h-5 text-emerald-600"></i> Alertas e intervalo</h3>
+        <button type="button" onclick="document.getElementById('modal-pcv-config').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div><label for="pcvc-intervalo" class="block text-[11px] font-bold text-slate-700 mb-1">Intervalo padrão (km)</label><input type="text" inputmode="numeric" id="pcvc-intervalo" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="pcvc-alerta" class="block text-[11px] font-bold text-slate-700 mb-1">Alertar faltando (km)</label><input type="text" inputmode="numeric" id="pcvc-alerta" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+        <div><label for="pcvc-tol" class="block text-[11px] font-bold text-slate-700 mb-1">Diferença aceita Prolog x Telemetria (km)</label><input type="text" inputmode="numeric" id="pcvc-tol" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none"></div>
+      </div>
+      <div><p class="text-[11px] font-bold text-slate-700 mb-1">Usuários que recebem o alerta</p><div id="pcvc-usuarios" class="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50"></div><p class="text-[10px] text-slate-400 mt-1">Eles veem um aviso ao entrar no sistema e podem receber e-mail (precisa do e-mail no cadastro).</p></div>
+      <label class="flex items-center gap-2 text-xs font-bold text-slate-700"><input type="checkbox" id="pcvc-email-auto"> Enviar e-mail automático ao atualizar o KM (quando houver cavalo em alerta)</label>
+      <div class="flex flex-wrap justify-between gap-2 pt-2 border-t">
+        <button type="button" onclick="pcvEnviarAlertaEmail(false)" class="px-3 py-2 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold">Enviar alerta por e-mail agora</button>
+        <div class="flex gap-2"><button type="button" onclick="document.getElementById('modal-pcv-config').classList.replace('flex', 'hidden')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Cancelar</button><button type="button" onclick="pcvSalvarConfig()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Salvar</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL GERENCIAR CAUSAS RAIZ -->
   <div id="modal-causa-raiz" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-[60] p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
@@ -4038,14 +4387,14 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Unidade / Operação</label>
-          <select id="maint-unit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          <select id="maint-unit" onchange="if (typeof atualizarAvisoEscalaMaint === 'function') atualizarAvisoEscalaMaint()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
             <option value="AM">Rio Preto da Eva / Manaus - AM</option>
             <option value="MA">Parnaíba - MA</option>
           </select>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Especificação do Veículo</label>
-          <select id="maint-type" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          <select id="maint-type" onchange="if (typeof atualizarAvisoEscalaMaint === 'function') atualizarAvisoEscalaMaint()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
             <option value="Carreta">Carreta (Reboque)</option>
             <option value="Cavalo">Cavalo Mecânico</option>
           </select>
@@ -4058,6 +4407,7 @@
           <label class="block text-xs font-bold text-slate-700 mb-1">Data da Programação</label>
           <input type="date" id="maint-date" required onchange="onMaintDateChange()" oninput="onMaintDateChange()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
         </div>
+        <div id="maint-escala-aviso" class="hidden"></div>
         <!-- Lançamento retroativo: data no passado — registra se foi realizada (e quando) ou por que não foi -->
         <div id="maint-retro-box" class="hidden rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2">
           <p class="text-[11px] font-bold text-indigo-900 flex items-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5"></i> Lançamento retroativo (data no passado)</p>
@@ -4803,10 +5153,10 @@
     // Mapa de permissões por função — controla quais abas cada perfil pode acessar no sistema.
     // Abas liberadas por função. As funções antigas (Analista Planejamento, Supervisor, Gerente, Diretor) continuam
     // valendo para quem já está cadastrado com elas.
-    const ABAS_ANALISTA = ['dashboard', 'farol', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'evolution', 'history'];
-    const ABAS_CONTROLADOR = ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
-    const ABAS_SUPERVISOR = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
-    const ABAS_GERENTE = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history'];
+    const ABAS_ANALISTA = ['dashboard', 'farol', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'evolution', 'history', 'escala', 'prevcavalos'];
+    const ABAS_CONTROLADOR = ['dashboard', 'assets', 'status', 'farol', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'planning', 'controles', 'formularios', 'progrealizado', 'history', 'escala', 'prevcavalos'];
+    const ABAS_SUPERVISOR = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history', 'escala', 'prevcavalos'];
+    const ABAS_GERENTE = ['dashboard', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'falhas', 'custos', 'acao', 'evolution', 'executive', 'calendar', 'documents', 'planning', 'controles', 'formularios', 'progrealizado', 'history', 'escala', 'prevcavalos'];
     const ABAS_DIRETOR = ABAS_GERENTE.concat(['users']);
     const ROLE_PERMISSIONS = {
       'Assistente Administrativo': ['dashboard', 'farol', 'documents', 'history'],
@@ -4843,7 +5193,7 @@
     function permissoesDaFuncao(f) { return ROLE_PERMISSIONS[f] || ROLE_PERMISSIONS[funcaoCanonica(f)] || null; }
     const FUNCOES_VEEM_ONLINE = ['Diretor', 'Gerente', 'Desenvolvedor', 'Gerente de Operações', 'Gerente de Manutenção', 'Coordenador de Operações', 'Coordenador de Manutenção', 'Diretor de Operações', 'Ceo'];
     // mesma ordem do menu lateral (grupos Início, Frota, Manutenção, Análises, Sistema)
-    const ALL_TABS = ['dashboard', 'executive', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'calendar', 'planning', 'progrealizado', 'documents', 'controles', 'formularios', 'falhas', 'custos', 'acao', 'evolution', 'history', 'online', 'users'];
+    const ALL_TABS = ['dashboard', 'executive', 'assets', 'status', 'farol', 'availability', 'paradasdetalhado', 'operacao', 'calendar', 'prevcavalos', 'planning', 'progrealizado', 'documents', 'controles', 'formularios', 'escala', 'falhas', 'custos', 'acao', 'evolution', 'history', 'online', 'users'];
 
     window.users = [];
     let usersLoaded = false;
@@ -5727,9 +6077,9 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    const PERMISSOES_VERSAO = 5; // 2 = já conhece a aba Plano de Ação; 3 = Controles Personalizados; 4 = Formulários; 5 = Custo de Frota
+    const PERMISSOES_VERSAO = 6; // 2 = já conhece a aba Plano de Ação; 3 = Controles Personalizados; 4 = Formulários; 5 = Custo de Frota; 6 = Escala e Preventiva Cavalos
     // Abas criadas depois das permissões individuais: quem salvou antes delas recebe o padrão da função
-    const ABAS_NOVAS_VERSAO = { acao: 2, controles: 3, formularios: 4, custos: 5 };
+    const ABAS_NOVAS_VERSAO = { acao: 2, controles: 3, formularios: 4, custos: 5, escala: 6, prevcavalos: 6 };
     function abasNovasParaPermissoesAntigas(u, funcao) {
       const v = Number((u && u.permissoesVersao) || 0);
       return Object.keys(ABAS_NOVAS_VERSAO).filter(t => v < ABAS_NOVAS_VERSAO[t] && (permissoesDaFuncao(funcao) || []).includes(t));
@@ -5919,7 +6269,7 @@
     // ===================== PERMISSÕES INDIVIDUAIS (SOMENTE CONTA DESENVOLVEDOR) =====================
     const TAB_LABELS_MAP = {
       dashboard: 'Visão Geral', assets: 'Cadastro de Ativos', status: 'Status & Paradas', farol: 'Farol de Manutenção', availability: 'Disponibilidade',
-      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', custos: 'Análise de Custo de Frota', acao: 'Plano de Ação & Fatos Relevantes', evolution: 'Evolução', executive: 'Painel Diretoria',
+      paradasdetalhado: 'Paradas Detalhado', operacao: 'Operação por Ativo', falhas: 'Análise de Falhas', custos: 'Análise de Custo de Frota', escala: 'Gestão de Escala de Trabalho', prevcavalos: 'Controle de Preventiva — Cavalos', acao: 'Plano de Ação & Fatos Relevantes', evolution: 'Evolução', executive: 'Painel Diretoria',
       calendar: 'Calendário de Preventivas', documents: 'Documentação & Auditoria', planning: 'Planejamento', controles: 'Controles Personalizados', formularios: 'Formulários de Campo',
       progrealizado: 'Programado x Realizado',
       history: 'Histórico Consolidado', online: 'Usuários Online', users: 'Usuários & Permissões'
@@ -6432,6 +6782,9 @@
       if (!activeTab || activeTab === 'custos') renderCustos();
       if (!activeTab || activeTab === 'acao') renderPlanoAcao();
       if (!activeTab || activeTab === 'controles') renderControles();
+      if (!activeTab || activeTab === 'escala') renderEscala();
+      if (!activeTab || activeTab === 'prevcavalos') renderPrevCavalos();
+      if (typeof atualizarBadgePrevCavalos === 'function') atualizarBadgePrevCavalos();
       if (!activeTab || activeTab === 'formularios') renderFormularios();
       renderPlanejamento();
       renderProgRealizado();
@@ -7013,6 +7366,7 @@
         document.getElementById('maint-unit').value = asset.unidade;
         document.getElementById('maint-type').value = asset.tipo;
       }
+      if (typeof atualizarAvisoEscalaMaint === 'function') atualizarAvisoEscalaMaint();
     };
 
     // ===================== ABAS =====================
@@ -7053,6 +7407,8 @@
       if (tabId === 'acao') renderPlanoAcao();
       if (tabId === 'planning') renderPlanejamento();
       if (tabId === 'calendar') renderCalendar();
+      if (tabId === 'escala') renderEscala();
+      if (tabId === 'prevcavalos') renderPrevCavalos();
       if (tabId === 'controles') renderControles();
       if (tabId === 'formularios') renderFormularios();
       if (tabId === 'progrealizado') renderProgRealizado();
@@ -7244,6 +7600,7 @@
       document.getElementById('maint-data-real-wrap').classList.toggle('hidden', !realizada);
       document.getElementById('maint-just-wrap').classList.toggle('hidden', realizada);
       const dr = document.getElementById('maint-data-realizada');
+      if (typeof atualizarAvisoEscalaMaint === 'function') atualizarAvisoEscalaMaint();
       dr.max = hoje;
       if (retro) { dr.min = ''; if (!dr.value || dr.dataset.auto === '1') { dr.value = data; dr.dataset.auto = '1'; } }
     };
@@ -10266,6 +10623,10 @@
         }
       } else if (info.kind === 'maint') {
         const item = window.maintenanceSchedule.find(m => String(m.id) === String(info.id));
+        if (item && info.dataNova >= getTodayStr() && typeof avisoEscalaPreventiva === 'function') {
+          const av = avisoEscalaPreventiva(item.type, item.unit, info.dataNova, item.id);
+          if (av && av.nivel === 'alerta' && !confirm(`${av.texto}\n\nReprogramar mesmo assim?`)) return;
+        }
         if (item) {
           if (!item.historico) item.historico = [];
           if (!item.dataOriginal) item.dataOriginal = info.dataAnterior;
@@ -10327,6 +10688,11 @@
         if (dataRealizada > hoje) { alert('A data de realização não pode ser futura.'); return; }
       }
       const justificativa = retro && status !== 'Realizado' ? document.getElementById('maint-justificativa').value.trim() : '';
+      // Preventiva de carreta: confere os mecânicos escalados no dia
+      if (!retro && typeof avisoEscalaPreventiva === 'function') {
+        const av = avisoEscalaPreventiva(type, unit, date, null);
+        if (av && av.nivel === 'alerta' && !confirm(`${av.texto}\n\nProgramar mesmo assim?`)) return;
+      }
 
       const item = { id: Date.now(), unit, tag: asset.tag, assetId: asset.id, type, service, date, local, responsavel, status, dataOriginal: date, dataRealizada, historico: [] };
       if (retro) { item.retroativo = true; item.lancadoEm = hoje; }
@@ -15479,7 +15845,10 @@
       saveAtividade deleteAtividade openAtvConfirmar confirmarAtividade openControleBuilder salvarControle excluirControle openControleRegistro
       salvarRegistroControle excluirRegistroControle saveUser editUser deleteUser toggleUserStatus openUserPermissionsModal saveUserPermissions
       restoreDefaultPermissions salvarConfigEmail importFullBackupFile runDailySnapshotIfNeeded clearHistory abrirConstrutorFormulario salvarFormulario
-      excluirFormulario excluirRespostaFormulario alternarFormularioAtivo`.split(/\s+/).filter(Boolean));
+      excluirFormulario excluirRespostaFormulario alternarFormularioAtivo
+      escSalvarColab escEditarColab escExcluirColab escSalvarFuncao escRemoverFuncao escSalvarTurno escEditarTurno escRemoverTurno escSalvarConfig
+      escClicarCelula escAbrirCelula escEscolherNaCelula escDefinir escAbrirPreencher escAplicarPreencher escAbrirColabs escAbrirFuncoes escAbrirTurnos escAbrirConfig
+      kmiAbrir kmiLer kmiSalvar pcvAbrirEditar pcvSalvarEditar pcvAbrirConfig pcvSalvarConfig pcvProgramar pcvEnviarAlertaEmail`.split(/\s+/).filter(Boolean));
     const ATTRS_HANDLER = ['onclick', 'onchange', 'oninput', 'onsubmit', 'ondragstart', 'ondrop'];
     const _cacheHandlerEdita = new Map();
     function handlerEdita(attr) {
@@ -17105,6 +17474,1150 @@
     sbEl?.addEventListener('mouseleave', () => sbEl.classList.remove('recolher'));
     document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') fecharMenuMobile(); });
 
+    // ===================== GESTÃO DE ESCALA DE TRABALHO =====================
+    // Nós: escalaColaboradores, escalaFuncoes, escalaTurnos, escalaConfig e escala/<AAAA-MM>/<colab>/d<DD> = { v, h }.
+    // v = id do turno (trabalho) ou F (folga), FE (férias), AF (afastamento). h = histórico de alterações justificadas.
+    window.escColabs = [];
+    window.escFuncoes = [];
+    window.escTurnos = [];
+    window.escDados = {};
+    window.escConfig = {};
+    window.escRef = null;
+    window.escPincel = 'editar';
+    window.escJustLote = null;
+    const escLoaded = { colabs: false, dados: false };
+    const ESC_FUNCOES_PADRAO = ['Mecânico', 'Auxiliar de Mecânica', 'Eletricista', 'Auxiliar de Elétrica', 'Líder de Manutenção', 'Técnico de Criogenia', 'Instrumentista', 'Assistente Administrativo'];
+    const ESC_TURNOS_PADRAO = [
+      { id: 't1', nome: 'Primeiro turno', sigla: 'T1', inicio: '06:00', fim: '14:00', cor: '#2a78d6' },
+      { id: 't2', nome: 'Segundo turno', sigla: 'T2', inicio: '14:00', fim: '22:00', cor: '#eb6834' },
+      { id: 't3', nome: 'Terceiro turno', sigla: 'T3', inicio: '22:00', fim: '06:00', cor: '#4a3aa7' },
+      { id: 'tadm', nome: 'Administrativo', sigla: 'ADM', inicio: '08:00', fim: '17:00', cor: '#1baf7a' }
+    ];
+    const ESC_ESPECIAIS = {
+      F: { nome: 'Folga', sigla: 'F', bg: '#e2e8f0', fg: '#334155' },
+      FE: { nome: 'Férias', sigla: 'FE', bg: '#cffafe', fg: '#155e75' },
+      AF: { nome: 'Afastamento / atestado', sigla: 'AF', bg: '#fef3c7', fg: '#92400e' }
+    };
+    const DIAS_CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    function syncEscala() {
+      onValue(ref(db, 'escalaColaboradores'), s => { window.escColabs = toList(s.val()).filter(c => c && c.id); escLoaded.colabs = true; escAposDados(); });
+      onValue(ref(db, 'escalaFuncoes'), s => { const v = toList(s.val()).filter(f => f && f.nome); window.escFuncoes = v.length ? v : ESC_FUNCOES_PADRAO.map((n, i) => ({ id: 'f' + (i + 1), nome: n })); escAposDados(); });
+      onValue(ref(db, 'escalaTurnos'), s => { const v = toList(s.val()).filter(t => t && t.id); window.escTurnos = v.length ? v : ESC_TURNOS_PADRAO.map(t => Object.assign({}, t)); escAposDados(); });
+      onValue(ref(db, 'escalaConfig'), s => { window.escConfig = Object.assign({ minMecanicosCarreta: 3, funcoesPreventiva: ['Mecânico'] }, s.val() || {}); });
+      onValue(query(ref(db, 'escala'), limitToLast(24)), s => { window.escDados = s.val() || {}; escLoaded.dados = true; escAposDados(); });
+    }
+    function escAposDados() {
+      const ativa = document.querySelector('.tab-content.active');
+      if (ativa && ativa.id === 'tab-escala') renderEscala();
+      if (typeof atualizarAvisoEscalaMaint === 'function' && document.getElementById('modal-maint')?.classList.contains('flex')) atualizarAvisoEscalaMaint();
+    }
+    window.escFecharModal = (id) => document.getElementById(id).classList.replace('flex', 'hidden');
+    const escAbrirModal = (id) => { document.getElementById(id).classList.replace('hidden', 'flex'); if (window.lucide) lucide.createIcons(); };
+
+    // ----- leitura da escala -----
+    const escYm = (d) => d.slice(0, 7);
+    const escDk = (d) => 'd' + d.slice(8, 10);
+    function escCelula(colId, d) { const m = window.escDados[escYm(d)]; const c = m && m[colId]; return (c && c[escDk(d)]) || null; }
+    window.escValor = (colId, d) => (escCelula(colId, d) || {}).v || '';
+    const escEhTrabalho = (v) => !!v && !ESC_ESPECIAIS[v];
+    const escTurno = (id) => (window.escTurnos || []).find(t => t.id === id);
+    function escNomeValor(v) { if (!v) return ''; if (ESC_ESPECIAIS[v]) return ESC_ESPECIAIS[v].nome; const t = escTurno(v); return t ? `${t.nome} (${t.inicio}–${t.fim})` : 'Turno removido'; }
+    function escSigla(v) { if (!v) return ''; if (ESC_ESPECIAIS[v]) return ESC_ESPECIAIS[v].sigla; const t = escTurno(v); return t ? t.sigla : '?'; }
+    function escEstilo(v) {
+      if (!v) return '';
+      if (ESC_ESPECIAIS[v]) return `background:${ESC_ESPECIAIS[v].bg};color:${ESC_ESPECIAIS[v].fg}`;
+      const t = escTurno(v);
+      return `background:${t ? t.cor : '#64748b'};color:#fff`;
+    }
+    function escHorasTurno(t) {
+      if (!t || !t.inicio || !t.fim) return 8;
+      const [h1, m1] = t.inicio.split(':').map(Number), [h2, m2] = t.fim.split(':').map(Number);
+      let min = (h2 * 60 + m2) - (h1 * 60 + m1);
+      if (min <= 0) min += 24 * 60;
+      return Math.round(min / 6) / 10;
+    }
+    // Dias seguidos de trabalho contando o dia d com o valor v (olha antes e depois, atravessando meses)
+    function escSequencia(colId, d, v) {
+      if (!escEhTrabalho(v)) return 0;
+      let n = 1, x = addDaysToDateStr(d, -1), g = 0;
+      while (g++ < 62 && escEhTrabalho(escValor(colId, x))) { n++; x = addDaysToDateStr(x, -1); }
+      x = addDaysToDateStr(d, 1); g = 0;
+      while (g++ < 62 && escEhTrabalho(escValor(colId, x))) { n++; x = addDaysToDateStr(x, 1); }
+      return n;
+    }
+    const escColab = (id) => (window.escColabs || []).find(c => String(c.id) === String(id));
+    window.escSequencia = escSequencia;
+
+    // ----- período / filtros -----
+    function escPeriodo() {
+      const visao = document.getElementById('esc-visao')?.value || 'mes';
+      const ref0 = window.escRef || getTodayStr();
+      if (visao === 'dia') return { visao, ini: ref0, fim: ref0, label: `${DIAS_CURTO[parseLocalDate(ref0).getDay()]}, ${formatDateBR(ref0)}` };
+      const agr = visao === 'semana' ? 'semana' : 'mes';
+      const ini = prInicioPeriodo(ref0, agr);
+      const fim = prFimPeriodo(ini, agr);
+      return { visao, ini, fim, label: prRotuloComDatas({ agr, ini, fim, label: prRotulo(ini, agr) }) };
+    }
+    window.escNavegar = function(n) {
+      const visao = document.getElementById('esc-visao')?.value || 'mes';
+      const ref0 = window.escRef || getTodayStr();
+      window.escRef = n === 0 ? getTodayStr() : visao === 'dia' ? addDaysToDateStr(ref0, n) : prDeslocar(ref0, visao === 'semana' ? 'semana' : 'mes', n);
+      renderEscala();
+    };
+    window.escIrMesSeguinte = function() {
+      document.getElementById('esc-visao').value = 'mes';
+      window.escRef = prDeslocar(prInicioPeriodo(getTodayStr(), 'mes'), 'mes', 1);
+      renderEscala();
+    };
+    function escDiasEntre(ini, fim) { const out = []; let d = ini, g = 0; while (d <= fim && g++ < 400) { out.push(d); d = addDaysToDateStr(d, 1); } return out; }
+    function escColabsFiltrados(incluirInativos) {
+      const un = document.getElementById('esc-filter-unidade')?.value || 'TODAS';
+      const fn = document.getElementById('esc-filter-funcao')?.value || '';
+      const tn = document.getElementById('esc-filter-turno')?.value || '';
+      const busca = normTxt(document.getElementById('esc-filter-busca')?.value || '');
+      return (window.escColabs || []).filter(c => (incluirInativos || c.ativo !== false)
+        && (window.selectedUnit === 'TODAS' || c.unidade === window.selectedUnit) && (un === 'TODAS' || c.unidade === un)
+        && (!fn || c.funcao === fn) && (!tn || c.turnoPadrao === tn) && (!busca || normTxt(`${c.nome} ${c.matricula || ''}`).includes(busca)))
+        .sort((a, b) => (a.funcao || '').localeCompare(b.funcao || '') || (a.nome || '').localeCompare(b.nome || ''));
+    }
+    const escEhMecanico = (c) => (window.escConfig.funcoesPreventiva || ['Mecânico']).map(normTxt).includes(normTxt(c.funcao));
+
+    // ----- pincéis -----
+    function escRenderPinceis() {
+      const box = document.getElementById('esc-pinceis');
+      if (!box) return;
+      const itens = [{ v: 'editar', sigla: '✎', rotulo: 'Abrir dia', nome: 'Clique no dia para escolher (e ver o histórico)', estilo: 'background:#fff;color:#334155' }]
+        .concat((window.escTurnos || []).map(t => ({ v: t.id, sigla: t.sigla, rotulo: t.nome, nome: `${t.nome} ${t.inicio}–${t.fim}`, estilo: escEstilo(t.id) })))
+        .concat(Object.keys(ESC_ESPECIAIS).map(k => ({ v: k, sigla: ESC_ESPECIAIS[k].sigla, rotulo: ESC_ESPECIAIS[k].nome.split(' /')[0], nome: ESC_ESPECIAIS[k].nome, estilo: escEstilo(k) })))
+        .concat([{ v: 'limpar', sigla: '⌫', rotulo: 'Limpar', nome: 'Limpar o dia', estilo: 'background:#fff;color:#b91c1c' }]);
+      box.innerHTML = itens.map(p => `<button type="button" onclick="escSelecionarPincel('${escapeJs(p.v)}')" aria-pressed="${window.escPincel === p.v}" title="${escapeAttr(p.nome)}" class="px-2 py-1 rounded-md text-[11px] font-black border ${window.escPincel === p.v ? 'ring-2 ring-offset-1 ring-emerald-600 border-emerald-700' : 'border-slate-300'}" style="${p.estilo}">${escapeHtml(p.sigla)} <span class="font-bold">${escapeHtml(p.rotulo)}</span></button>`).join('');
+      const lote = document.getElementById('esc-lote-aviso');
+      const ativoLote = window.escJustLote && Date.now() < window.escJustLote.ate;
+      lote.classList.toggle('hidden', !ativoLote);
+      if (ativoLote) lote.innerHTML = `Justificativa em uso: "${escapeHtml(window.escJustLote.texto.slice(0, 40))}" <button type="button" onclick="window.escJustLote = null; escRenderPinceis()" class="underline ml-1">parar</button>`;
+    }
+    window.escSelecionarPincel = function(v) { window.escPincel = v; escRenderPinceis(); };
+
+    // ----- justificativa (modal com promessa) -----
+    let escJustResolver = null, escJustCtx = null;
+    function escPedirJustificativa(ctx) {
+      const lote = window.escJustLote && Date.now() < window.escJustLote.ate ? window.escJustLote.texto : '';
+      if (lote && !(ctx.seq >= 7)) return Promise.resolve({ just: lote });
+      return new Promise(resolve => {
+        escJustResolver = resolve;
+        escJustCtx = ctx;
+        document.getElementById('escj-titulo').innerText = ctx.titulo || (ctx.seq >= 7 ? '7º dia seguido de trabalho' : 'Justificar alteração da escala');
+        document.getElementById('escj-texto').innerText = ctx.texto || '';
+        const av = document.getElementById('escj-aviso');
+        av.classList.toggle('hidden', !(ctx.seq >= 7));
+        av.innerText = ctx.seq >= 7 ? `${ctx.nome || 'O colaborador'} já está com ${ctx.seq - 1} dias seguidos trabalhando — este seria o ${ctx.seq}º dia (regra 6x1). Deseja colocar uma folga? Para manter o trabalho, justifique.` : '';
+        document.getElementById('escj-btn-folga').classList.toggle('hidden', !(ctx.seq >= 7) || !!ctx.semFolga);
+        document.getElementById('escj-btn-ok').innerText = ctx.seq >= 7 ? 'Manter trabalhando (justificado)' : 'Confirmar';
+        document.getElementById('escj-just').value = lote || '';
+        document.getElementById('escj-lote').checked = false;
+        document.getElementById('escj-lote-wrap').classList.toggle('hidden', !!ctx.semLote);
+        escAbrirModal('modal-esc-just');
+        setTimeout(() => document.getElementById('escj-just').focus(), 50);
+      });
+    }
+    window.escJustResponder = function(acao) {
+      if (!escJustResolver) return;
+      const just = document.getElementById('escj-just').value.trim();
+      if (acao === 'ok' && !just) { alert('Escreva a justificativa.'); return; }
+      if (acao === 'folga' && escJustCtx && escJustCtx.precisaJustFolga && !just) { alert('Escreva a justificativa (o dia já estava escalado).'); return; }
+      if (acao && document.getElementById('escj-lote').checked && just) window.escJustLote = { texto: just, ate: Date.now() + 15 * 60000 };
+      const r = escJustResolver;
+      escJustResolver = null;
+      escFecharModal('modal-esc-just');
+      r(acao ? { just, folga: acao === 'folga' } : null);
+      escRenderPinceis();
+    };
+
+    // ----- gravação -----
+    function escGravarCelula(colId, d, de, para, just) {
+      const c = escColab(colId);
+      const ym = escYm(d), dk = escDk(d);
+      const ant = escCelula(colId, d) || {};
+      const hist = (ant.h || []).slice();
+      const agora = new Date().toISOString();
+      if (de || just) hist.push({ de: de || '', para: para || '', just: just || '', por: nomeUsuarioAtual(), em: agora });
+      const cel = para ? { v: para, h: hist, por: nomeUsuarioAtual(), em: agora } : (hist.length ? { v: '', h: hist } : null);
+      window.escDados[ym] = window.escDados[ym] || {};
+      window.escDados[ym][colId] = window.escDados[ym][colId] || {};
+      if (cel) window.escDados[ym][colId][dk] = cel; else delete window.escDados[ym][colId][dk];
+      safeSet(`escala/${ym}/${colId}/${dk}`, cel);
+      if (de || just) addAuditLog((c && c.unidade) || 'TODAS', 'Escala', c ? c.nome : colId, `Escala de ${formatDateBR(d)}: ${escNomeValor(de) || 'vazio'} → ${escNomeValor(para) || 'vazio'}${just ? ` — justificativa: ${just}` : ''}`, d, escNomeValor(para) || 'Removido');
+    }
+    // Define um dia: pede justificativa ao trocar um dia já escalado e alerta o 7º dia seguido
+    window.escDefinir = async function(colId, d, novo) {
+      const c = escColab(colId);
+      if (!c) return false;
+      const atual = escValor(colId, d);
+      if (atual === novo) return false;
+      const seq = escSequencia(colId, d, novo);
+      let final = novo, just = '';
+      if (atual || seq >= 7) {
+        const r = await escPedirJustificativa({ nome: c.nome, seq, precisaJustFolga: !!atual && atual !== 'F', texto: `${c.nome} (${c.funcao || ''}) — ${DIAS_CURTO[parseLocalDate(d).getDay()]}, ${formatDateBR(d)}\nDe: ${escNomeValor(atual) || 'vazio'}\nPara: ${escNomeValor(novo) || 'vazio'}` });
+        if (!r) return false;
+        if (r.folga) final = 'F';
+        just = r.just || '';
+        if (final === atual) return false;
+      }
+      escGravarCelula(colId, d, atual, final, just);
+      return true;
+    };
+    window.escClicarCelula = async function(colId, d) {
+      if (window.escPincel === 'editar') { escAbrirCelula(colId, d); return; }
+      const ok = await escDefinir(colId, d, window.escPincel === 'limpar' ? '' : window.escPincel);
+      if (ok) renderEscala();
+    };
+    window.escAbrirCelula = function(colId, d) {
+      const c = escColab(colId);
+      if (!c) return;
+      const cel = escCelula(colId, d) || {};
+      document.getElementById('escl-titulo').innerText = `${c.nome} — ${DIAS_CURTO[parseLocalDate(d).getDay()]}, ${formatDateBR(d)}`;
+      document.getElementById('escl-atual').innerHTML = `Atual: <strong>${escapeHtml(escNomeValor(cel.v) || 'sem escala')}</strong>`;
+      const ops = (window.escTurnos || []).map(t => t.id).concat(Object.keys(ESC_ESPECIAIS)).concat(['']);
+      document.getElementById('escl-opcoes').innerHTML = ops.map(v => `<button type="button" onclick="escEscolherNaCelula('${escapeJs(colId)}', '${d}', '${escapeJs(v)}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-black border ${v === (cel.v || '') ? 'ring-2 ring-emerald-600' : 'border-slate-300'}" style="${v ? escEstilo(v) : 'background:#fff;color:#b91c1c'}">${v ? escapeHtml(escSigla(v)) + ' · ' + escapeHtml(escNomeValor(v).replace(/\s\(.*\)$/, '')) : '⌫ Limpar'}</button>`).join('');
+      document.getElementById('escl-hist').innerHTML = (cel.h || []).length ? '<p class="font-bold text-slate-600">Histórico deste dia</p>' + cel.h.slice().reverse().map(h => `<p>• ${escapeHtml(new Date(h.em).toLocaleString('pt-BR'))} — ${escapeHtml(h.por || '')}: ${escapeHtml(escNomeValor(h.de) || 'vazio')} → ${escapeHtml(escNomeValor(h.para) || 'vazio')}${h.just ? ` <em>(${escapeHtml(h.just)})</em>` : ''}</p>`).join('') : '';
+      escAbrirModal('modal-esc-celula');
+    };
+    window.escEscolherNaCelula = async function(colId, d, v) {
+      escFecharModal('modal-esc-celula');
+      const ok = await escDefinir(colId, d, v);
+      if (ok) renderEscala();
+    };
+
+    // ----- render -----
+    window.renderEscala = function() {
+      const sec = document.getElementById('tab-escala');
+      if (!sec) return;
+      // filtros
+      const fSel = document.getElementById('esc-filter-funcao'), tSel = document.getElementById('esc-filter-turno');
+      const fCur = fSel.value, tCur = tSel.value;
+      fSel.innerHTML = '<option value="">Todas as funções</option>' + (window.escFuncoes || []).map(f => `<option value="${escapeAttr(f.nome)}">${escapeHtml(f.nome)}</option>`).join('');
+      fSel.value = Array.from(fSel.options).some(o => o.value === fCur) ? fCur : '';
+      tSel.innerHTML = '<option value="">Todos os turnos padrão</option>' + (window.escTurnos || []).map(t => `<option value="${escapeAttr(t.id)}">${escapeHtml(t.nome)}</option>`).join('');
+      tSel.value = Array.from(tSel.options).some(o => o.value === tCur) ? tCur : '';
+      escRenderPinceis();
+      const per = escPeriodo();
+      document.getElementById('esc-periodo-label').innerText = per.label;
+      const dias = escDiasEntre(per.ini, per.fim);
+      const colabs = escColabsFiltrados(false);
+      const hoje = getTodayStr();
+      window.lastEscala = { per, dias, colabs };
+      // legenda
+      document.getElementById('esc-legenda').innerHTML = (window.escTurnos || []).map(t => `<span class="inline-flex items-center gap-1"><span class="px-1.5 rounded font-black" style="${escEstilo(t.id)}">${escapeHtml(t.sigla)}</span>${escapeHtml(t.nome)} ${escapeHtml(t.inicio)}–${escapeHtml(t.fim)}</span>`).join('') + Object.keys(ESC_ESPECIAIS).map(k => `<span class="inline-flex items-center gap-1"><span class="px-1.5 rounded font-black" style="${escEstilo(k)}">${k}</span>${ESC_ESPECIAIS[k].nome}</span>`).join('');
+      // estatísticas por colaborador
+      const est = colabs.map(c => {
+        let trab = 0, folga = 0, ferias = 0, afast = 0, vazio = 0, horas = 0, run = 0, maxRun = 0, domingos = 0;
+        // sequência começa contando os dias trabalhados logo antes do período
+        let x = addDaysToDateStr(per.ini, -1), g = 0;
+        while (g++ < 62 && escEhTrabalho(escValor(c.id, x))) { run++; x = addDaysToDateStr(x, -1); }
+        const semanas = {};
+        dias.forEach(d => {
+          const v = escValor(c.id, d);
+          const wk = prInicioPeriodo(d, 'semana');
+          const s = semanas[wk] = semanas[wk] || { t: 0, f: 0 };
+          if (escEhTrabalho(v)) { trab++; horas += escHorasTurno(escTurno(v)); run++; maxRun = Math.max(maxRun, run); s.t++; if (parseLocalDate(d).getDay() === 0) domingos++; }
+          else { run = 0; if (v === 'F') { folga++; s.f++; } else if (v === 'FE') ferias++; else if (v === 'AF') afast++; else vazio++; }
+        });
+        return { c, trab, folga, ferias, afast, vazio, horas, maxRun, domingos, semanas };
+      });
+      const totTrab = est.reduce((s, e) => s + e.trab, 0), totFolga = est.reduce((s, e) => s + e.folga, 0), totVazio = est.reduce((s, e) => s + e.vazio, 0);
+      const seteMais = est.filter(e => e.maxRun >= 7);
+      // mecânicos por dia
+      const minMec = Number(window.escConfig.minMecanicosCarreta) || 3;
+      const mecDia = dias.map(d => ({ d, n: colabs.filter(c => escEhMecanico(c) && escEhTrabalho(escValor(c.id, d))).length }));
+      const temMec = colabs.some(escEhMecanico);
+      const piorMec = mecDia.slice().sort((a, b) => a.n - b.n)[0];
+      const k = (t, v, cor, icone, sub) => `<div class="card-executive p-3"><p class="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="${icone}" class="w-3.5 h-3.5 ${cor}"></i> ${t}</p><p class="text-2xl font-black ${cor}">${v}</p>${sub ? `<p class="text-[10px] text-slate-500">${sub}</p>` : ''}</div>`;
+      document.getElementById('esc-kpis').innerHTML = [
+        k('Colaboradores', colabs.length, 'text-slate-800', 'users', `${(window.escColabs || []).filter(c => c.ativo === false).length} inativo(s) fora da escala`),
+        k('Dias trabalhados', totTrab, 'text-emerald-700', 'briefcase', `${colabs.length ? (totTrab / colabs.length).toFixed(1).replace('.', ',') : 0} por colaborador`),
+        k('Folgas', totFolga, 'text-slate-600', 'coffee', `${colabs.length ? (totFolga / colabs.length).toFixed(1).replace('.', ',') : 0} por colaborador`),
+        k('7+ dias seguidos', seteMais.length, seteMais.length ? 'text-red-600' : 'text-slate-400', 'triangle-alert', seteMais.slice(0, 3).map(e => e.c.nome.split(' ')[0]).join(', ') || 'regra 6x1 ok'),
+        k('Menos mecânicos/dia', temMec && piorMec ? piorMec.n : '—', temMec && piorMec && piorMec.n < minMec ? 'text-amber-600' : 'text-indigo-700', 'wrench', temMec && piorMec ? `em ${formatDateBR(piorMec.d).slice(0, 5)} • mínimo ${minMec}` : 'cadastre mecânicos'),
+        k('Dias sem escala', totVazio, totVazio ? 'text-amber-600' : 'text-slate-400', 'calendar-x', totVazio ? 'colaborador x dia sem marcação' : 'escala completa')
+      ].join('');
+      // alertas
+      const al = document.getElementById('esc-alertas');
+      const linhasAl = [];
+      seteMais.forEach(e => linhasAl.push(`⚠ <strong>${escapeHtml(e.c.nome)}</strong> tem ${e.maxRun} dias seguidos de trabalho no período (regra 6x1).`));
+      if (temMec) mecDia.filter(x => x.n < minMec && x.d >= hoje).slice(0, 6).forEach(x => linhasAl.push(`🔧 ${DIAS_CURTO[parseLocalDate(x.d).getDay()]} ${formatDateBR(x.d)}: só ${x.n} mecânico(s) escalado(s) (mínimo ${minMec}).`));
+      al.innerHTML = linhasAl.join('<br>');
+      al.classList.toggle('hidden', !linhasAl.length);
+      // grade
+      document.getElementById('esc-grade-titulo').innerText = per.visao === 'dia' ? `Escala do dia — ${per.label}` : `Escala — ${per.label}`;
+      const grade = document.getElementById('esc-grade');
+      if (!(window.escColabs || []).length) {
+        grade.innerHTML = `<div class="p-8 text-center space-y-2"><p class="text-sm font-bold text-slate-700">Nenhum colaborador cadastrado</p><p class="text-xs text-slate-500">Comece cadastrando a equipe (nome, função, unidade e turno padrão).</p><button onclick="escAbrirColabs()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Cadastrar colaboradores</button></div>`;
+      } else if (per.visao === 'dia') {
+        const d = per.ini;
+        const porTurno = (window.escTurnos || []).map(t => ({ t, lista: colabs.filter(c => escValor(c.id, d) === t.id) }));
+        const fora = Object.keys(ESC_ESPECIAIS).map(kk => ({ kk, lista: colabs.filter(c => escValor(c.id, d) === kk) }));
+        const semEsc = colabs.filter(c => !escValor(c.id, d));
+        const prevs = (window.maintenanceSchedule || []).filter(m => m.date === d && m.type === 'Carreta' && m.status !== 'Realizado' && (window.selectedUnit === 'TODAS' || m.unit === window.selectedUnit));
+        grade.innerHTML = `<div class="p-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">${porTurno.map(({ t, lista }) => `<div class="border border-slate-200 rounded-lg overflow-hidden"><div class="px-3 py-2 text-xs font-black" style="${escEstilo(t.id)}">${escapeHtml(t.nome)} • ${escapeHtml(t.inicio)}–${escapeHtml(t.fim)} <span class="float-right">${lista.length}</span></div><ul class="divide-y divide-slate-100">${lista.map(c => `<li class="px-3 py-1.5 text-xs flex justify-between gap-2"><span class="font-bold text-slate-800">${escapeHtml(c.nome)} <button type="button" onclick="escClicarCelula('${escapeJs(c.id)}', '${d}')" class="text-slate-400 hover:text-emerald-700" title="Alterar este dia">✎</button></span><span class="text-slate-500">${escapeHtml(c.funcao || '')}</span></li>`).join('') || '<li class="px-3 py-2 text-[11px] text-slate-400 italic">ninguém</li>'}</ul></div>`).join('')}
+          ${fora.map(({ kk, lista }) => `<div class="border border-slate-200 rounded-lg overflow-hidden"><div class="px-3 py-2 text-xs font-black" style="${escEstilo(kk)}">${ESC_ESPECIAIS[kk].nome} <span class="float-right">${lista.length}</span></div><ul class="divide-y divide-slate-100">${lista.map(c => `<li class="px-3 py-1.5 text-xs flex justify-between gap-2"><span class="font-bold text-slate-700">${escapeHtml(c.nome)} <button type="button" onclick="escClicarCelula('${escapeJs(c.id)}', '${d}')" class="text-slate-400 hover:text-emerald-700" title="Alterar este dia">✎</button></span><span class="text-slate-500">${escapeHtml(c.funcao || '')}</span></li>`).join('') || '<li class="px-3 py-2 text-[11px] text-slate-400 italic">ninguém</li>'}</ul></div>`).join('')}
+          <div class="border border-slate-200 rounded-lg overflow-hidden"><div class="px-3 py-2 text-xs font-black bg-slate-100 text-slate-600">Sem escala <span class="float-right">${semEsc.length}</span></div><ul class="divide-y divide-slate-100">${semEsc.map(c => `<li class="px-3 py-1.5 text-xs flex justify-between gap-2"><span class="font-bold text-slate-700">${escapeHtml(c.nome)} <button type="button" onclick="escClicarCelula('${escapeJs(c.id)}', '${d}')" class="text-slate-400 hover:text-emerald-700" title="Alterar este dia">✎</button></span><span class="text-slate-500">${escapeHtml(c.funcao || '')}</span></li>`).join('') || '<li class="px-3 py-2 text-[11px] text-slate-400 italic">todos escalados</li>'}</ul></div>
+          <div class="border border-indigo-200 rounded-lg overflow-hidden md:col-span-2"><div class="px-3 py-2 text-xs font-black bg-indigo-50 text-indigo-800">Preventivas de carreta programadas no dia <span class="float-right">${prevs.length}</span></div><ul class="divide-y divide-slate-100">${prevs.map(m => `<li class="px-3 py-1.5 text-xs"><strong>${escapeHtml(m.tag)}</strong> — ${escapeHtml(m.service || '')} <span class="text-slate-400">(${escapeHtml(m.unit || '')})</span></li>`).join('') || '<li class="px-3 py-2 text-[11px] text-slate-400 italic">nenhuma</li>'}</ul><p class="px-3 py-2 text-[11px] font-bold ${temMec && mecDia[0].n < minMec ? 'text-amber-700' : 'text-slate-500'}">Mecânicos escalados: ${mecDia[0].n} (mínimo ${minMec})</p></div>
+        </div>`;
+      } else {
+        const cab = dias.map(d => { const dt = parseLocalDate(d); const fds = dt.getDay() === 0 || dt.getDay() === 6; return `<th class="p-1 text-center ${fds ? 'bg-slate-100' : ''} ${d === hoje ? 'text-emerald-700' : ''}" title="${formatDateBR(d)}"><span class="block text-[9px] font-bold">${DIAS_CURTO[dt.getDay()].slice(0, 3)}</span><span class="block text-[11px] font-black">${d.slice(8, 10)}</span></th>`; }).join('');
+        const linhas = est.map(e => {
+          const c = e.c;
+          const cels = dias.map(d => {
+            const cel = escCelula(c.id, d) || {};
+            const v = cel.v || '';
+            const seq = escEhTrabalho(v) ? escSequencia(c.id, d, v) : 0;
+            const dt = parseLocalDate(d);
+            const fds = dt.getDay() === 0 || dt.getDay() === 6;
+            const titulo = `${c.nome} — ${DIAS_CURTO[dt.getDay()]} ${formatDateBR(d)}: ${escNomeValor(v) || 'sem escala'}${seq >= 7 ? ` • ${seq} dias seguidos!` : ''}${(cel.h || []).length ? ` • alterado: ${cel.h[cel.h.length - 1].just || ''}` : ''}`;
+            return `<td class="esc-cel ${!v && fds ? 'esc-fds' : ''} ${d === hoje ? 'esc-hoje' : ''} ${seq >= 7 ? 'esc-seq7' : ''}" style="${escEstilo(v)}" title="${escapeAttr(titulo)}" onclick="escClicarCelula('${escapeJs(c.id)}', '${d}')">${escapeHtml(escSigla(v))}${(cel.h || []).length ? '<sup>•</sup>' : ''}</td>`;
+          }).join('');
+          return `<tr><td class="esc-sticky p-2 whitespace-nowrap"><span class="font-bold text-slate-900">${escapeHtml(c.nome)}</span><span class="block text-[10px] text-slate-500">${escapeHtml(c.funcao || '')} • ${escapeHtml(c.unidade || '')}${c.turnoPadrao && escTurno(c.turnoPadrao) ? ' • ' + escapeHtml(escTurno(c.turnoPadrao).sigla) : ''}</span></td>${cels}<td class="p-1 text-center font-black text-emerald-700">${e.trab}</td><td class="p-1 text-center font-bold text-slate-600">${e.folga}</td><td class="p-1 text-center ${e.maxRun >= 7 ? 'text-red-600 font-black' : 'text-slate-500'}">${e.maxRun}</td></tr>`;
+        }).join('');
+        const rodTurno = (window.escTurnos || []).map(t => `<tr class="bg-slate-50"><td class="esc-sticky p-1.5 text-[10px] font-bold text-slate-600 whitespace-nowrap bg-slate-50"><span class="px-1 rounded" style="${escEstilo(t.id)}">${escapeHtml(t.sigla)}</span> trabalhando</td>${dias.map(d => { const n = colabs.filter(c => escValor(c.id, d) === t.id).length; return `<td class="p-1 text-center text-[10px] font-bold ${n ? 'text-slate-700' : 'text-slate-300'}">${n}</td>`; }).join('')}<td colspan="3"></td></tr>`).join('');
+        const rodMec = temMec ? `<tr class="bg-slate-50"><td class="esc-sticky p-1.5 text-[10px] font-bold text-slate-600 whitespace-nowrap bg-slate-50">🔧 Mecânicos</td>${mecDia.map(x => `<td class="p-1 text-center text-[10px] font-black ${x.n < minMec ? 'text-amber-700 bg-amber-50' : 'text-indigo-700'}" title="mínimo ${minMec}">${x.n}</td>`).join('')}<td colspan="3"></td></tr>` : '';
+        grade.innerHTML = colabs.length ? `<table class="esc-grid w-full text-xs"><thead class="bg-slate-50 text-slate-500 border-b border-slate-200"><tr><th class="esc-sticky p-2 text-left bg-slate-50">Colaborador</th>${cab}<th class="p-1 text-center" title="Dias trabalhados">Trab.</th><th class="p-1 text-center" title="Folgas">Folg.</th><th class="p-1 text-center" title="Maior sequência de dias trabalhados">Seq.</th></tr></thead><tbody class="divide-y divide-slate-100">${linhas}</tbody><tfoot class="border-t-2 border-slate-200">${rodTurno}${rodMec}</tfoot></table>` : '<p class="p-6 text-center text-xs text-slate-400 italic">Nenhum colaborador com estes filtros.</p>';
+      }
+      escRenderCobertura(dias, colabs);
+      // resumo por colaborador
+      const semanas = per.visao === 'mes' ? Array.from(new Set(dias.map(d => prInicioPeriodo(d, 'semana')))) : [];
+      document.getElementById('esc-res-thead').innerHTML = `<tr><th class="p-2">Colaborador</th><th class="p-2 text-right">Trab.</th><th class="p-2 text-right">Folgas</th><th class="p-2 text-right">Férias</th><th class="p-2 text-right">Afast.</th><th class="p-2 text-right">Horas</th><th class="p-2 text-right">Seq.</th><th class="p-2 text-right">Dom.</th>${semanas.map(w => `<th class="p-2 text-center whitespace-nowrap" title="Semana de ${formatDateBR(w)}">${escapeHtml(prRotulo(w, 'semana', true))}</th>`).join('')}</tr>`;
+      document.getElementById('esc-res-tbody').innerHTML = est.map(e => `<tr><td class="p-2 whitespace-nowrap"><span class="font-bold">${escapeHtml(e.c.nome)}</span><span class="block text-[10px] text-slate-400">${escapeHtml(e.c.funcao || '')}</span></td><td class="p-2 text-right font-black text-emerald-700">${e.trab}</td><td class="p-2 text-right">${e.folga}</td><td class="p-2 text-right">${e.ferias || '—'}</td><td class="p-2 text-right">${e.afast || '—'}</td><td class="p-2 text-right">${String(Math.round(e.horas * 10) / 10).replace('.', ',')}</td><td class="p-2 text-right ${e.maxRun >= 7 ? 'text-red-600 font-black' : ''}">${e.maxRun}</td><td class="p-2 text-right">${e.domingos}</td>${semanas.map(w => { const s = e.semanas[w] || { t: 0, f: 0 }; return `<td class="p-2 text-center whitespace-nowrap text-[11px]"><span class="font-bold text-emerald-700">${s.t}T</span>/<span class="text-slate-500">${s.f}F</span></td>`; }).join('')}</tr>`).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Sem colaboradores.</td></tr>';
+      window.lastEscala.est = est;
+      if (window.lucide) lucide.createIcons();
+    };
+    function escRenderCobertura(dias, colabs) {
+      const turnos = window.escTurnos || [];
+      document.getElementById('esc-cob-thead').innerHTML = `<tr><th class="p-2">Dia</th>${turnos.map(t => `<th class="p-2 text-center"><span class="px-1.5 rounded" style="${escEstilo(t.id)}">${escapeHtml(t.sigla)}</span></th>`).join('')}<th class="p-2 text-center">Total</th><th class="p-2 text-center">Folga</th></tr>`;
+      const tot = turnos.map(() => 0);
+      let totGeral = 0, totFolga = 0;
+      document.getElementById('esc-cob-tbody').innerHTML = dias.map(d => {
+        const dt = parseLocalDate(d);
+        const ns = turnos.map((t, i) => { const n = colabs.filter(c => escValor(c.id, d) === t.id).length; tot[i] += n; return n; });
+        const total = ns.reduce((a, b) => a + b, 0), folgas = colabs.filter(c => escValor(c.id, d) === 'F').length;
+        totGeral += total; totFolga += folgas;
+        return `<tr class="${dt.getDay() === 0 || dt.getDay() === 6 ? 'bg-slate-50/60' : ''}"><td class="p-2 whitespace-nowrap font-bold">${DIAS_CURTO[dt.getDay()]} ${formatDateBR(d).slice(0, 5)}</td>${ns.map((n, i) => `<td class="p-2 text-center"><button type="button" onclick="escMostrarQuem('${d}', '${escapeJs(turnos[i].id)}')" class="font-black ${n ? 'text-slate-800 hover:text-emerald-700 hover:underline' : 'text-slate-300'}">${n}</button></td>`).join('')}<td class="p-2 text-center font-black text-emerald-700"><button type="button" onclick="escMostrarQuem('${d}', '')" class="hover:underline">${total}</button></td><td class="p-2 text-center text-slate-500"><button type="button" onclick="escMostrarQuem('${d}', 'F')" class="hover:underline">${folgas}</button></td></tr>`;
+      }).join('') || '<tr><td class="p-3 text-slate-400 italic">—</td></tr>';
+      const nd = dias.length || 1;
+      document.getElementById('esc-cob-tfoot').innerHTML = `<tr><td class="p-2">Média/dia</td>${tot.map(n => `<td class="p-2 text-center">${String(Math.round((n / nd) * 10) / 10).replace('.', ',')}</td>`).join('')}<td class="p-2 text-center">${String(Math.round((totGeral / nd) * 10) / 10).replace('.', ',')}</td><td class="p-2 text-center">${String(Math.round((totFolga / nd) * 10) / 10).replace('.', ',')}</td></tr><tr><td class="p-2">Total (pessoa x dia)</td>${tot.map(n => `<td class="p-2 text-center">${n}</td>`).join('')}<td class="p-2 text-center">${totGeral}</td><td class="p-2 text-center">${totFolga}</td></tr>`;
+      document.getElementById('esc-cob-detalhe').classList.add('hidden');
+    }
+    window.escMostrarQuem = function(d, turnoId) {
+      const colabs = (window.lastEscala && window.lastEscala.colabs) || [];
+      const lista = colabs.filter(c => turnoId === '' ? escEhTrabalho(escValor(c.id, d)) : escValor(c.id, d) === turnoId);
+      const box = document.getElementById('esc-cob-detalhe');
+      const titulo = turnoId === '' ? 'Todos os turnos' : turnoId === 'F' ? 'De folga' : escNomeValor(turnoId);
+      box.innerHTML = `<p class="font-black text-slate-800 mb-1">${DIAS_CURTO[parseLocalDate(d).getDay()]} ${formatDateBR(d)} — ${escapeHtml(titulo)} (${lista.length})</p>${lista.map(c => `<span class="inline-block mr-2 mb-1 px-2 py-0.5 rounded-full bg-white border border-slate-200"><strong>${escapeHtml(c.nome)}</strong> <span class="text-slate-500">${escapeHtml(c.funcao || '')}${turnoId === '' ? ' • ' + escapeHtml(escSigla(escValor(c.id, d))) : ''}</span></span>`).join('') || '<span class="text-slate-400 italic">ninguém</span>'}`;
+      box.classList.remove('hidden');
+    };
+
+    // ----- cadastros -----
+    function escOpcoesFuncao(sel, atual) { sel.innerHTML = (window.escFuncoes || []).map(f => `<option value="${escapeAttr(f.nome)}">${escapeHtml(f.nome)}</option>`).join(''); if (atual) { if (!Array.from(sel.options).some(o => o.value === atual)) sel.insertAdjacentHTML('beforeend', `<option value="${escapeAttr(atual)}">${escapeHtml(atual)}</option>`); sel.value = atual; } }
+    function escOpcoesTurno(sel, atual, rotuloVazio) { sel.innerHTML = (rotuloVazio ? `<option value="">${rotuloVazio}</option>` : '') + (window.escTurnos || []).map(t => `<option value="${escapeAttr(t.id)}">${escapeHtml(t.sigla)} — ${escapeHtml(t.nome)} (${escapeHtml(t.inicio)}–${escapeHtml(t.fim)})</option>`).join(''); if (atual !== undefined) sel.value = atual; }
+    window.escAbrirColabs = function() { escLimparColabForm(); escRenderColabs(); escAbrirModal('modal-esc-colab'); if (typeof aplicarTravaUnidade === 'function') aplicarTravaUnidade(false); };
+    window.escLimparColabForm = function() {
+      document.getElementById('escc-id').value = '';
+      ['escc-nome', 'escc-matricula'].forEach(i => { document.getElementById(i).value = ''; });
+      const fPad = (window.escFuncoes || []).some(f => f.nome === 'Mecânico') ? 'Mecânico' : ((window.escFuncoes || [])[0] || {}).nome;
+      escOpcoesFuncao(document.getElementById('escc-funcao'), fPad);
+      escOpcoesTurno(document.getElementById('escc-turno'), (window.escTurnos[0] || {}).id || '', 'Sem turno padrão');
+      document.getElementById('escc-unidade').value = (typeof unidadeTravada === 'function' && unidadeTravada()) || (window.selectedUnit !== 'TODAS' ? window.selectedUnit : 'MA');
+      document.getElementById('escc-ativo').checked = true;
+    };
+    function escRenderColabs() {
+      document.getElementById('escc-tbody').innerHTML = escColabsFiltrados(true).map(c => `<tr class="${c.ativo === false ? 'opacity-60' : ''}"><td class="p-2 font-bold">${escapeHtml(c.nome)}${c.matricula ? `<span class="block text-[10px] text-slate-400">Mat. ${escapeHtml(c.matricula)}</span>` : ''}</td><td class="p-2">${escapeHtml(c.funcao || '')}</td><td class="p-2">${escapeHtml(c.unidade || '')}</td><td class="p-2">${escapeHtml(c.turnoPadrao && escTurno(c.turnoPadrao) ? escTurno(c.turnoPadrao).nome : '—')}</td><td class="p-2">${c.ativo === false ? 'Inativo' : '<span class="text-emerald-700 font-bold">Ativo</span>'}</td><td class="p-2 text-center whitespace-nowrap"><button type="button" onclick="escEditarColab('${escapeJs(c.id)}')" class="text-slate-500 hover:text-emerald-700 text-[11px] font-bold mr-2">Editar</button><button type="button" onclick="escExcluirColab('${escapeJs(c.id)}')" class="text-slate-400 hover:text-red-600 text-[11px] font-bold">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum colaborador.</td></tr>';
+    }
+    window.escEditarColab = function(id) {
+      const c = escColab(id);
+      if (!c) return;
+      document.getElementById('escc-id').value = c.id;
+      document.getElementById('escc-nome').value = c.nome || '';
+      document.getElementById('escc-matricula').value = c.matricula || '';
+      escOpcoesFuncao(document.getElementById('escc-funcao'), c.funcao);
+      escOpcoesTurno(document.getElementById('escc-turno'), c.turnoPadrao || '', 'Sem turno padrão');
+      document.getElementById('escc-unidade').value = c.unidade || 'MA';
+      document.getElementById('escc-ativo').checked = c.ativo !== false;
+    };
+    window.escSalvarColab = function() {
+      const nome = document.getElementById('escc-nome').value.trim();
+      if (!nome) { alert('Informe o nome do colaborador.'); return; }
+      const id = document.getElementById('escc-id').value;
+      const dados = { nome, matricula: document.getElementById('escc-matricula').value.trim(), funcao: document.getElementById('escc-funcao').value, unidade: document.getElementById('escc-unidade').value, turnoPadrao: document.getElementById('escc-turno').value, ativo: document.getElementById('escc-ativo').checked };
+      const lista = (window.escColabs || []).slice();
+      if (id) {
+        const i = lista.findIndex(c => String(c.id) === String(id));
+        if (i < 0) return;
+        const antes = lista[i];
+        lista[i] = Object.assign({}, antes, dados, { atualizadoEm: new Date().toISOString(), atualizadoPor: nomeUsuarioAtual() });
+        addAuditLog(dados.unidade, 'Escala', nome, `Colaborador da escala atualizado`, getTodayStr(), dados.ativo ? 'Ativo' : 'Inativo', null, diffCampos(antes, lista[i], { nome: 'Nome', funcao: 'Função', unidade: 'Unidade', turnoPadrao: 'Turno padrão', ativo: 'Ativo', matricula: 'Matrícula' }));
+      } else {
+        lista.push(Object.assign({ id: 'c' + Date.now(), criadoEm: new Date().toISOString(), criadoPor: nomeUsuarioAtual() }, dados));
+        addAuditLog(dados.unidade, 'Escala', nome, `Colaborador cadastrado na escala (${dados.funcao})`, getTodayStr(), 'Ativo');
+      }
+      window.escColabs = lista;
+      safeSet('escalaColaboradores', lista);
+      escLimparColabForm();
+      escRenderColabs();
+      renderEscala();
+      showToast(`${nome} salvo.`, 'success');
+    };
+    window.escExcluirColab = function(id) {
+      const c = escColab(id);
+      if (!c) return;
+      if (!confirm(`Excluir ${c.nome} da escala? Os dias já escalados continuam no histórico. Se ele só saiu da equipe, prefira desmarcar "Ativo".`)) return;
+      window.escColabs = window.escColabs.filter(x => String(x.id) !== String(id));
+      safeSet('escalaColaboradores', window.escColabs);
+      addAuditLog(c.unidade || 'TODAS', 'Escala', c.nome, 'Colaborador excluído da escala', getTodayStr(), 'Excluído');
+      escRenderColabs();
+      renderEscala();
+    };
+    window.escAbrirFuncoes = function() { escRenderFuncoes(); escAbrirModal('modal-esc-funcoes'); };
+    function escRenderFuncoes() {
+      document.getElementById('escf-lista').innerHTML = (window.escFuncoes || []).map(f => { const n = (window.escColabs || []).filter(c => c.funcao === f.nome).length; return `<li class="px-3 py-2 text-sm flex justify-between items-center"><span class="font-bold text-slate-700">${escapeHtml(f.nome)} <span class="text-[11px] font-medium text-slate-400">${n} colaborador(es)</span></span><button type="button" onclick="escRemoverFuncao('${escapeJs(f.id)}')" class="text-[11px] font-bold text-slate-400 hover:text-red-600">Remover</button></li>`; }).join('');
+    }
+    window.escSalvarFuncao = function() {
+      const nome = document.getElementById('escf-nome').value.trim();
+      if (!nome) return;
+      if ((window.escFuncoes || []).some(f => normTxt(f.nome) === normTxt(nome))) { alert('Essa função já existe.'); return; }
+      window.escFuncoes = (window.escFuncoes || []).concat([{ id: 'f' + Date.now(), nome }]);
+      safeSet('escalaFuncoes', window.escFuncoes);
+      document.getElementById('escf-nome').value = '';
+      escRenderFuncoes();
+      renderEscala();
+    };
+    window.escRemoverFuncao = function(id) {
+      const f = (window.escFuncoes || []).find(x => x.id === id);
+      if (!f) return;
+      const n = (window.escColabs || []).filter(c => c.funcao === f.nome).length;
+      if (!confirm(n ? `${n} colaborador(es) estão com a função "${f.nome}". Remover mesmo assim? (eles mantêm a função até serem editados)` : `Remover a função "${f.nome}"?`)) return;
+      window.escFuncoes = window.escFuncoes.filter(x => x.id !== id);
+      safeSet('escalaFuncoes', window.escFuncoes);
+      escRenderFuncoes();
+      renderEscala();
+    };
+    window.escAbrirTurnos = function() { escLimparTurnoForm(); escRenderTurnos(); escAbrirModal('modal-esc-turnos'); };
+    window.escLimparTurnoForm = function() { document.getElementById('esct-id').value = ''; ['esct-nome', 'esct-sigla', 'esct-inicio', 'esct-fim'].forEach(i => { document.getElementById(i).value = ''; }); document.getElementById('esct-cor').value = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7'][(window.escTurnos || []).length % 7]; };
+    function escRenderTurnos() {
+      document.getElementById('esct-lista').innerHTML = (window.escTurnos || []).map(t => `<li class="px-3 py-2 text-sm flex justify-between items-center gap-2"><span class="flex items-center gap-2"><span class="px-2 py-0.5 rounded font-black text-xs" style="${escEstilo(t.id)}">${escapeHtml(t.sigla)}</span><span class="font-bold text-slate-700">${escapeHtml(t.nome)}</span><span class="text-xs text-slate-500">${escapeHtml(t.inicio)}–${escapeHtml(t.fim)} (${String(escHorasTurno(t)).replace('.', ',')} h)</span></span><span class="whitespace-nowrap"><button type="button" onclick="escEditarTurno('${escapeJs(t.id)}')" class="text-[11px] font-bold text-slate-500 hover:text-emerald-700 mr-2">Editar</button><button type="button" onclick="escRemoverTurno('${escapeJs(t.id)}')" class="text-[11px] font-bold text-slate-400 hover:text-red-600">Remover</button></span></li>`).join('');
+    }
+    window.escEditarTurno = function(id) { const t = escTurno(id); if (!t) return; document.getElementById('esct-id').value = t.id; document.getElementById('esct-nome').value = t.nome; document.getElementById('esct-sigla').value = t.sigla; document.getElementById('esct-inicio').value = t.inicio || ''; document.getElementById('esct-fim').value = t.fim || ''; document.getElementById('esct-cor').value = t.cor || '#2a78d6'; };
+    window.escSalvarTurno = function() {
+      const nome = document.getElementById('esct-nome').value.trim(), sigla = document.getElementById('esct-sigla').value.trim().toUpperCase();
+      if (!nome || !sigla) { alert('Informe o nome e a sigla do turno.'); return; }
+      if (ESC_ESPECIAIS[sigla]) { alert(`A sigla "${sigla}" é reservada (F = folga, FE = férias, AF = afastamento).`); return; }
+      const id = document.getElementById('esct-id').value;
+      if ((window.escTurnos || []).some(t => t.sigla === sigla && t.id !== id)) { alert('Já existe um turno com essa sigla.'); return; }
+      const dados = { nome, sigla, inicio: document.getElementById('esct-inicio').value || '', fim: document.getElementById('esct-fim').value || '', cor: document.getElementById('esct-cor').value || '#2a78d6' };
+      let lista = (window.escTurnos || []).slice();
+      if (id) lista = lista.map(t => t.id === id ? Object.assign({}, t, dados) : t);
+      else lista.push(Object.assign({ id: 't' + Date.now() }, dados));
+      window.escTurnos = lista;
+      safeSet('escalaTurnos', lista);
+      addAuditLog('TODAS', 'Escala', nome, `Turno ${id ? 'alterado' : 'cadastrado'}: ${sigla} ${dados.inicio}–${dados.fim}`, getTodayStr(), 'Configuração');
+      escLimparTurnoForm();
+      escRenderTurnos();
+      renderEscala();
+    };
+    window.escRemoverTurno = function(id) {
+      const t = escTurno(id);
+      if (!t) return;
+      if ((window.escTurnos || []).length <= 1) { alert('Mantenha pelo menos um turno.'); return; }
+      if (!confirm(`Remover o turno "${t.nome}"? Dias já escalados nele aparecerão como "?" até serem trocados.`)) return;
+      window.escTurnos = window.escTurnos.filter(x => x.id !== id);
+      safeSet('escalaTurnos', window.escTurnos);
+      escRenderTurnos();
+      renderEscala();
+    };
+    window.escAbrirConfig = function() {
+      const cfg = window.escConfig || {};
+      document.getElementById('escg-min').value = cfg.minMecanicosCarreta || 3;
+      const sel = (cfg.funcoesPreventiva || ['Mecânico']).map(normTxt);
+      document.getElementById('escg-funcoes').innerHTML = (window.escFuncoes || []).map(f => `<label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600"><input type="checkbox" class="escg-func" value="${escapeAttr(f.nome)}" ${sel.includes(normTxt(f.nome)) ? 'checked' : ''}> ${escapeHtml(f.nome)}</label>`).join('');
+      escAbrirModal('modal-esc-config');
+    };
+    window.escSalvarConfig = function() {
+      const min = parseInt(document.getElementById('escg-min').value, 10);
+      if (!(min >= 1)) { alert('Informe um mínimo válido (1 ou mais).'); return; }
+      const funcoes = Array.from(document.querySelectorAll('.escg-func:checked')).map(cb => cb.value);
+      if (!funcoes.length) { alert('Marque pelo menos uma função que conta como mecânico.'); return; }
+      window.escConfig = Object.assign({}, window.escConfig, { minMecanicosCarreta: min, funcoesPreventiva: funcoes });
+      safeSet('escalaConfig', window.escConfig);
+      addAuditLog('TODAS', 'Escala', '-', `Regras da escala: mínimo ${min} mecânico(s)/dia para preventiva de carreta (${funcoes.join(', ')})`, getTodayStr(), 'Configuração');
+      escFecharModal('modal-esc-config');
+      renderEscala();
+    };
+
+    // ----- montar escala do mês -----
+    window.escAbrirPreencher = function() {
+      if (!(window.escColabs || []).length) { alert('Cadastre os colaboradores primeiro.'); escAbrirColabs(); return; }
+      const atual = prInicioPeriodo(getTodayStr(), 'mes');
+      const vista = prInicioPeriodo(window.escRef || getTodayStr(), 'mes');
+      const meses = Array.from(new Set([atual, prDeslocar(atual, 'mes', 1), vista])).sort();
+      const sel = document.getElementById('escp-mes');
+      sel.innerHTML = meses.map(m => `<option value="${m}">${escapeHtml(prRotulo(m, 'mes'))}${m === atual ? ' (mês atual)' : m > atual ? ' (próximo)' : ''}</option>`).join('');
+      sel.value = vista;
+      escOpcoesTurno(document.getElementById('escp-turno'), '__padrao', '');
+      document.getElementById('escp-turno').insertAdjacentHTML('afterbegin', '<option value="__padrao">Turno padrão de cada colaborador</option>');
+      document.getElementById('escp-turno').value = '__padrao';
+      document.getElementById('escp-sobrescrever').checked = false;
+      document.getElementById('escp-colabs').innerHTML = escColabsFiltrados(false).map(c => `<label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700"><input type="checkbox" class="escp-col" value="${escapeAttr(c.id)}" checked onchange="escContarPreencher()"> ${escapeHtml(c.nome)} <span class="font-medium text-slate-400">${escapeHtml(c.funcao || '')}</span></label>`).join('') || '<p class="text-[11px] text-slate-400 italic">Nenhum colaborador ativo nos filtros.</p>';
+      escContarPreencher();
+      escAtualizarPreencherUI();
+      escAbrirModal('modal-esc-preencher');
+    };
+    window.escContarPreencher = () => { document.getElementById('escp-count').innerText = `(${document.querySelectorAll('.escp-col:checked').length} marcados)`; };
+    window.escMarcarPreencher = (v) => { document.querySelectorAll('.escp-col').forEach(cb => { cb.checked = v; }); escContarPreencher(); };
+    window.escAtualizarPreencherUI = function() {
+      const p = document.getElementById('escp-padrao').value;
+      document.getElementById('escp-folga-wrap').classList.toggle('hidden', p !== '6x1f');
+      document.getElementById('escp-inicio-wrap').classList.toggle('hidden', p !== '12x36');
+      document.getElementById('escp-turno').disabled = p === 'copiar';
+      document.getElementById('escp-escalonar-wrap').classList.toggle('hidden', !['6x1c', '6x1f', '12x36'].includes(p));
+    };
+    window.escAplicarPreencher = async function() {
+      const ini = document.getElementById('escp-mes').value;
+      const dias = escDiasEntre(ini, prFimPeriodo(ini, 'mes'));
+      const padrao = document.getElementById('escp-padrao').value;
+      const folgaDia = Number(document.getElementById('escp-folga').value);
+      const comecaTrab = document.getElementById('escp-inicio').value !== 'folga';
+      const turnoSel = document.getElementById('escp-turno').value;
+      const sobrescrever = document.getElementById('escp-sobrescrever').checked;
+      const escalonar = document.getElementById('escp-escalonar').checked;
+      const ids = Array.from(document.querySelectorAll('.escp-col:checked')).map(cb => cb.value);
+      if (!ids.length) { alert('Marque pelo menos um colaborador.'); return; }
+      const plano = {};
+      let trocas = 0, novos = 0, semTurno = [];
+      ids.forEach((id, idx) => {
+        const c = escColab(id);
+        if (!c) return;
+        const turno = turnoSel === '__padrao' ? (c.turnoPadrao || '') : turnoSel;
+        if (padrao !== 'copiar' && !turno) { semTurno.push(c.nome); return; }
+        // sequência de trabalho que vem do mês anterior (para o 6x1 contínuo)
+        let run = 0, x = addDaysToDateStr(ini, -1), g = 0;
+        while (g++ < 62 && escEhTrabalho(escValor(id, x))) { run++; x = addDaysToDateStr(x, -1); }
+        // sem histórico na semana anterior: espalha o ponto de partida para as folgas não caírem no mesmo dia
+        const semHistorico = !escDiasEntre(addDaysToDateStr(ini, -7), addDaysToDateStr(ini, -1)).some(d => escValor(id, d));
+        if (escalonar && padrao === '6x1c' && semHistorico) run = idx % 7;
+        const folgaDoColab = escalonar ? (folgaDia + idx) % 7 : folgaDia;
+        const comecaTrabColab = escalonar && idx % 2 === 1 ? !comecaTrab : comecaTrab;
+        plano[id] = {};
+        dias.forEach((d, i) => {
+          const dow = parseLocalDate(d).getDay();
+          let v;
+          if (padrao === '6x1c') v = run >= 6 ? 'F' : turno;
+          else if (padrao === '6x1f') v = dow === folgaDoColab ? 'F' : turno;
+          else if (padrao === '5x2') v = dow === 0 || dow === 6 ? 'F' : turno;
+          else if (padrao === '12x36') v = (i % 2 === 0) === comecaTrabColab ? turno : 'F';
+          else v = escValor(id, addDaysToDateStr(d, -28)) || '';
+          const atual = escValor(id, d);
+          // o 6x1 contínuo segue a sequência real (dias já escalados que não serão trocados contam)
+          const efetivo = atual && !sobrescrever ? atual : (v || atual);
+          run = escEhTrabalho(efetivo) ? run + 1 : 0;
+          if (!v || v === atual) return;
+          if (atual && !sobrescrever) return;
+          plano[id][d] = { de: atual, para: v };
+          if (atual) trocas++; else novos++;
+        });
+      });
+      if (semTurno.length) { alert(`Sem turno padrão: ${semTurno.join(', ')}. Escolha um turno ou defina o turno padrão no cadastro.`); if (!Object.values(plano).some(o => Object.keys(o).length)) return; }
+      if (!trocas && !novos) { alert('Nada a preencher: os dias já estão escalados (marque "Substituir dias já preenchidos" para trocar).'); return; }
+      // regra dos 7 dias com o plano aplicado
+      const valorPlano = (id, d) => (plano[id] && plano[id][d]) ? plano[id][d].para : escValor(id, d);
+      const viol = [];
+      Object.keys(plano).forEach(id => {
+        let run = 0, x = addDaysToDateStr(dias[0], -1), g = 0;
+        while (g++ < 62 && escEhTrabalho(escValor(id, x))) { run++; x = addDaysToDateStr(x, -1); }
+        let max = run;
+        dias.forEach(d => { if (escEhTrabalho(valorPlano(id, d))) { run++; max = Math.max(max, run); } else run = 0; });
+        if (max >= 7) viol.push(`${escColab(id).nome} (${max} dias seguidos)`);
+      });
+      let just = '';
+      if (trocas || viol.length) {
+        const r = await escPedirJustificativa({ semLote: true, semFolga: true, seq: viol.length ? 7 : 0, titulo: viol.length ? 'Escala com mais de 6 dias seguidos' : 'Justificar substituição de dias', nome: viol.length ? viol.join(', ') : '', texto: `${prRotulo(ini, 'mes')}: ${novos} dia(s) novo(s) e ${trocas} dia(s) substituído(s).${viol.length ? `\n7+ dias seguidos: ${viol.join(', ')}` : ''}` });
+        if (!r) return;
+        just = r.just;
+      }
+      // grava por colaborador (um registro do mês por pessoa)
+      const agora = new Date().toISOString(), por = nomeUsuarioAtual(), ym = escYm(ini);
+      Object.keys(plano).forEach(id => {
+        const mudancas = plano[id];
+        if (!Object.keys(mudancas).length) return;
+        window.escDados[ym] = window.escDados[ym] || {};
+        const obj = Object.assign({}, window.escDados[ym][id] || {});
+        Object.keys(mudancas).forEach(d => {
+          const m = mudancas[d], dk = escDk(d), ant = obj[dk] || {};
+          const h = (ant.h || []).slice();
+          if (m.de) h.push({ de: m.de, para: m.para, just, por, em: agora });
+          obj[dk] = { v: m.para, h, por, em: agora };
+        });
+        window.escDados[ym][id] = obj;
+        safeSet(`escala/${ym}/${id}`, obj);
+      });
+      const nomePadrao = document.getElementById('escp-padrao').selectedOptions[0].text.split(' (')[0];
+      addAuditLog(window.selectedUnit || 'TODAS', 'Escala', '-', `Escala de ${prRotulo(ini, 'mes')} montada (${nomePadrao}): ${Object.keys(plano).length} colaborador(es), ${novos} dia(s) novo(s), ${trocas} substituído(s)${just ? ` — justificativa: ${just}` : ''}`, ini, 'Escala');
+      escFecharModal('modal-esc-preencher');
+      window.escRef = ini;
+      document.getElementById('esc-visao').value = 'mes';
+      renderEscala();
+      showToast(`Escala de ${prRotulo(ini, 'mes')} montada: ${novos + trocas} dia(s).`, 'success');
+    };
+
+    // ----- mecânicos para a preventiva de carreta -----
+    window.escMecanicosNoDia = function(unidade, d) {
+      const cands = (window.escColabs || []).filter(c => c.ativo !== false && (!unidade || c.unidade === unidade) && escEhMecanico(c));
+      const trab = cands.filter(c => escEhTrabalho(escValor(c.id, d)));
+      return { n: trab.length, nomes: trab.map(c => c.nome), montada: cands.some(c => !!escValor(c.id, d)), total: cands.length, min: Number(window.escConfig.minMecanicosCarreta) || 3 };
+    };
+    window.avisoEscalaPreventiva = function(tipo, unidade, d, excetoId) {
+      if (tipo !== 'Carreta' || !d || !(window.escColabs || []).some(escEhMecanico)) return null;
+      const r = escMecanicosNoDia(unidade, d);
+      if (!r.total) return null;
+      const prevs = (window.maintenanceSchedule || []).filter(m => m.date === d && m.type === 'Carreta' && m.unit === unidade && m.status !== 'Realizado' && String(m.id) !== String(excetoId || '')).length;
+      const dia = `${DIAS_CURTO[parseLocalDate(d).getDay()]} ${formatDateBR(d)}`;
+      if (!r.montada) return { nivel: 'info', texto: `A escala de ${dia} (${unidade}) ainda não foi montada — confira se haverá mecânico para esta preventiva.` };
+      if (r.n < r.min || prevs + 1 > r.n) return { nivel: 'alerta', texto: `Atenção: em ${dia} só há ${r.n} mecânico(s) escalado(s) em ${unidade}${r.nomes.length ? ` (${r.nomes.join(', ')})` : ''} — mínimo ${r.min}${prevs ? ` — e já existe(m) ${prevs} preventiva(s) de carreta programada(s) nesse dia` : ''}. Pode ser que não seja possível atender esta programação.` };
+      return { nivel: 'ok', texto: `${r.n} mecânico(s) escalado(s) em ${dia} (${unidade})${prevs ? ` • ${prevs} preventiva(s) de carreta já programada(s)` : ''}.` };
+    };
+    window.atualizarAvisoEscalaMaint = function() {
+      const box = document.getElementById('maint-escala-aviso');
+      if (!box) return;
+      const aviso = avisoEscalaPreventiva(document.getElementById('maint-type').value, document.getElementById('maint-unit').value, document.getElementById('maint-date').value, null);
+      box.classList.toggle('hidden', !aviso);
+      if (!aviso) return;
+      box.className = `rounded-lg border p-2 text-[11px] font-bold ${aviso.nivel === 'alerta' ? 'border-amber-300 bg-amber-50 text-amber-900' : aviso.nivel === 'info' ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`;
+      box.innerText = `👷 ${aviso.texto}`;
+    };
+
+    // ----- Excel -----
+    window.exportEscalaToExcel = function() {
+      const ctx = window.lastEscala;
+      if (!ctx || !ctx.colabs.length) { alert('Nenhum colaborador na escala com estes filtros.'); return; }
+      const { per, dias, colabs, est } = ctx;
+      const wb = XLSX.utils.book_new();
+      const aba = (nome, aoa, cols) => { const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = cols || (aoa[0] || []).map((_, i) => ({ wch: i === 0 ? 28 : 8 })); XLSX.utils.book_append_sheet(wb, ws, nome); };
+      aba('Escala', [['Colaborador', 'Função', 'Unidade', ...dias.map(d => `${DIAS_CURTO[parseLocalDate(d).getDay()]} ${d.slice(8, 10)}/${d.slice(5, 7)}`), 'Trabalhados', 'Folgas', 'Férias', 'Afastamento', 'Horas', 'Maior sequência']].concat(
+        est.map(e => [e.c.nome, e.c.funcao || '', e.c.unidade || '', ...dias.map(d => escSigla(escValor(e.c.id, d))), e.trab, e.folga, e.ferias, e.afast, Math.round(e.horas * 10) / 10, e.maxRun])), [{ wch: 28 }, { wch: 22 }, { wch: 8 }].concat(dias.map(() => ({ wch: 8 }))));
+      const turnos = window.escTurnos || [];
+      aba('Por turno', [['Dia', ...turnos.map(t => `${t.sigla} - ${t.nome}`), 'Total trabalhando', 'Folga', 'Quem está no turno']].concat(dias.map(d => [formatDateBR(d), ...turnos.map(t => colabs.filter(c => escValor(c.id, d) === t.id).length), colabs.filter(c => escEhTrabalho(escValor(c.id, d))).length, colabs.filter(c => escValor(c.id, d) === 'F').length, turnos.map(t => `${t.sigla}: ${colabs.filter(c => escValor(c.id, d) === t.id).map(c => c.nome).join(', ')}`).join(' | ')])), [{ wch: 12 }].concat(turnos.map(() => ({ wch: 16 }))).concat([{ wch: 16 }, { wch: 8 }, { wch: 80 }]));
+      aba('Resumo', [['Colaborador', 'Função', 'Unidade', 'Turno padrão', 'Trabalhados', 'Folgas', 'Férias', 'Afastamento', 'Sem escala', 'Horas previstas', 'Maior sequência', 'Domingos trabalhados']].concat(est.map(e => [e.c.nome, e.c.funcao || '', e.c.unidade || '', e.c.turnoPadrao && escTurno(e.c.turnoPadrao) ? escTurno(e.c.turnoPadrao).nome : '', e.trab, e.folga, e.ferias, e.afast, e.vazio, Math.round(e.horas * 10) / 10, e.maxRun, e.domingos])), [{ wch: 28 }, { wch: 22 }, { wch: 8 }, { wch: 18 }].concat(Array(8).fill({ wch: 12 })));
+      const hist = [];
+      colabs.forEach(c => dias.forEach(d => ((escCelula(c.id, d) || {}).h || []).forEach(h => hist.push([formatDateBR(d), c.nome, escNomeValor(h.de) || 'vazio', escNomeValor(h.para) || 'vazio', h.just || '', h.por || '', h.em ? new Date(h.em).toLocaleString('pt-BR') : '']))));
+      aba('Alterações', [['Dia', 'Colaborador', 'De', 'Para', 'Justificativa', 'Por', 'Quando']].concat(hist), [{ wch: 12 }, { wch: 28 }, { wch: 24 }, { wch: 24 }, { wch: 50 }, { wch: 20 }, { wch: 20 }]);
+      aba('Legenda', [['Sigla', 'Significado', 'Horário']].concat(turnos.map(t => [t.sigla, t.nome, `${t.inicio}–${t.fim}`])).concat(Object.keys(ESC_ESPECIAIS).map(k => [k, ESC_ESPECIAIS[k].nome, ''])), [{ wch: 8 }, { wch: 28 }, { wch: 14 }]);
+      const slug = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      XLSX.writeFile(wb, `Escala_${slug(per.label)}.xlsx`);
+    };
+
+    // ===================== CONTROLE DE PREVENTIVA — CAVALOS (KM) =====================
+    // kmLeituras/a<id>/<AAAA-MM-DD> = { km, fonte, kmProlog, kmTelemetria, por, em } — uma leitura por dia e cavalo.
+    // prevCavalos/a<id> = { intervaloKm, kmUltimaPrev, dataUltimaPrev, localUltimaPrev, obs } (ajustes manuais).
+    // configPrevCavalos = { intervaloPadrao, alertaKm, toleranciaKm, usuariosAlerta: [login], emailAutomatico }.
+    window.kmLeituras = {};
+    window.prevCavCfg = {};
+    window.prevCavConfig = {};
+    window.kmMeta = {};
+    window.pcvRef = null;
+    window.chartKmRodadoInstance = null;
+    const PCV_PADRAO = { intervaloPadrao: 120000, alertaKm: 2000, toleranciaKm: 100, usuariosAlerta: [], emailAutomatico: false };
+    let pcvLoaded = false;
+    const pcvKey = (id) => 'a' + String(id).replace(/[.#$\[\]\/]/g, '_');
+    const fmtKm = (v) => v === null || v === undefined || isNaN(Number(v)) ? '—' : Math.round(Number(v)).toLocaleString('pt-BR');
+    function syncPrevCavalos() {
+      onValue(ref(db, 'kmLeituras'), s => { window.kmLeituras = s.val() || {}; pcvLoaded = true; pcvAposDados(); });
+      onValue(ref(db, 'prevCavalos'), s => { window.prevCavCfg = s.val() || {}; pcvAposDados(); });
+      onValue(ref(db, 'configPrevCavalos'), s => { window.prevCavConfig = Object.assign({}, PCV_PADRAO, s.val() || {}); pcvAposDados(); });
+      onValue(ref(db, 'kmMeta'), s => { window.kmMeta = s.val() || {}; });
+    }
+    function pcvAposDados() {
+      atualizarBadgePrevCavalos();
+      const ativa = document.querySelector('.tab-content.active');
+      if (ativa && ativa.id === 'tab-prevcavalos') renderPrevCavalos();
+      pcvAvisarUsuario();
+    }
+    const pcvCfgGeral = () => Object.assign({}, PCV_PADRAO, window.prevCavConfig || {});
+    function pcvLeituras(id) {
+      const o = window.kmLeituras[pcvKey(id)] || {};
+      return Object.keys(o).sort().map(d => Object.assign({ data: d }, o[d])).filter(x => Number(x.km) > 0);
+    }
+    function pcvKmEm(id, d) { let r = null; for (const x of pcvLeituras(id)) { if (x.data <= d) r = x; else break; } return r; }
+    function pcvKmAtual(id) { const l = pcvLeituras(id); return l.length ? l[l.length - 1] : null; }
+    function pcvMediaDia(id) {
+      const l = pcvLeituras(id);
+      if (l.length < 2) return null;
+      const ult = l[l.length - 1];
+      const alvo = addDaysToDateStr(ult.data, -30);
+      let base = l.find(x => x.data >= alvo);
+      if (!base || base === ult) base = l[l.length - 2];
+      const dias = calcDiasEntre(base.data, ult.data);
+      return dias > 0 ? Math.max(0, (ult.km - base.km) / dias) : null;
+    }
+    // Última preventiva: Status & Paradas (parada Preventiva liberada) ou Calendário (Realizado); ajuste manual por cima
+    function pcvUltimaAuto(a) {
+      const cands = [];
+      (window.assetEvents || []).forEach(e => { if ((String(e.assetId) === String(a.id) || e.tag === a.tag) && e.tipoParada === 'Preventiva' && e.status === 'Encerrado' && e.fim) cands.push({ data: e.fim, local: e.local || '', responsavel: e.responsavel || '', servico: e.motivo || '', origem: 'Status & Paradas', prio: 2 }); });
+      (window.maintenanceSchedule || []).forEach(m => { if ((String(m.assetId) === String(a.id) || m.tag === a.tag) && m.status === 'Realizado') cands.push({ data: m.dataRealizada || m.date, local: m.local || '', responsavel: m.responsavel || '', servico: m.service || '', origem: 'Calendário', prio: 1 }); });
+      cands.sort((x, y) => (y.data || '').localeCompare(x.data || '') || y.prio - x.prio);
+      return cands[0] ? Object.assign({}, cands[0]) : null;
+    }
+    function pcvUltimaPreventiva(a) {
+      let ult = pcvUltimaAuto(a);
+      const cfg = window.prevCavCfg[pcvKey(a.id)] || {};
+      if (cfg.dataUltimaPrev && (!ult || cfg.dataUltimaPrev > ult.data)) ult = { data: cfg.dataUltimaPrev, local: cfg.localUltimaPrev || '', responsavel: '', servico: 'Lançada no controle', origem: 'Manual' };
+      if (!ult) return null;
+      // KM informado vale para a preventiva a que foi amarrado (mesma data) ou para a lançada aqui
+      if (cfg.kmUltimaPrev && (cfg.dataUltimaPrev === ult.data || ult.origem === 'Manual')) { ult.km = Number(cfg.kmUltimaPrev); ult.kmFonte = 'informado'; }
+      else { const l = pcvKmEm(a.id, ult.data); if (l) { ult.km = Number(l.km); ult.kmFonte = l.data === ult.data ? 'leitura do dia' : `estimado (leitura de ${formatDateBR(l.data).slice(0, 5)})`; } }
+      return ult;
+    }
+    function pcvLinha(a) {
+      const g = pcvCfgGeral();
+      const cfg = window.prevCavCfg[pcvKey(a.id)] || {};
+      const intervalo = Number(cfg.intervaloKm) || Number(g.intervaloPadrao) || 120000;
+      const atual = pcvKmAtual(a.id);
+      const ult = pcvUltimaPreventiva(a);
+      const kmUlt = ult && ult.km ? ult.km : null;
+      const proxima = kmUlt !== null ? kmUlt + intervalo : null;
+      const falta = proxima !== null && atual ? proxima - Number(atual.km) : null;
+      const media = pcvMediaDia(a.id);
+      const previsao = falta !== null && media > 0 ? addDaysToDateStr(getTodayStr(), Math.max(0, Math.ceil(falta / media))) : null;
+      const status = falta === null ? 'semdados' : falta <= 0 ? 'vencida' : falta <= Number(g.alertaKm || 2000) ? 'proxima' : 'ok';
+      const programada = (window.maintenanceSchedule || []).filter(m => (String(m.assetId) === String(a.id) || m.tag === a.tag) && m.status !== 'Realizado' && m.date >= getTodayStr()).sort((x, y) => x.date.localeCompare(y.date))[0] || null;
+      return { a, cfg, intervalo, atual, ult, kmUlt, proxima, falta, media, previsao, status, programada };
+    }
+    const PCV_ST = { vencida: { t: 'Vencida', c: 'bg-red-100 text-red-800 border-red-300', o: 0 }, proxima: { t: 'Próxima', c: 'bg-amber-100 text-amber-800 border-amber-300', o: 1 }, ok: { t: 'Em dia', c: 'bg-emerald-100 text-emerald-800 border-emerald-300', o: 2 }, semdados: { t: 'Sem dados', c: 'bg-slate-100 text-slate-600 border-slate-300', o: 3 } };
+    function pcvCavalos(comFiltros) {
+      let l = getActiveAssets().filter(a => a.tipo === 'Cavalo');
+      if (window.selectedUnit !== 'TODAS') l = l.filter(a => a.unidade === window.selectedUnit);
+      if (window.ignorarReforma) l = l.filter(a => !itemOcultoPorReforma(a.id, a.tag));
+      if (comFiltros) {
+        const un = document.getElementById('pcv-filter-unidade')?.value || 'TODAS';
+        const mod = document.getElementById('pcv-filter-modelo')?.value || '';
+        const busca = (document.getElementById('pcv-filter-busca')?.value || '').trim().toUpperCase();
+        if (un !== 'TODAS') l = l.filter(a => a.unidade === un);
+        if (mod) l = l.filter(a => `${a.marca || ''} ${a.modelo || ''}`.trim() === mod);
+        if (busca) l = l.filter(a => `${a.tag} ${a.placa || ''}`.toUpperCase().includes(busca));
+      }
+      return l.sort((x, y) => naturalCompare(x.tag, y.tag));
+    }
+    // Aviso no menu (bolinha com o número de cavalos em alerta)
+    window.atualizarBadgePrevCavalos = function() {
+      const btn = document.getElementById('btn-tab-prevcavalos');
+      if (!btn || !pcvLoaded) return;
+      const n = pcvCavalos(false).map(pcvLinha).filter(x => x.status === 'vencida' || x.status === 'proxima').length;
+      let b = btn.querySelector('.sb-badge');
+      if (!b) { b = document.createElement('b'); b.className = 'sb-badge'; btn.appendChild(b); }
+      b.innerText = n;
+      b.title = `${n} cavalo(s) com preventiva próxima ou vencida`;
+      b.classList.toggle('hidden', !n);
+      pcvAvisarUsuario();
+    };
+    function pcvAvisarUsuario() {
+      const u = window.currentLoggedUser;
+      if (!u || !pcvLoaded || !(pcvCfgGeral().usuariosAlerta || []).includes(u.login)) return;
+      const k = 'pcm_pcv_aviso_' + getTodayStr();
+      try { if (sessionStorage.getItem(k)) return; } catch (e) {}
+      const ls = pcvCavalos(false).map(pcvLinha);
+      const v = ls.filter(x => x.status === 'vencida').length, p = ls.filter(x => x.status === 'proxima').length;
+      if (!v && !p) return;
+      try { sessionStorage.setItem(k, '1'); } catch (e) {}
+      showToast(`🔧 Preventiva de cavalos: ${v ? `${v} vencida(s)` : ''}${v && p ? ' e ' : ''}${p ? `${p} próxima(s) (faltando até ${fmtKm(pcvCfgGeral().alertaKm)} km)` : ''}. Veja em Controle de Preventiva — Cavalos.`, v ? 'error' : 'info');
+    }
+
+    window.pcvNavegar = function(n) {
+      const agr = document.getElementById('pcv-rod-agr')?.value || 'mes';
+      window.pcvRef = n === 0 ? getTodayStr() : prDeslocar(window.pcvRef || getTodayStr(), agr, n);
+      renderPrevCavalos();
+    };
+    // KM rodado de um cavalo num período: KM da última leitura até o fim − KM da última leitura antes do início
+    function pcvRodado(id, ini, fim) {
+      const l = pcvLeituras(id);
+      if (!l.length) return null;
+      let base = null, fimR = null;
+      l.forEach(x => { if (x.data < ini) base = x; if (x.data <= fim) fimR = x; });
+      if (!fimR || fimR.data < ini) return null;
+      if (!base) base = l.find(x => x.data >= ini && x.data <= fim);
+      if (!base) return null;
+      return { kmIni: Number(base.km), kmFim: Number(fimR.km), rodado: Math.max(0, Number(fimR.km) - Number(base.km)), dataIni: base.data, dataFim: fimR.data };
+    }
+
+    window.renderPrevCavalos = function() {
+      const sec = document.getElementById('tab-prevcavalos');
+      if (!sec) return;
+      const g = pcvCfgGeral();
+      const modSel = document.getElementById('pcv-filter-modelo');
+      const modCur = modSel.value;
+      const mods = Array.from(new Set(pcvCavalos(false).map(a => `${a.marca || ''} ${a.modelo || ''}`.trim()).filter(Boolean))).sort();
+      modSel.innerHTML = '<option value="">Todas as marcas/modelos</option>' + mods.map(m => `<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>`).join('');
+      modSel.value = mods.includes(modCur) ? modCur : '';
+      const meta = window.kmMeta || {};
+      document.getElementById('pcv-meta').innerText = meta.em ? `Última atualização de KM: ${new Date(meta.em).toLocaleString('pt-BR')} por ${meta.por || '-'} (${meta.fontes || '-'}, leituras de ${formatDateBR(meta.data || '')})` : 'Nenhuma atualização de KM ainda — use "Atualizar KM".';
+      const st = document.getElementById('pcv-filter-status')?.value || '';
+      let linhas = pcvCavalos(true).map(pcvLinha);
+      const todas = linhas;
+      if (st) linhas = linhas.filter(x => x.status === st);
+      linhas.sort((x, y) => PCV_ST[x.status].o - PCV_ST[y.status].o || (x.falta ?? 1e12) - (y.falta ?? 1e12) || naturalCompare(x.a.tag, y.a.tag));
+      window.lastPrevCavalos = linhas;
+      const cnt = (s) => todas.filter(x => x.status === s).length;
+      const perMes = { ini: prInicioPeriodo(getTodayStr(), 'mes'), fim: getTodayStr() };
+      const rodMes = todas.reduce((s, x) => s + ((pcvRodado(x.a.id, perMes.ini, perMes.fim) || {}).rodado || 0), 0);
+      const k = (t, v, cor, icone, sub) => `<div class="card-executive p-3"><p class="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="${icone}" class="w-3.5 h-3.5 ${cor}"></i> ${t}</p><p class="text-2xl font-black ${cor}">${v}</p>${sub ? `<p class="text-[10px] text-slate-500">${sub}</p>` : ''}</div>`;
+      document.getElementById('pcv-kpis').innerHTML = [
+        k('Cavalos', todas.length, 'text-slate-800', 'truck', `intervalo padrão ${fmtKm(g.intervaloPadrao)} km`),
+        k('Vencidas', cnt('vencida'), cnt('vencida') ? 'text-red-600' : 'text-slate-400', 'octagon-alert', 'passaram do KM'),
+        k('Próximas', cnt('proxima'), cnt('proxima') ? 'text-amber-600' : 'text-slate-400', 'bell-ring', `faltando até ${fmtKm(g.alertaKm)} km`),
+        k('Em dia', cnt('ok'), 'text-emerald-700', 'circle-check'),
+        k('Sem dados', cnt('semdados'), cnt('semdados') ? 'text-slate-600' : 'text-slate-400', 'circle-help', 'sem KM ou sem última preventiva'),
+        k('KM rodado no mês', fmtKm(rodMes), 'text-indigo-700', 'route', `todos os cavalos • ${prRotulo(perMes.ini, 'mes')}`)
+      ].join('');
+      document.getElementById('pcv-count').innerText = `(${linhas.length})`;
+      document.getElementById('pcv-tbody').innerHTML = linhas.map(x => {
+        const S = PCV_ST[x.status];
+        const usado = x.kmUlt !== null && x.atual ? Math.min(100, Math.max(0, ((Number(x.atual.km) - x.kmUlt) / x.intervalo) * 100)) : 0;
+        const corBarra = x.status === 'vencida' ? '#dc2626' : x.status === 'proxima' ? '#d97706' : '#059669';
+        return `<tr class="${x.status === 'vencida' ? 'bg-red-50/40' : x.status === 'proxima' ? 'bg-amber-50/40' : ''}">
+          <td class="p-2 whitespace-nowrap"><span class="font-black text-slate-900">${escapeHtml(x.a.tag)}</span><span class="block text-[10px] text-slate-400">${escapeHtml([x.a.placa, x.a.modelo, x.a.unidade].filter(Boolean).join(' • '))}</span></td>
+          <td class="p-2 text-right whitespace-nowrap">${x.atual ? `<span class="font-black">${fmtKm(x.atual.km)}</span><span class="block text-[10px] text-slate-400">${formatDateBR(x.atual.data).slice(0, 5)} • ${escapeHtml(x.atual.fonte || '')}</span>` : '<span class="text-slate-300">sem leitura</span>'}</td>
+          <td class="p-2 whitespace-nowrap">${x.ult ? `${formatDateBR(x.ult.data)}<span class="block text-[10px] text-slate-400">${escapeHtml(x.ult.servico || '')} • ${escapeHtml(x.ult.origem)}</span>` : '<span class="text-slate-300">nenhuma registrada</span>'}</td>
+          <td class="p-2 text-right whitespace-nowrap">${x.kmUlt !== null ? `<span class="font-bold">${fmtKm(x.kmUlt)}</span><span class="block text-[10px] text-slate-400">${escapeHtml(x.ult.kmFonte || '')}</span>` : '<span class="text-slate-300">—</span>'}</td>
+          <td class="p-2">${x.ult ? `${escapeHtml(x.ult.local || '-')}<span class="block text-[10px] text-slate-400">${escapeHtml(x.ult.responsavel || '')}</span>` : '—'}</td>
+          <td class="p-2 text-right whitespace-nowrap">${fmtKm(x.intervalo)}</td>
+          <td class="p-2 text-right whitespace-nowrap font-bold">${fmtKm(x.proxima)}</td>
+          <td class="p-2 whitespace-nowrap min-w-[130px]">${x.falta !== null ? `<span class="font-black ${x.status === 'vencida' ? 'text-red-700' : x.status === 'proxima' ? 'text-amber-700' : 'text-slate-800'}">${x.falta <= 0 ? `passou ${fmtKm(-x.falta)} km` : `${fmtKm(x.falta)} km`}</span><span class="mini-bar block mt-1"><span style="width:${usado}%;background:${corBarra}"></span></span>` : '—'}</td>
+          <td class="p-2 whitespace-nowrap">${x.previsao ? `${formatDateBR(x.previsao)}<span class="block text-[10px] text-slate-400">~${fmtKm(x.media)} km/dia</span>` : x.media ? `<span class="text-[10px] text-slate-400">~${fmtKm(x.media)} km/dia</span>` : '—'}${x.programada ? `<span class="block text-[10px] font-bold text-indigo-700">programada ${formatDateBR(x.programada.date).slice(0, 5)}</span>` : ''}</td>
+          <td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border ${S.c}">${S.t}</span></td>
+          <td class="p-2 text-center sticky-col-right whitespace-nowrap"><button type="button" onclick="pcvAbrirEditar('${escapeJs(x.a.id)}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded text-[10px] font-bold">Ajustar</button> <button type="button" onclick="pcvProgramar('${escapeJs(x.a.id)}')" class="px-2 py-1 border border-emerald-300 text-emerald-800 hover:bg-emerald-50 rounded text-[10px] font-bold">Programar</button></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="11" class="p-4 text-center text-slate-400 italic">Nenhum cavalo com estes filtros.</td></tr>';
+      pcvRenderRodado();
+      if (window.lucide) lucide.createIcons();
+    };
+    function pcvRenderRodado() {
+      const agr = document.getElementById('pcv-rod-agr')?.value || 'mes';
+      const ini = prInicioPeriodo(window.pcvRef || getTodayStr(), agr);
+      const fimCheio = prFimPeriodo(ini, agr);
+      const fim = fimCheio > getTodayStr() && ini <= getTodayStr() ? getTodayStr() : fimCheio;
+      document.getElementById('pcv-rod-label').innerText = prRotuloComDatas({ agr, ini, fim: fimCheio, label: prRotulo(ini, agr) });
+      const cav = pcvCavalos(true);
+      const lin = cav.map(a => ({ a, r: pcvRodado(a.id, ini, fim) }));
+      const com = lin.filter(x => x.r);
+      const total = com.reduce((s, x) => s + x.r.rodado, 0);
+      const diasPer = Math.max(1, calcDiasEntre(ini, fim) + 1);
+      const top = com.slice().sort((x, y) => y.r.rodado - x.r.rodado)[0];
+      window.lastKmRodado = { agr, ini, fim, lin, total };
+      const k = (t, v, sub) => `<div class="bg-slate-50 border border-slate-200 rounded-lg p-2"><p class="text-[10px] font-bold text-slate-500 uppercase">${t}</p><p class="text-lg font-black text-slate-900">${v}</p>${sub ? `<p class="text-[10px] text-slate-500">${sub}</p>` : ''}</div>`;
+      document.getElementById('pcv-rod-kpis').innerHTML = [
+        k('KM rodado (consolidado)', fmtKm(total), `${com.length} de ${cav.length} cavalos com leitura`),
+        k('Média por cavalo', fmtKm(com.length ? total / com.length : 0), 'no período'),
+        k('Média por dia (frota)', fmtKm(total / diasPer), `${diasPer} dia(s)`),
+        k('Quem mais rodou', top ? escapeHtml(top.a.tag) : '—', top ? `${fmtKm(top.r.rodado)} km` : '')
+      ].join('');
+      document.getElementById('pcv-rod-tbody').innerHTML = lin.sort((x, y) => (y.r ? y.r.rodado : -1) - (x.r ? x.r.rodado : -1) || naturalCompare(x.a.tag, y.a.tag)).map(x => `<tr><td class="p-2 font-black">${escapeHtml(x.a.tag)}<span class="block text-[10px] font-medium text-slate-400">${escapeHtml(x.a.placa || '')}</span></td><td class="p-2 text-right">${x.r ? fmtKm(x.r.kmIni) : '—'}</td><td class="p-2 text-right">${x.r ? fmtKm(x.r.kmFim) : '—'}</td><td class="p-2 text-right font-black ${x.r ? 'text-slate-900' : 'text-slate-300'}">${x.r ? fmtKm(x.r.rodado) : 'sem leitura'}</td><td class="p-2 text-right">${x.r ? fmtKm(x.r.rodado / Math.max(1, calcDiasEntre(x.r.dataIni, x.r.dataFim) || 1)) : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">Sem cavalos.</td></tr>';
+      document.getElementById('pcv-rod-tfoot').innerHTML = `<tr><td class="p-2">Total</td><td></td><td></td><td class="p-2 text-right">${fmtKm(total)}</td><td class="p-2 text-right">${fmtKm(total / diasPer)}</td></tr>`;
+      // evolução consolidada: últimos períodos
+      const n = ({ dia: 14, semana: 12, mes: 12, ano: 5 })[agr] || 12;
+      const pers = [];
+      let p = ini;
+      for (let i = 0; i < n; i++) { pers.unshift(p); p = prDeslocar(p, agr, -1); }
+      const serie = pers.map(pi => { const pf0 = prFimPeriodo(pi, agr); const pf = pf0 > getTodayStr() && pi <= getTodayStr() ? getTodayStr() : pf0; return { label: prRotulo(pi, agr, true), total: cav.reduce((s, a) => s + ((pcvRodado(a.id, pi, pf) || {}).rodado || 0), 0) }; });
+      window.lastKmRodado.serie = serie;
+      document.getElementById('pcv-rod-graf-sub').innerText = `KM rodado de todos os cavalos — últimos ${n} ${({ dia: 'dias', semana: 'semanas', mes: 'meses', ano: 'anos' })[agr]}`;
+      const cv = document.getElementById('chartKmRodado');
+      if (window.chartKmRodadoInstance) window.chartKmRodadoInstance.destroy();
+      window.chartKmRodadoInstance = new Chart(cv.getContext('2d'), {
+        type: 'bar',
+        data: { labels: serie.map(s => s.label), datasets: [{ label: 'KM rodado', data: serie.map(s => s.total), backgroundColor: serie.map((s, i) => i === serie.length - 1 ? '#4a3aa7' : '#a5b4fc'), borderRadius: 4, maxBarThickness: 42 }] },
+        options: { responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${fmtKm(c.raw)} km` } }, datalabels: { display: (c) => c.dataIndex === serie.length - 1 && c.raw > 0, anchor: 'end', align: 'top', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: (v) => fmtKm(v) } }, scales: { y: { beginAtZero: true, grace: '15%', suggestedMax: 100, ticks: { precision: 0, callback: (v) => fmtKm(v), font: { size: 10 }, color: '#64748b' }, grid: { color: '#eef2f6' } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#64748b', maxRotation: 0, autoSkip: true } } } }
+      });
+    }
+
+    // ----- ajustes por cavalo -----
+    window.pcvAbrirEditar = function(id) {
+      const a = getAssetById(id);
+      if (!a) return;
+      const x = pcvLinha(a);
+      const cfg = x.cfg;
+      document.getElementById('pcve-id').value = a.id;
+      document.getElementById('pcve-titulo').innerText = `${a.tag}${a.placa ? ' · ' + a.placa : ''}`;
+      document.getElementById('pcve-auto').innerHTML = x.ult ? `Última preventiva: <strong>${formatDateBR(x.ult.data)}</strong> — ${escapeHtml(x.ult.servico || '')} (${escapeHtml(x.ult.origem)})${x.ult.local ? ` • ${escapeHtml(x.ult.local)}` : ''}${x.kmUlt !== null ? ` • KM ${fmtKm(x.kmUlt)} (${escapeHtml(x.ult.kmFonte || '')})` : ' • KM não encontrado: informe abaixo'}` : 'Nenhuma preventiva registrada em Status & Paradas ou no Calendário. Informe a data e o KM da última preventiva abaixo.';
+      document.getElementById('pcve-intervalo').value = cfg.intervaloKm ? fmtKm(cfg.intervaloKm) : '';
+      document.getElementById('pcve-intervalo').placeholder = `padrão ${fmtKm(pcvCfgGeral().intervaloPadrao)}`;
+      document.getElementById('pcve-km-ult').value = cfg.kmUltimaPrev && x.ult && x.ult.kmFonte === 'informado' ? fmtKm(cfg.kmUltimaPrev) : '';
+      document.getElementById('pcve-data-ult').value = cfg.dataUltimaPrev && x.ult && x.ult.origem === 'Manual' ? cfg.dataUltimaPrev : '';
+      document.getElementById('pcve-local').value = cfg.localUltimaPrev || '';
+      document.getElementById('pcve-obs').value = cfg.obs || '';
+      const ls = pcvLeituras(a.id).slice(-20).reverse();
+      document.getElementById('pcve-leituras').innerHTML = ls.map(l => `<div class="px-2 py-1 border-b border-slate-100 flex justify-between gap-2"><span>${formatDateBR(l.data)} — <strong>${fmtKm(l.km)} km</strong></span><span class="text-slate-400">${escapeHtml(l.fonte || '')}${l.kmProlog ? ` • Prolog ${fmtKm(l.kmProlog)}` : ''}${l.kmTelemetria ? ` • Telem. ${fmtKm(l.kmTelemetria)}` : ''}</span></div>`).join('') || '<p class="p-2 text-slate-400 italic">Sem leituras.</p>';
+      document.getElementById('modal-pcv-editar').classList.replace('hidden', 'flex');
+    };
+    const numKm = (v) => { const s = String(v || '').replace(/\D/g, ''); return s ? Number(s) : null; };
+    window.pcvSalvarEditar = function() {
+      const id = document.getElementById('pcve-id').value;
+      const a = getAssetById(id);
+      if (!a) return;
+      const antes = window.prevCavCfg[pcvKey(id)] || {};
+      const dataUlt = document.getElementById('pcve-data-ult').value;
+      if (dataUlt && dataUlt > getTodayStr()) { alert('A data da última preventiva não pode ser futura.'); return; }
+      const kmUlt = numKm(document.getElementById('pcve-km-ult').value);
+      // sem data: o KM informado fica amarrado à última preventiva registrada no sistema
+      const auto = pcvUltimaAuto(a);
+      const dataRef = dataUlt || (kmUlt && auto ? auto.data : null);
+      if (kmUlt && !dataRef) { alert('Não há preventiva registrada para este cavalo: informe também a data da última preventiva.'); return; }
+      if (dataUlt && !kmUlt && !pcvKmEm(a.id, dataUlt)) { alert('Informe o KM da última preventiva (não há leitura de KM nessa data).'); return; }
+      const cfg = {
+        intervaloKm: numKm(document.getElementById('pcve-intervalo').value),
+        kmUltimaPrev: kmUlt, dataUltimaPrev: dataRef,
+        localUltimaPrev: document.getElementById('pcve-local').value.trim(), obs: document.getElementById('pcve-obs').value.trim(),
+        atualizadoEm: new Date().toISOString(), atualizadoPor: nomeUsuarioAtual()
+      };
+      if (cfg.intervaloKm !== null && cfg.intervaloKm < 1000) { alert('Intervalo muito baixo — informe em km (ex.: 120.000).'); return; }
+      window.prevCavCfg[pcvKey(id)] = cfg;
+      safeSet(`prevCavalos/${pcvKey(id)}`, cfg);
+      addAuditLog(a.unidade, 'KM Cavalos', a.tag, `Controle de preventiva ajustado: intervalo ${cfg.intervaloKm ? fmtKm(cfg.intervaloKm) + ' km' : 'padrão'}${cfg.kmUltimaPrev ? `, KM da última preventiva ${fmtKm(cfg.kmUltimaPrev)}` : ''}${cfg.dataUltimaPrev ? ` (${formatDateBR(cfg.dataUltimaPrev)})` : ''}`, getTodayStr(), 'Ajustado', null, diffCampos(antes, cfg, { intervaloKm: 'Intervalo (km)', kmUltimaPrev: 'KM última preventiva', dataUltimaPrev: 'Data última preventiva', localUltimaPrev: 'Local', obs: 'Observação' }));
+      document.getElementById('modal-pcv-editar').classList.replace('flex', 'hidden');
+      renderPrevCavalos();
+      atualizarBadgePrevCavalos();
+    };
+    window.pcvProgramar = function(id) {
+      const a = getAssetById(id);
+      if (!a) return;
+      const x = pcvLinha(a);
+      openMaintModal(x.previsao && x.previsao > getTodayStr() ? x.previsao : addDaysToDateStr(getTodayStr(), 1));
+      const sel = document.getElementById('maint-tag');
+      if (!Array.from(sel.options).some(o => String(o.value) === String(a.id))) sel.insertAdjacentHTML('beforeend', `<option value="${escapeAttr(a.id)}">${escapeHtml(a.tag)}</option>`);
+      sel.value = a.id;
+      onMaintAssetChange();
+      document.getElementById('maint-service').value = `Preventiva ${Math.round(x.intervalo / 1000)}K`;
+      if (typeof atualizarAvisoEscalaMaint === 'function') atualizarAvisoEscalaMaint();
+    };
+
+    // ----- configuração e alertas -----
+    window.pcvAbrirConfig = function() {
+      const g = pcvCfgGeral();
+      document.getElementById('pcvc-intervalo').value = fmtKm(g.intervaloPadrao);
+      document.getElementById('pcvc-alerta').value = fmtKm(g.alertaKm);
+      document.getElementById('pcvc-tol').value = fmtKm(g.toleranciaKm);
+      document.getElementById('pcvc-email-auto').checked = !!g.emailAutomatico;
+      const sel = g.usuariosAlerta || [];
+      document.getElementById('pcvc-usuarios').innerHTML = (window.users || []).filter(u => u.status === 'Ativo').sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).map(u => `<label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700"><input type="checkbox" class="pcvc-user" value="${escapeAttr(u.login)}" ${sel.includes(u.login) ? 'checked' : ''}> ${escapeHtml(u.nome || u.login)} <span class="font-medium text-slate-400 truncate">${escapeHtml(u.email || 'sem e-mail')}</span></label>`).join('');
+      document.getElementById('modal-pcv-config').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+    };
+    window.pcvSalvarConfig = function() {
+      const intervalo = numKm(document.getElementById('pcvc-intervalo').value), alerta = numKm(document.getElementById('pcvc-alerta').value), tol = numKm(document.getElementById('pcvc-tol').value);
+      if (!intervalo || intervalo < 1000) { alert('Informe o intervalo padrão em km (ex.: 120.000).'); return; }
+      const cfg = Object.assign({}, pcvCfgGeral(), { intervaloPadrao: intervalo, alertaKm: alerta || 0, toleranciaKm: tol || 0, usuariosAlerta: Array.from(document.querySelectorAll('.pcvc-user:checked')).map(cb => cb.value), emailAutomatico: document.getElementById('pcvc-email-auto').checked });
+      window.prevCavConfig = cfg;
+      safeSet('configPrevCavalos', cfg);
+      addAuditLog('TODAS', 'KM Cavalos', '-', `Alertas de preventiva de cavalos: intervalo ${fmtKm(intervalo)} km, alerta faltando ${fmtKm(cfg.alertaKm)} km, ${cfg.usuariosAlerta.length} usuário(s) avisado(s)`, getTodayStr(), 'Configuração');
+      document.getElementById('modal-pcv-config').classList.replace('flex', 'hidden');
+      renderPrevCavalos();
+      atualizarBadgePrevCavalos();
+      showToast('Alertas salvos.', 'success');
+    };
+    function pcvMontarEmail(linhas) {
+      const S = (x) => escapeHtml(x == null ? '' : String(x));
+      const th = 'padding:6px 8px;background:#f1f5f9;color:#475569;font-size:11px;text-align:left;border-bottom:1px solid #e2e8f0';
+      const td = 'padding:6px 8px;font-size:12px;border-bottom:1px solid #f1f5f9';
+      const html = `<div style="font-family:Arial,sans-serif;color:#0f172a"><h2 style="color:#047857;margin:0 0 8px">Preventiva de cavalos — alerta</h2><p style="font-size:13px">${linhas.filter(x => x.status === 'vencida').length} vencida(s) e ${linhas.filter(x => x.status === 'proxima').length} próxima(s) (faltando até ${fmtKm(pcvCfgGeral().alertaKm)} km).</p><table style="border-collapse:collapse;width:100%"><tr><th style="${th}">Frota</th><th style="${th}">KM atual</th><th style="${th}">Próxima preventiva</th><th style="${th}">Falta</th><th style="${th}">Previsão</th><th style="${th}">Situação</th></tr>${linhas.map(x => `<tr><td style="${td}"><b>${S(x.a.tag)}</b> ${S(x.a.placa || '')}</td><td style="${td}">${fmtKm(x.atual && x.atual.km)}</td><td style="${td}">${fmtKm(x.proxima)}</td><td style="${td};color:${x.status === 'vencida' ? '#b91c1c' : '#b45309'};font-weight:bold">${x.falta <= 0 ? 'passou ' + fmtKm(-x.falta) : fmtKm(x.falta)} km</td><td style="${td}">${x.previsao ? formatDateBR(x.previsao) : '-'}</td><td style="${td}">${PCV_ST[x.status].t}</td></tr>`).join('')}</table><p style="font-size:11px;color:#64748b">Enviado pelo sistema de Gestão Integrada de Ativos — GNL Brasil.</p></div>`;
+      const texto = ['PREVENTIVA DE CAVALOS — ALERTA', ''].concat(linhas.map(x => `${x.a.tag}: KM ${fmtKm(x.atual && x.atual.km)} • próxima ${fmtKm(x.proxima)} • ${x.falta <= 0 ? 'passou ' + fmtKm(-x.falta) : 'faltam ' + fmtKm(x.falta)} km • ${PCV_ST[x.status].t}`)).join('\n');
+      return { html, texto, assunto: `Preventiva de cavalos: ${linhas.length} em alerta` };
+    }
+    window.pcvEnviarAlertaEmail = async function(auto) {
+      const linhas = pcvCavalos(false).map(pcvLinha).filter(x => x.status === 'vencida' || x.status === 'proxima');
+      if (!linhas.length) { if (!auto) alert('Nenhum cavalo em alerta agora.'); return; }
+      const logins = pcvCfgGeral().usuariosAlerta || [];
+      const destinos = (window.users || []).filter(u => logins.includes(u.login) && u.email && /\S+@\S+\.\S+/.test(u.email)).map(u => ({ email: u.email, nome: u.nome, login: u.login }));
+      if (!destinos.length) { if (!auto) alert('Escolha usuários com e-mail cadastrado em "Usuários que recebem o alerta".'); return; }
+      const m = pcvMontarEmail(linhas);
+      if (typeof emailConfigurado === 'function' && emailConfigurado()) {
+        const res = await enviarEmailSistema(destinos, m.assunto, m.html, m.texto);
+        const ok = res.filter(r => r.ok).length;
+        showToast(`Alerta de preventiva enviado para ${ok} de ${destinos.length} usuário(s).`, ok === destinos.length ? 'success' : 'error');
+        addAuditLog('TODAS', 'KM Cavalos', '-', `Alerta de preventiva de cavalos enviado por e-mail (${linhas.length} cavalo(s), ${ok} destinatário(s))`, getTodayStr(), 'Enviado');
+      } else if (!auto) {
+        window.location.href = `mailto:?bcc=${encodeURIComponent(destinos.map(d => d.email).join(','))}&subject=${encodeURIComponent(m.assunto)}&body=${encodeURIComponent(m.texto)}`;
+      }
+    };
+
+    // ----- importação das planilhas (Telemetria + Prolog) -----
+    const normCab = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[º°]/g, 'o').replace(/\s+/g, ' ').trim();
+    const normIdent = (s) => String(s == null ? '' : s).toUpperCase().replace(/[\s\-_.]/g, '');
+    function kmNumero(v) {
+      if (typeof v === 'number') return v;
+      let s = String(v == null ? '' : v).trim().replace(/\s|km/gi, '');
+      if (!s) return null;
+      if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+      else if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s = s.replace(/,/g, '');
+      else s = s.replace(',', '.');
+      const n = Number(s);
+      return isNaN(n) ? null : n;
+    }
+    const KM_COLS = ['odometro', 'km coletado', 'km atual', 'hodometro', 'quilometragem', 'km'];
+    const ID_COLS = /^(numero de veiculo|n(o)? (de )?veiculo|frota|id frota|placa|veiculo|tag|prefixo|equipamento)$/;
+    function kmLerPlanilha(buf) {
+      const wb = XLSX.read(buf, { type: 'array' });
+      const mapa = {};
+      (window.assets || []).forEach(a => { if (a.tag) mapa[normIdent(a.tag)] = a; if (a.placa) mapa[normIdent(a.placa)] = a; });
+      const porAtivo = {}, naoRec = new Set();
+      let linhas = 0, achouCab = false;
+      wb.SheetNames.forEach(sn => {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: '' });
+        let h = -1, cKm = -1, cIds = [], cTipo = -1;
+        for (let i = 0; i < Math.min(rows.length, 40); i++) {
+          const cab = (rows[i] || []).map(normCab);
+          let km = -1;
+          for (const nome of KM_COLS) { km = cab.indexOf(nome); if (km >= 0) break; }
+          const ids = cab.map((c, j) => ID_COLS.test(c) ? j : -1).filter(j => j >= 0);
+          if (km >= 0 && ids.length) { h = i; cKm = km; cIds = ids; cTipo = cab.indexOf('tipo de veiculo'); break; }
+        }
+        if (h < 0) return;
+        achouCab = true;
+        rows.slice(h + 1).forEach(r => {
+          const km = kmNumero(r[cKm]);
+          if (!km || km <= 0) return;
+          const cands = [];
+          cIds.forEach(j => { const v = String(r[j] == null ? '' : r[j]).trim(); if (!v) return; cands.push(v); v.split(/\s+-\s+|\s*\/\s*|\s+/).forEach(p => { if (p && p !== v) cands.push(p); }); });
+          if (!cands.length) return;
+          linhas++;
+          let a = null;
+          for (const c of cands) { a = mapa[normIdent(c)]; if (a) break; }
+          if (!a) { if (cTipo < 0 || /cavalo/i.test(String(r[cTipo] || ''))) naoRec.add(cands[0]); return; }
+          if (a.tipo !== 'Cavalo') return;
+          const k = String(a.id);
+          if (!porAtivo[k] || km > porAtivo[k]) porAtivo[k] = km;
+        });
+      });
+      return { porAtivo, naoRec: Array.from(naoRec), linhas, achouCab };
+    }
+    const lerArquivo = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(new Uint8Array(r.result)); r.onerror = () => rej(new Error('Não foi possível ler ' + f.name)); r.readAsArrayBuffer(f); });
+    window.kmiAbrir = function() {
+      ['kmi-telemetria', 'kmi-prolog'].forEach(i => { document.getElementById(i).value = ''; });
+      document.getElementById('kmi-data').value = getTodayStr();
+      document.getElementById('kmi-data').max = getTodayStr();
+      document.getElementById('kmi-status').innerText = '';
+      document.getElementById('kmi-previa').classList.add('hidden');
+      document.getElementById('kmi-btn-salvar').disabled = true;
+      window.kmiLinhas = [];
+      document.getElementById('modal-km-import').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+    };
+    window.kmiLer = async function(manual) {
+      const fT = document.getElementById('kmi-telemetria').files[0], fP = document.getElementById('kmi-prolog').files[0];
+      if (!manual && !fT && !fP) { alert('Escolha pelo menos uma planilha (Telemetria ou Prolog) — ou use "Digitar".'); return; }
+      const st = document.getElementById('kmi-status');
+      st.innerText = 'Lendo...';
+      let T = { porAtivo: {}, naoRec: [], linhas: 0 }, P = { porAtivo: {}, naoRec: [], linhas: 0 };
+      try {
+        if (fT && !manual) T = kmLerPlanilha(await lerArquivo(fT));
+        if (fP && !manual) P = kmLerPlanilha(await lerArquivo(fP));
+      } catch (e) { st.innerText = 'Erro: ' + e.message; return; }
+      const avisos = [];
+      if (fT && !manual && !T.achouCab) avisos.push('Telemetria: não encontrei as colunas de frota/placa e Odômetro/KM');
+      if (fP && !manual && !P.achouCab) avisos.push('Prolog: não encontrei as colunas de placa/frota e KM coletado');
+      const tol = Number(pcvCfgGeral().toleranciaKm) || 0;
+      window.kmiLinhas = pcvCavalos(false).map(a => {
+        const kp = P.porAtivo[String(a.id)] ?? null, kt = T.porAtivo[String(a.id)] ?? null;
+        const atual = pcvKmAtual(a.id);
+        const sugerido = [kp, kt].filter(v => v !== null).reduce((m, v) => Math.max(m, v), 0) || null;
+        const dif = kp !== null && kt !== null ? Math.abs(kp - kt) : null;
+        let check = '', cls = '';
+        if (kp !== null && kt !== null) { check = dif <= tol ? 'OK' : 'VERIFICAR'; cls = dif <= tol ? 'bg-emerald-100 text-emerald-800' : dif <= tol * 3 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'; }
+        else if (kp !== null || kt !== null) { check = kp !== null ? 'só Prolog' : 'só Telemetria'; cls = 'bg-amber-50 text-amber-800'; }
+        const menor = sugerido !== null && atual && sugerido < Number(atual.km);
+        if (menor) { check = 'MENOR QUE O ATUAL'; cls = 'bg-red-100 text-red-800'; }
+        return { a, kp, kt, dif, check, cls, atual, sugerido, incluir: sugerido !== null && !menor };
+      });
+      const tb = document.getElementById('kmi-tbody');
+      tb.innerHTML = window.kmiLinhas.map((l, i) => `<tr>
+          <td class="p-2"><input type="checkbox" class="kmi-inc" data-i="${i}" ${l.incluir ? 'checked' : ''} onchange="kmiContar()"></td>
+          <td class="p-2 font-black">${escapeHtml(l.a.tag)}</td><td class="p-2">${escapeHtml(l.a.placa || '')}</td>
+          <td class="p-2 text-right">${l.kp !== null ? fmtKm(l.kp) : '<span class="text-slate-300">#N/A</span>'}</td>
+          <td class="p-2 text-right">${l.kt !== null ? fmtKm(l.kt) : '<span class="text-slate-300">#N/A</span>'}</td>
+          <td class="p-2 text-right font-bold">${l.dif !== null ? fmtKm(l.dif) : '—'}</td>
+          <td class="p-2">${l.check ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black ${l.cls}">${l.check}</span>` : ''}</td>
+          <td class="p-2 text-right text-slate-500">${l.atual ? `${fmtKm(l.atual.km)} <span class="text-[10px]">(${formatDateBR(l.atual.data).slice(0, 5)})</span>` : '—'}</td>
+          <td class="p-2"><input type="text" inputmode="numeric" class="kmi-km w-28 border border-slate-300 rounded p-1 text-xs font-bold text-right" data-i="${i}" value="${l.sugerido !== null ? fmtKm(l.sugerido) : ''}" oninput="const cb = document.querySelector('.kmi-inc[data-i=&quot;${i}&quot;]'); if (cb && this.value.trim()) cb.checked = true; kmiContar()"></td>
+        </tr>`).join('') || '<tr><td colspan="9" class="p-4 text-center text-slate-400 italic">Nenhum cavalo ativo.</td></tr>';
+      const naoRec = Array.from(new Set(T.naoRec.concat(P.naoRec)));
+      document.getElementById('kmi-naorec').innerText = naoRec.length ? `Não reconhecidos nas planilhas (${naoRec.length}): ${naoRec.slice(0, 30).join(', ')}${naoRec.length > 30 ? '…' : ''} — confira a TAG/placa no Cadastro de Ativos.` : '';
+      const achados = window.kmiLinhas.filter(l => l.sugerido !== null).length;
+      st.innerText = manual ? 'Digite o KM de cada cavalo e salve.' : `${achados} de ${window.kmiLinhas.length} cavalos encontrados${fP ? ` • Prolog: ${P.linhas} linha(s)` : ''}${fT ? ` • Telemetria: ${T.linhas} linha(s)` : ''}${avisos.length ? ' • ' + avisos.join(' • ') : ''}`;
+      document.getElementById('kmi-previa').classList.remove('hidden');
+      document.getElementById('kmi-todos').checked = false;
+      kmiContar();
+    };
+    window.kmiContar = function() {
+      const n = document.querySelectorAll('.kmi-inc:checked').length;
+      const b = document.getElementById('kmi-btn-salvar');
+      b.disabled = !n;
+      b.innerText = n ? `Salvar KM (${n})` : 'Salvar KM';
+    };
+    window.kmiSalvar = async function() {
+      const data = document.getElementById('kmi-data').value || getTodayStr();
+      if (data > getTodayStr()) { alert('A data das leituras não pode ser futura.'); return; }
+      const sel = Array.from(document.querySelectorAll('.kmi-inc:checked')).map(cb => Number(cb.dataset.i));
+      const agora = new Date().toISOString(), por = nomeUsuarioAtual();
+      let salvos = 0;
+      const menores = [];
+      for (const i of sel) {
+        const l = window.kmiLinhas[i];
+        const km = numKm(document.querySelector(`.kmi-km[data-i="${i}"]`).value);
+        if (!km) continue;
+        const ant = pcvKmEm(l.a.id, addDaysToDateStr(data, -1));
+        if (ant && km < Number(ant.km)) menores.push(`${l.a.tag} (${fmtKm(km)} < ${fmtKm(ant.km)})`);
+        const manual = l.sugerido === null || km !== l.sugerido;
+        const fonte = manual ? 'Manual' : [l.kp !== null && km === l.kp ? 'Prolog' : '', l.kt !== null && km === l.kt ? 'Telemetria' : ''].filter(Boolean).join(' = ') || 'Planilhas';
+        const reg = { km, fonte, kmProlog: l.kp, kmTelemetria: l.kt, por, em: agora };
+        const k = pcvKey(l.a.id);
+        window.kmLeituras[k] = window.kmLeituras[k] || {};
+        window.kmLeituras[k][data] = reg;
+        safeSet(`kmLeituras/${k}/${data}`, reg);
+        salvos++;
+      }
+      if (menores.length && !confirm(`KM menor que a leitura anterior em: ${menores.join(', ')}. O odômetro não volta — salvar mesmo assim?`)) return;
+      if (!salvos) { alert('Nenhum KM válido para salvar.'); return; }
+      const fontes = [document.getElementById('kmi-prolog').files[0] ? 'Prolog' : '', document.getElementById('kmi-telemetria').files[0] ? 'Telemetria' : ''].filter(Boolean).join(' + ') || 'digitado';
+      window.kmMeta = { em: agora, por, data, fontes, qtd: salvos };
+      safeSet('kmMeta', window.kmMeta);
+      addAuditLog(window.selectedUnit || 'TODAS', 'KM Cavalos', '-', `KM atualizado de ${salvos} cavalo(s) — leituras de ${formatDateBR(data)} (${fontes})`, data, 'Atualizado');
+      document.getElementById('modal-km-import').classList.replace('flex', 'hidden');
+      renderPrevCavalos();
+      atualizarBadgePrevCavalos();
+      const alertas = pcvCavalos(false).map(pcvLinha).filter(x => x.status === 'vencida' || x.status === 'proxima').length;
+      showToast(`KM de ${salvos} cavalo(s) atualizado.${alertas ? ` ${alertas} em alerta de preventiva.` : ''}`, 'success');
+      if (alertas && pcvCfgGeral().emailAutomatico) pcvEnviarAlertaEmail(true);
+    };
+
+    // ----- Excel -----
+    window.exportPrevCavalosToExcel = function() {
+      const linhas = window.lastPrevCavalos || [];
+      if (!linhas.length) { alert('Nenhum cavalo para exportar.'); return; }
+      const wb = XLSX.utils.book_new();
+      const aba = (nome, aoa) => { const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = (aoa[0] || []).map((_, i) => ({ wch: Math.min(40, Math.max(9, ...aoa.slice(0, 200).map(l => String(l[i] == null ? '' : l[i]).length + 2))) })); XLSX.utils.book_append_sheet(wb, ws, nome); };
+      aba('Controle preventiva', [['Frota', 'Placa', 'Modelo', 'Unidade', 'KM atual', 'Data do KM', 'Fonte do KM', 'Data última preventiva', 'Serviço', 'Origem', 'KM última preventiva', 'Local', 'Responsável', 'Intervalo (km)', 'Próxima preventiva (km)', 'Falta rodar (km)', 'Média km/dia', 'Previsão', 'Situação']].concat(linhas.map(x => [x.a.tag, x.a.placa || '', x.a.modelo || '', x.a.unidade || '', x.atual ? Number(x.atual.km) : '', x.atual ? formatDateBR(x.atual.data) : '', x.atual ? x.atual.fonte || '' : '', x.ult ? formatDateBR(x.ult.data) : '', x.ult ? x.ult.servico || '' : '', x.ult ? x.ult.origem : '', x.kmUlt ?? '', x.ult ? x.ult.local || '' : '', x.ult ? x.ult.responsavel || '' : '', x.intervalo, x.proxima ?? '', x.falta ?? '', x.media ? Math.round(x.media) : '', x.previsao ? formatDateBR(x.previsao) : '', PCV_ST[x.status].t])));
+      const r = window.lastKmRodado;
+      if (r) {
+        aba('KM rodado', [['Período', prRotuloComDatas({ agr: r.agr, ini: r.ini, fim: r.fim, label: prRotulo(r.ini, r.agr) }, true)], [], ['Frota', 'Placa', 'KM inicial', 'KM final', 'KM rodado']].concat(r.lin.map(x => [x.a.tag, x.a.placa || '', x.r ? x.r.kmIni : '', x.r ? x.r.kmFim : '', x.r ? x.r.rodado : ''])).concat([['TOTAL', '', '', '', r.total]]));
+        // mês a mês do ano (KM inicial, final e rodado — como a planilha de controle)
+        const ano = r.ini.slice(0, 4);
+        const meses = Array.from({ length: 12 }, (_, i) => `${ano}-${String(i + 1).padStart(2, '0')}-01`).filter(m => m <= getTodayStr());
+        const cab = ['Frota'].concat(...meses.map(m => [`${prRotulo(m, 'mes', true)} KM inicial`, `${prRotulo(m, 'mes', true)} KM final`, `${prRotulo(m, 'mes', true)} KM rodado`]));
+        const cav = pcvCavalos(true);
+        const corpo = cav.map(a => [a.tag].concat(...meses.map(m => { const x = pcvRodado(a.id, m, prFimPeriodo(m, 'mes')); return x ? [x.kmIni, x.kmFim, x.rodado] : ['', '', '']; })));
+        const tot = ['TOTAL'].concat(...meses.map(m => ['', '', cav.reduce((s, a) => s + ((pcvRodado(a.id, m, prFimPeriodo(m, 'mes')) || {}).rodado || 0), 0)]));
+        aba(`Mês a mês ${ano}`, [cab].concat(corpo).concat([tot]));
+      }
+      const leit = [];
+      pcvCavalos(true).forEach(a => pcvLeituras(a.id).forEach(l => leit.push([a.tag, a.placa || '', formatDateBR(l.data), Number(l.km), l.fonte || '', l.kmProlog ?? '', l.kmTelemetria ?? '', l.por || ''])));
+      aba('Leituras de KM', [['Frota', 'Placa', 'Data', 'KM considerado', 'Fonte', 'KM Prolog', 'KM Telemetria', 'Por']].concat(leit));
+      XLSX.writeFile(wb, `Preventiva_Cavalos_${getTodayStr()}.xlsx`);
+    };
+
     // ===================== CONGELAR TOPO (opcional) =====================
     // Botão 📌 no cabeçalho. Ligado, o menu de abas, o título + filtros (+ indicadores) da página e o cabeçalho
     // das tabelas ficam fixos enquanto a lista rola — como o "Congelar painéis" do Excel. Vale para todas as
@@ -17260,6 +18773,8 @@
       syncAtividades();
       syncControles();
       syncFormularios();
+      syncEscala();
+      syncPrevCavalos();
       syncConfigEmail();
       document.getElementById('current-date-display').innerText = getToday().toLocaleDateString('pt-BR');
       initFirebaseSync();
