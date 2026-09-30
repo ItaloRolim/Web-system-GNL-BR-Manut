@@ -4602,6 +4602,43 @@
     </div>
   </div>
 
+  <div id="modal-senha-temp" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-3 max-h-[94vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="asterisk" class="w-5 h-5 text-purple-600"></i> Senha temporária</h3>
+        <button type="button" onclick="document.getElementById('modal-senha-temp').classList.replace('flex', 'hidden')" class="text-slate-400 hover:text-slate-600" aria-label="Fechar"><i data-lucide="x"></i></button>
+      </div>
+      <input type="hidden" id="st-id">
+      <p id="st-quem" class="text-sm font-bold text-slate-800"></p>
+      <p class="text-xs text-slate-500">Você define uma senha provisória. A pessoa entra com o <strong>usuário</strong> e essa senha e, no primeiro acesso, cria a senha dela. A senha que ela usava antes deixa de funcionar.</p>
+      <div>
+        <label for="st-senha" class="block text-[11px] font-bold text-slate-700 mb-1">Senha temporária (mínimo 6 caracteres)</label>
+        <div class="flex gap-2"><input type="text" id="st-senha" autocomplete="off" data-lpignore="true" spellcheck="false" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm font-mono outline-none focus:ring-2 focus:ring-purple-500"><button type="button" onclick="gerarSenhaTemporaria()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50">Gerar</button></div>
+      </div>
+      <label class="flex items-center gap-2 text-xs font-bold text-slate-700"><input type="checkbox" id="st-trocar" checked class="accent-purple-600"> Pedir para criar uma senha nova no primeiro acesso</label>
+      <div id="st-resultado" class="hidden"></div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button type="button" onclick="document.getElementById('modal-senha-temp').classList.replace('flex', 'hidden')" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Fechar</button>
+        <button type="button" id="st-btn" onclick="salvarSenhaTemporaria()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold">Definir senha</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-trocar-senha" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-[70] p-4">
+    <form onsubmit="salvarTrocaSenha(event)" class="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-3">
+      <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2"><i data-lucide="key-round" class="w-5 h-5 text-emerald-600"></i> Crie a sua senha</h3>
+      <p class="text-xs text-slate-500">Você entrou com uma senha temporária. Crie agora a sua senha (mínimo 6 caracteres) — a temporária deixa de valer.</p>
+      <input type="text" id="ts-usuario" name="username" autocomplete="username" class="hidden" tabindex="-1" aria-hidden="true">
+      <div><label for="ts-nova" class="block text-[11px] font-bold text-slate-700 mb-1">Nova senha</label><input type="password" id="ts-nova" name="new-password" autocomplete="new-password" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></div>
+      <div><label for="ts-conf" class="block text-[11px] font-bold text-slate-700 mb-1">Repita a nova senha</label><input type="password" id="ts-conf" autocomplete="new-password" class="w-full border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"></div>
+      <div id="ts-msg" class="hidden"></div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="document.getElementById('modal-trocar-senha').classList.replace('flex', 'hidden'); handleLogout();" class="flex-1 px-3 py-2 border rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">Sair</button>
+        <button type="submit" id="ts-btn" class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold">Salvar senha</button>
+      </div>
+    </form>
+  </div>
+
   <!-- MODAL GERENCIAR CAUSAS RAIZ -->
   <div id="modal-causa-raiz" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-[60] p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
@@ -5724,6 +5761,7 @@
             Object.assign(window.currentLoggedUser, { nome: rec.nome, funcao: rec.funcao, unidade: rec.unidade || 'TODAS', verUnidade: rec.verUnidade || 'TODAS', empresa: rec.empresa || '', acesso: rec.acesso || 'editor', permissoesCustom: rec.permissoesCustom || null, permissoesVersao: rec.permissoesVersao || null, verPresenca: rec.verPresenca, mostrarPresenca: rec.mostrarPresenca });
             sessaoAtualizar(window.currentLoggedUser);
             applyRolePermissions(rec.funcao, rec);
+            if (rec.trocarSenha && auth && auth.currentUser && auth.currentUser.uid === rec.authUid) abrirTrocaSenhaObrigatoria(rec);
             if (rec.mostrarPresenca === false) stopPresence(false); else startPresence();
           }
         }
@@ -6668,7 +6706,7 @@
       const senhaDigitada = document.getElementById('user-senha').value;
       const antesRec = editingId ? (window.users || []).find(u => String(u.id) === String(editingId)) : null;
       const emailForm = (document.getElementById('user-email').value || '').trim();
-      if (antesRec && antesRec.authUid && senhaDigitada) { alert('Este usuário entra pelo login por e-mail: a senha é só dele e o sistema não vê nem troca. Para ele criar uma senha nova, use o botão da chave (Enviar link) na lista de usuários.'); return; }
+      if (antesRec && antesRec.authUid && senhaDigitada) { alert('Este usuário já entra pelo login novo: a senha é só dele e o sistema não vê nem guarda. Para trocar, use o botão da chave (Enviar link) ou, na conta Desenvolvedor, o botão Senha temporária.'); return; }
       const podeSemSenha = emailValido(emailForm) && !!auth && !window.__authProvedorDesligado;
       if (!senhaDigitada && !(antesRec && (antesRec.senha || antesRec.authUid)) && !podeSemSenha) { alert('Informe a senha — ou cadastre o e-mail para a pessoa criar a própria senha pelo link.'); return; }
       if (senhaDigitada && podeSemSenha && senhaDigitada.length < 6 && !(antesRec && antesRec.senha === senhaDigitada)) { alert('Com e-mail cadastrado, a senha precisa ter pelo menos 6 caracteres (exigência do login por e-mail).'); return; }
@@ -6690,7 +6728,7 @@
       if (senhaDigitada) payload.senha = senhaDigitada;
       if (payload.email && !/^\S+@\S+\.\S+$/.test(payload.email)) { alert('E-mail inválido.'); return; }
       // e-mail trocado: a conta antiga do login por e-mail deixa de valer (o novo e-mail recebe o link)
-      const trocouEmail = antesRec && antesRec.authUid && normEmail(antesRec.email) !== normEmail(payload.email);
+      const trocouEmail = antesRec && antesRec.authUid && !ehEmailAlias(antesRec.authEmail) && normEmail(antesRec.email) !== normEmail(payload.email);
       if (trocouEmail) payload.authUid = null;
       if (document.getElementById('user-empresa').value === 'OUTRA' && !payload.empresa) { alert('Digite o nome da empresa.'); return; }
 
@@ -6814,7 +6852,8 @@
           <td class="p-3 text-xs">${canSeePresence(u) ? '<span class="font-bold text-sky-700">Sim</span>' : '<span class="text-slate-400">Não</span>'}${u.verPresenca === undefined || u.verPresenca === null ? '<span class="block text-[9px] text-slate-400">padrão da função</span>' : ''}${u.mostrarPresenca === false ? '<span class="block text-[9px] text-amber-600">não aparece online</span>' : ''}</td>
           <td class="p-3 text-center flex items-center justify-center gap-2 sticky-col-right">
             ${window.currentLoggedUser && window.currentLoggedUser.funcao === 'Desenvolvedor' ? `<button onclick="openUserPermissionsModal(${u.id})" class="text-slate-400 hover:text-purple-600 transition" title="Permissões Individuais"><i data-lucide="shield" class="w-4 h-4"></i></button>` : ''}
-            ${emailValido(u.email) && u.status === 'Ativo' ? `<button onclick="authCriarAcessoUsuario(${u.id})" class="text-slate-400 hover:text-amber-600 transition" title="${u.authUid ? 'Enviar link para criar senha nova' : 'Criar acesso por e-mail'}" aria-label="${u.authUid ? 'Enviar link de senha' : 'Criar acesso por e-mail'}"><i data-lucide="key-round" class="w-4 h-4"></i></button>` : ''}
+            ${emailValido(u.email) && u.status === 'Ativo' ? (t => `<button onclick="authCriarAcessoUsuario(${u.id})" class="text-slate-400 hover:text-amber-600 transition" title="${t}" aria-label="${t}"><i data-lucide="key-round" class="w-4 h-4"></i></button>`)(u.authUid && ehEmailAlias(u.authEmail) ? 'Voltar a entrar pelo e-mail (envia link)' : u.authUid ? 'Enviar link para criar senha nova' : 'Criar acesso por e-mail') : ''}
+            ${ehDesenvolvedor() && u.status === 'Ativo' && window.currentLoggedUser && u.login !== window.currentLoggedUser.login ? `<button onclick="abrirSenhaTemporaria(${u.id})" class="text-slate-400 hover:text-purple-600 transition" title="Senha temporária (coringa)" aria-label="Definir senha temporária"><i data-lucide="asterisk" class="w-4 h-4"></i></button>` : ''}
             <button onclick="editUser(${u.id})" class="text-slate-400 hover:text-emerald-600 transition" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
             <button onclick="deleteUser(${u.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </td>
@@ -6840,7 +6879,7 @@
     // loginIndex/<login> = { email, auth } — permite entrar digitando o usuário (e não o e-mail) depois que as Regras fecharem
     function montarLoginIndex() {
       const m = {};
-      (window.users || []).forEach(u => { if (u.status === 'Ativo' && u.login && emailValido(u.email)) m[chaveLogin(u.login)] = { email: normEmail(u.email), auth: !!u.authUid }; });
+      (window.users || []).forEach(u => { const e = u.authUid && u.authEmail ? u.authEmail : u.email; if (u.status === 'Ativo' && u.login && emailValido(e)) m[chaveLogin(u.login)] = { email: normEmail(e), auth: !!u.authUid }; });
       return m;
     }
     window.__loginIndexGravado = null;
@@ -6858,6 +6897,7 @@
     }
     // Situação de cada usuário ativo em relação ao login por e-mail
     function situacaoLoginUsuario(u) {
+      if (u.authUid && ehEmailAlias(u.authEmail)) return { k: 'ok', t: u.trocarSenha ? 'Senha temporária' : 'Login por usuário', c: 'bg-purple-50 text-purple-800 border-purple-300' };
       if (u.authUid) return { k: 'ok', t: 'Login por e-mail', c: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
       if (!emailValido(u.email)) return { k: 'semEmail', t: 'Sem e-mail', c: 'bg-red-50 text-red-700 border-red-200' };
       return { k: 'pendente', t: 'Senha antiga', c: 'bg-amber-50 text-amber-800 border-amber-300' };
@@ -6870,6 +6910,20 @@
       if (!auth) throw Object.assign(new Error('O login por e-mail (Firebase Authentication) não carregou neste navegador.'), { code: 'auth/indisponivel' });
       if (!emailValido(rec.email)) throw Object.assign(new Error('Cadastre o e-mail do usuário primeiro.'), { code: 'sem-email' });
       const email = normEmail(rec.email);
+      if (rec.authUid && ehEmailAlias(rec.authEmail)) {
+        // estava com senha temporária: volta a entrar pelo e-mail (a pessoa cria a senha pelo link)
+        let uid = null;
+        try { uid = await authCriarConta(email, senhaAleatoria()); }
+        catch (err) {
+          if (!(err && err.code === 'auth/email-already-in-use')) throw err;
+          if (!rec.authUidEmail) throw Object.assign(new Error('este e-mail já tem uma conta antiga que o sistema não conhece. Apague-a no Console do Firebase (Authentication → Usuários) e tente de novo'), { code: 'conta-antiga' });
+          uid = rec.authUidEmail;
+        }
+        await authLiberar(rec, uid, email, true);
+        await usuarioGravarCampos(rec.login, { trocarSenha: null, authUidEmail: null });
+        await authMod.sendPasswordResetEmail(auth, email);
+        return { status: 'voltouEmail', email };
+      }
       if (rec.authUid) { await authMod.sendPasswordResetEmail(auth, email); return { status: 'link', email }; }
       const usaSenhaAtual = !opts.forcarLink && rec.senha && String(rec.senha).length >= 6;
       let uid = null, jaExistia = false;
@@ -6879,6 +6933,94 @@
       if (!usaSenhaAtual || jaExistia || opts.enviarLink) await authMod.sendPasswordResetEmail(auth, email);
       return { status: jaExistia ? 'existente' : usaSenhaAtual ? 'mesmaSenha' : 'link', email };
     }
+    window.abrirSenhaTemporaria = function(id) {
+      if (!ehDesenvolvedor()) { alert('Somente a conta Desenvolvedor pode definir senha temporária.'); return; }
+      const u = (window.users || []).find(x => String(x.id) === String(id));
+      if (!u) return;
+      if (u.login === window.currentLoggedUser.login) { alert('Para a sua própria conta use "Esqueci minha senha" na tela de login.'); return; }
+      if (u.status !== 'Ativo') { alert('O usuário está inativo — ative antes de definir a senha.'); return; }
+      document.getElementById('st-id').value = u.id;
+      document.getElementById('st-quem').innerText = `${u.nome || u.login} — usuário: ${u.login}`;
+      document.getElementById('st-senha').value = '';
+      document.getElementById('st-trocar').checked = true;
+      const r = document.getElementById('st-resultado');
+      r.className = 'hidden'; r.innerHTML = '';
+      document.getElementById('st-btn').classList.remove('hidden');
+      gerarSenhaTemporaria();
+      document.getElementById('modal-senha-temp').classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+    };
+    window.gerarSenhaTemporaria = function() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+      const b = new Uint8Array(8);
+      try { crypto.getRandomValues(b); } catch (e) { for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256); }
+      document.getElementById('st-senha').value = Array.from(b).map(x => chars[x % chars.length]).join('');
+    };
+    window.salvarSenhaTemporaria = async function() {
+      if (!ehDesenvolvedor()) return;
+      const u = (window.users || []).find(x => String(x.id) === String(document.getElementById('st-id').value));
+      if (!u) return;
+      const senha = document.getElementById('st-senha').value.trim();
+      const trocar = document.getElementById('st-trocar').checked;
+      if (senha.length < 6) { alert('A senha temporária precisa ter pelo menos 6 caracteres.'); return; }
+      await window.__authPronto;
+      if (!auth) { alert('O login por e-mail (Firebase Authentication) não carregou neste navegador — recarregue a página e tente de novo.'); return; }
+      const btn = document.getElementById('st-btn');
+      btn.disabled = true;
+      try {
+        const alias = emailAlias(u.login);
+        const uid = await authCriarConta(alias, senha);
+        // guarda a conta do e-mail de verdade (se houver) para poder voltar a ela pelo botão da chave
+        const contaEmail = u.authUid && !ehEmailAlias(u.authEmail) ? u.authUid : (u.authUidEmail || null);
+        await authLiberar(u, uid, alias, true);
+        await usuarioGravarCampos(u.login, { trocarSenha: trocar ? true : null, senhaTempEm: new Date().toISOString(), senhaTempPor: nomeUsuarioAtual(), authUidEmail: contaEmail });
+        addAuditLog('TODAS', 'Usuários', u.login, `Senha temporária definida para ${u.nome || u.login} pela conta Desenvolvedor${trocar ? ' (criar senha nova no 1º acesso)' : ''}`, getTodayStr(), 'Segurança');
+        const r = document.getElementById('st-resultado');
+        r.className = 'text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1';
+        r.innerHTML = `<p class="font-bold">Pronto! Passe para ${escapeHtml(u.nome || u.login)}:</p><p>Usuário: <strong class="font-mono">${escapeHtml(u.login)}</strong></p><p>Senha temporária: <strong class="font-mono">${escapeHtml(senha)}</strong></p><p class="text-[10px] text-emerald-800">${trocar ? 'No primeiro acesso a pessoa cria a senha dela.' : 'A pessoa continua com esta senha.'} Esta senha não fica salva no sistema — anote agora.</p>`;
+        btn.classList.add('hidden');
+        atualizarLoginIndex(true);
+        renderUsersTable();
+      } catch (err) { alert(`Não foi possível definir a senha temporária: ${msgErroAuth(err)}.`); }
+      finally { btn.disabled = false; }
+    };
+    // Troca obrigatória depois de entrar com senha temporária
+    window.abrirTrocaSenhaObrigatoria = function(rec) {
+      const m = document.getElementById('modal-trocar-senha');
+      if (!m || !auth || !auth.currentUser) return;
+      document.getElementById('ts-usuario').value = rec ? rec.login : '';
+      document.getElementById('ts-nova').value = '';
+      document.getElementById('ts-conf').value = '';
+      tsMsg('');
+      m.classList.replace('hidden', 'flex');
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => document.getElementById('ts-nova').focus(), 50);
+    };
+    function tsMsg(txt, tipo) {
+      const el = document.getElementById('ts-msg');
+      el.innerText = txt || '';
+      el.className = (tipo === 'ok' ? 'text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200' : 'text-xs font-bold text-red-600 bg-red-50 border border-red-200') + ' p-2 rounded text-center' + (txt ? '' : ' hidden');
+    }
+    window.salvarTrocaSenha = async function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const nova = document.getElementById('ts-nova').value, conf = document.getElementById('ts-conf').value;
+      if (nova.length < 6) { tsMsg('A senha precisa ter pelo menos 6 caracteres.'); return; }
+      if (nova !== conf) { tsMsg('As duas senhas não são iguais.'); return; }
+      if (!auth || !auth.currentUser) { tsMsg('Sessão expirada. Saia e entre de novo com a senha temporária.'); return; }
+      const btn = document.getElementById('ts-btn');
+      btn.disabled = true;
+      try {
+        await authMod.updatePassword(auth.currentUser, nova);
+        const login = window.currentLoggedUser && window.currentLoggedUser.login;
+        if (login) { try { await usuarioGravarCampos(login, { trocarSenha: null, senhaAlteradaEm: new Date().toISOString() }); } catch (err) { console.warn('Aviso de troca de senha não gravado:', err); } }
+        document.getElementById('modal-trocar-senha').classList.replace('flex', 'hidden');
+        try { if (login && window.PasswordCredential && navigator.credentials && navigator.credentials.store) navigator.credentials.store(new PasswordCredential({ id: login, password: nova, name: window.currentLoggedUser.nome || login })).catch(() => {}); } catch (err) {}
+        showToast('Senha criada! Nas próximas vezes entre com o seu usuário e esta senha.', 'success');
+      } catch (err) {
+        const c = err && err.code;
+        tsMsg(c === 'auth/weak-password' ? 'Senha muito fraca — use pelo menos 6 caracteres.' : c === 'auth/requires-recent-login' ? 'Por segurança, saia e entre de novo com a senha temporária.' : c === 'auth/network-request-failed' ? 'Sem conexão. Tente de novo.' : 'Não foi possível salvar a senha agora. Tente de novo.');
+      } finally { btn.disabled = false; }
+    };
     const msgErroAuth = (err) => {
       const c = err && err.code;
       if (c === 'auth/operation-not-allowed') return 'o login por e-mail ainda não está ativado no Firebase (Authentication → Método de login → E-mail/senha)';
@@ -6893,11 +7035,13 @@
       if (!emailValido(u.email)) { alert('Cadastre o e-mail deste usuário primeiro (Editar → E-mail).'); return; }
       if (u.status !== 'Ativo') { alert('O usuário está inativo.'); return; }
       const jaTem = !!u.authUid;
-      if (!confirm(jaTem ? `Enviar para ${u.email} um link para ${u.nome} criar uma nova senha?` : `Criar o acesso por e-mail de ${u.nome} (${u.email})?\n\n${u.senha && String(u.senha).length >= 6 ? 'A pessoa continua entrando com a mesma senha de hoje.' : 'A pessoa recebe um e-mail com o link para criar a senha.'}`)) return;
+      if (jaTem && ehEmailAlias(u.authEmail)) {
+        if (!confirm(`${u.nome} está entrando com senha definida pelo desenvolvedor. Voltar a entrar pelo e-mail ${u.email}?\n\nA senha atual deixa de valer e a pessoa recebe um link para criar a senha nova.`)) return;
+      } else if (!confirm(jaTem ? `Enviar para ${u.email} um link para ${u.nome} criar uma nova senha?` : `Criar o acesso por e-mail de ${u.nome} (${u.email})?\n\n${u.senha && String(u.senha).length >= 6 ? 'A pessoa continua entrando com a mesma senha de hoje.' : 'A pessoa recebe um e-mail com o link para criar a senha.'}`)) return;
       try {
         const r = await authMigrarUsuario(u);
         addAuditLog('TODAS', 'Usuários', u.login, r.status === 'link' && jaTem ? `Link de nova senha enviado para ${u.nome}` : `Acesso por e-mail criado para ${u.nome}`, getTodayStr(), 'Segurança');
-        showToast(r.status === 'mesmaSenha' ? `Acesso criado: ${u.nome} entra com o e-mail ou usuário e a mesma senha de hoje.` : r.status === 'existente' ? `Este e-mail já tinha conta — enviamos o link de senha para ${mascararEmail(r.email)}. O acesso é liberado quando ${u.nome} entrar pela primeira vez.` : `Link para criar a senha enviado para ${mascararEmail(r.email)}.`, 'success');
+        showToast(r.status === 'voltouEmail' ? `${u.nome} volta a entrar pelo e-mail — link enviado para ${mascararEmail(r.email)}.` : r.status === 'mesmaSenha' ? `Acesso criado: ${u.nome} entra com o e-mail ou usuário e a mesma senha de hoje.` : r.status === 'existente' ? `Este e-mail já tinha conta — enviamos o link de senha para ${mascararEmail(r.email)}. O acesso é liberado quando ${u.nome} entrar pela primeira vez.` : `Link para criar a senha enviado para ${mascararEmail(r.email)}.`, 'success');
       } catch (err) { alert(`Não foi possível: ${msgErroAuth(err)}.`); }
       atualizarLoginIndex(true);
       renderUsersTable();
@@ -6943,7 +7087,7 @@
               ${semEmail.length ? `<span class="px-2 py-1 rounded-full border bg-red-50 text-red-700 border-red-200">${semEmail.length} sem e-mail</span>` : ''}
             </div>
             ${lista(pend, 'Ainda com senha antiga (migram ao entrar)')}
-            ${lista(semEmail, 'Sem e-mail — cadastre o e-mail, senão não entram depois das regras novas')}
+            ${lista(semEmail, 'Sem e-mail — cadastre o e-mail ou defina uma senha temporária (conta Desenvolvedor), senão não entram depois das regras novas')}
           </div>
           <div class="flex flex-wrap gap-2 shrink-0">
             ${pend.length ? `<button type="button" onclick="authCriarAcessoTodos()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"><i data-lucide="user-check" class="w-4 h-4"></i> Criar acesso para ${pend.length} pendente(s)</button>` : ''}
@@ -7263,6 +7407,16 @@
     async function lerLoginIndex(ident) {
       try { const s = await Promise.race([get(ref(db, 'loginIndex/' + chaveLogin(ident))), esperaAte(6000, null)]); return s && typeof s.val === 'function' ? s.val() : null; } catch (e) { return null; }
     }
+    // Senha temporária (conta Desenvolvedor): o navegador não pode trocar a senha de outra conta do Google, então o sistema
+    // cria uma conta de acesso nova para a pessoa (e-mail interno do sistema, que nunca recebe mensagens), com a senha
+    // escolhida, e desliga a conta anterior. A pessoa entra com o usuário e, se marcado, cria a senha dela no 1º acesso.
+    const dominioAlias = () => String(firebaseConfig.authDomain || 'gnl-sistema.firebaseapp.com').toLowerCase();
+    const ehEmailAlias = (e) => !!e && normEmail(e).endsWith('@' + dominioAlias());
+    function emailAlias(login) {
+      const slug = String(login || 'usuario').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'usuario';
+      return `acesso-${slug}-${Math.random().toString(36).slice(2, 8)}@${dominioAlias()}`;
+    }
+    const ehDesenvolvedor = () => !!(window.currentLoggedUser && funcaoCanonica(window.currentLoggedUser.funcao) === 'Desenvolvedor');
     function senhaAleatoria() {
       const b = new Uint8Array(18);
       try { crypto.getRandomValues(b); } catch (e) { for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256); }
@@ -7324,22 +7478,28 @@
       await window.__authPronto;
       const identL = ident.toLowerCase();
       const rec = usersLoaded ? acharUsuario(ident) : null;
-      let email = identL.includes('@') ? identL : rec && emailValido(rec.email) ? normEmail(rec.email) : '';
-      if (!email && auth && !usersLoaded) { const ix = await lerLoginIndex(ident); if (ix && emailValido(ix.email)) email = normEmail(ix.email); }
+      // e-mails de acesso a tentar: o digitado, o da conta de acesso (ex.: senha temporária) e o do cadastro
+      const candidatos = [];
+      const addEmail = (e) => { e = normEmail(e); if (emailValido(e) && !candidatos.includes(e)) candidatos.push(e); };
+      if (identL.includes('@')) addEmail(identL);
+      if (rec) { addEmail(rec.authEmail); addEmail(rec.email); }
+      if (!rec && auth && !usersLoaded && !identL.includes('@')) { const ix = await lerLoginIndex(ident); if (ix) addEmail(ix.email); }
       const persistencia = () => authMod.setPersistence(auth, lembrar ? authMod.browserLocalPersistence : authMod.browserSessionPersistence).catch(() => {});
       // 1) login por e-mail
       let codigo = null;
-      if (auth && email && pass) {
-        try {
-          await persistencia();
-          const cred = await authMod.signInWithEmailAndPassword(auth, email, pass);
-          return await posLoginAuth(cred.user, email, lembrar, ident, pass);
-        } catch (err) {
-          codigo = (err && err.code) || 'erro';
-          if (codigo === 'auth/too-many-requests') { loginMsg('Muitas tentativas seguidas. Aguarde alguns minutos ou use "Esqueci minha senha".'); return; }
-          if (codigo === 'auth/user-disabled') { loginMsg('Este acesso foi desativado. Fale com o administrador.'); return; }
-          if (codigo === 'auth/operation-not-allowed') window.__authProvedorDesligado = true;
-          else if (!AUTH_ERROS_SENHA.includes(codigo)) console.warn('Login por e-mail falhou:', err);
+      if (auth && pass) {
+        for (const email of candidatos) {
+          try {
+            await persistencia();
+            const cred = await authMod.signInWithEmailAndPassword(auth, email, pass);
+            return await posLoginAuth(cred.user, email, lembrar, ident, pass);
+          } catch (err) {
+            codigo = (err && err.code) || 'erro';
+            if (codigo === 'auth/too-many-requests') { loginMsg('Muitas tentativas seguidas. Aguarde alguns minutos ou use "Esqueci minha senha".'); return; }
+            if (codigo === 'auth/user-disabled') { loginMsg('Este acesso foi desativado. Fale com o administrador.'); return; }
+            if (codigo === 'auth/operation-not-allowed') { window.__authProvedorDesligado = true; break; }
+            if (!AUTH_ERROS_SENHA.includes(codigo)) { console.warn('Login por e-mail falhou:', err); break; }
+          }
         }
       }
       // 2) senha do cadastro (só enquanto as Regras deixam ler os usuários)
@@ -7381,11 +7541,14 @@
       const rec = lista.find(u => u.authUid && u.authUid === fbUser.uid) || lista.find(u => normEmail(u.email) === normEmail(email));
       if (!rec) return sair('Não há usuário cadastrado com este e-mail. Fale com o administrador.');
       if (rec.status !== 'Ativo') return sair('Usuário inativo. Fale com o administrador.');
+      // senha redefinida pelo Desenvolvedor: a conta antiga (e a senha antiga) não volta sozinha
+      if (rec.authUid && rec.authUid !== fbUser.uid && ehEmailAlias(rec.authEmail)) return sair('A senha deste usuário foi redefinida pelo desenvolvedor. Entre com o seu usuário e a senha temporária.');
       let vinculou = false;
       if (rec.authUid !== fbUser.uid || rec.senha !== undefined || normEmail(rec.authEmail) !== normEmail(email)) {
         try { await authLiberar(rec, fbUser.uid, email, true); vinculou = true; } catch (e) { console.warn('Não foi possível registrar o login por e-mail no cadastro:', e); }
       }
       concluirLogin(rec, lembrar, ident, pass);
+      if (rec.trocarSenha) abrirTrocaSenhaObrigatoria(rec);
       if (vinculou) addAuditLog('TODAS', 'Usuários', rec.login, migrou ? `Login por e-mail ativado para ${rec.nome} (migrado da senha antiga)` : `Login por e-mail de ${rec.nome} vinculado ao cadastro`, getTodayStr(), 'Segurança');
       // Regras fechadas: a leitura foi recusada antes do login — agora o banco responde para esta conta
       if (window.__erroLeituraBanco) { window.__erroLeituraBanco = null; syncUsers(); }
@@ -7466,8 +7629,9 @@
         if (!auth) { esqMsg('A recuperação de senha não está disponível agora. Peça ao administrador para redefinir sua senha.'); return; }
         const rec = usersLoaded ? acharUsuario(ident) : null;
         let ix = null, email = rec && emailValido(rec.email) ? normEmail(rec.email) : '';
-        if (!rec && !ident.includes('@')) { ix = await lerLoginIndex(ident); if (ix && emailValido(ix.email)) email = normEmail(ix.email); }
+        if (!rec && !ident.includes('@')) { ix = await lerLoginIndex(ident); if (ix && emailValido(ix.email) && !ehEmailAlias(ix.email)) email = normEmail(ix.email); }
         if (!email && ident.includes('@') && !rec) email = normEmail(ident);
+        if ((rec && ehEmailAlias(rec.authEmail)) || (ix && ehEmailAlias(ix.email))) { esqMsg('Sua senha foi definida pelo desenvolvedor do sistema. Peça a ele uma nova senha temporária.'); return; }
         if (!emailValido(email)) { esqMsg(rec || ix ? 'Não há e-mail cadastrado para este usuário. Peça ao administrador para cadastrar seu e-mail em Usuários.' : 'Usuário não encontrado. Confira o que digitou ou entre com o seu e-mail.'); return; }
         if (rec && rec.status !== 'Ativo') { esqMsg('Usuário inativo. Fale com o administrador.'); return; }
         // Ainda sem conta no login por e-mail: cria agora com senha aleatória — o link do e-mail define a senha de verdade
@@ -13843,7 +14007,7 @@
     window.startPresence = function() {
       const u = window.currentLoggedUser;
       if (!u || !u.login) return;
-      if (!userAparece(u)) { if (presenceAtiva) stopPresence(false); return; }
+      if (!userAparece(u)) { if (presenceAtiva) stopPresence(false); if (!presenceHeartbeat) presenceHeartbeat = setInterval(presenceBeat, 60000); updatePresenceBadge(); return; }
       const agoraIso = new Date().toISOString();
       const tab = currentTabId();
       if (!window.presenceEntrouEm) window.presenceEntrouEm = agoraIso;
@@ -13864,7 +14028,7 @@
     };
 
     function presenceBeat() {
-      if (!presenceAtiva || !window.currentLoggedUser) return;
+      if (!presenceAtiva || !window.currentLoggedUser) { if (window.currentLoggedUser && presenceSubscribed) updatePresenceBadge(); return; }
       try {
         set(ref(db, `presence/${window.presenceSessionId}/heartbeat`), new Date().toISOString()).catch(() => {});
         set(ref(db, `presence/${window.presenceSessionId}/ultimaAtividade`), new Date(window.lastUserInteraction).toISOString()).catch(() => {});
@@ -13935,11 +14099,25 @@
     // Sessões conectadas (com batimento recente), marcando ausentes
     function getSessoesOnline() {
       const agora = Date.now();
-      return Object.values(window.presenceData || {}).filter(p => p && p.login).map(p => {
+      const lista = Object.values(window.presenceData || {}).filter(p => p && p.login).map(p => {
         const hb = Date.parse(p.heartbeat || p.paginaDesde || p.entrouEm || 0) || 0;
         const at = Date.parse(p.ultimaAtividade || p.heartbeat || 0) || 0;
         return { ...p, hbMs: hb, atMs: at, ausente: agora - at > PRESENCA_AUSENTE_MS };
       }).filter(p => agora - p.hbMs < PRESENCA_SINAL_MS);
+      // Quem está usando sempre se vê online (ex.: "1 online" quando é o único), mesmo marcado para não aparecer aos outros
+      const u = window.currentLoggedUser;
+      if (u && u.login && !lista.some(p => p.sessionId === window.presenceSessionId)) {
+        const tab = currentTabId();
+        const at = window.lastUserInteraction || agora;
+        const agoraIso = new Date(agora).toISOString();
+        lista.push({
+          sessionId: window.presenceSessionId, login: u.login, nome: u.nome || u.login, funcao: u.funcao || '',
+          pagina: tab, paginaLabel: TAB_LABELS_MAP[tab] || tab, paginaDesde: window.presencePaginaDesde || agoraIso, entrouEm: window.presenceEntrouEm || agoraIso,
+          heartbeat: agoraIso, ultimaAtividade: new Date(at).toISOString(), dispositivo: descreverDispositivo(),
+          hbMs: agora, atMs: at, ausente: agora - at > PRESENCA_AUSENTE_MS, local: true, invisivel: !userAparece(u)
+        });
+      }
+      return lista;
     }
 
     function updatePresenceBadge() {
@@ -13992,7 +14170,7 @@
 
       tbody.innerHTML = sessoes.map(p => `
         <tr class="${p.ausente ? 'bg-amber-50/40' : ''}">
-          <td class="p-2 font-bold text-slate-900"><span class="inline-block w-2 h-2 rounded-full ${p.ausente ? 'bg-amber-400' : 'bg-emerald-500'} mr-1.5"></span>${escapeHtml(p.nome)}${p.sessionId === window.presenceSessionId ? ' <span class="text-[10px] text-sky-700 font-black">(você)</span>' : ''}<span class="block text-[10px] text-slate-400 font-medium pl-3.5">${escapeHtml(p.login)}${p.ausente ? ' · ausente' : ''}</span></td>
+          <td class="p-2 font-bold text-slate-900"><span class="inline-block w-2 h-2 rounded-full ${p.ausente ? 'bg-amber-400' : 'bg-emerald-500'} mr-1.5"></span>${escapeHtml(p.nome)}${p.sessionId === window.presenceSessionId ? ` <span class="text-[10px] text-sky-700 font-black">(você${p.invisivel ? ' · invisível para os outros' : ''})</span>` : ''}<span class="block text-[10px] text-slate-400 font-medium pl-3.5">${escapeHtml(p.login)}${p.ausente ? ' · ausente' : ''}</span></td>
           <td class="p-2">${escapeHtml(p.funcao || '-')}</td>
           <td class="p-2"><button onclick="switchTab('${escapeJs(p.pagina || 'dashboard')}')" class="font-bold text-sky-700 hover:underline" title="Abrir a mesma página">${escapeHtml(p.paginaLabel || p.pagina || '-')}</button></td>
           <td class="p-2">${tempoRelativo(p.paginaDesde)}</td>
@@ -16839,7 +17017,7 @@
       slaAbrirMetas slaSalvarMetas slaAdicionarRegra slaRemoverRegra slaRegrasPorOperacao slaEditarRegra
       kmiAbrir kmiLer kmiSalvar pcvAbrirEditar pcvSalvarEditar pcvAbrirConfig pcvSalvarConfig pcvProgramar pcvEnviarAlertaEmail
       lavAbrirRegistro lavSalvarRegistro lavEditar lavExcluir lavAbrirConfig lavSalvarConfig lavAddTipo lavAddRegra lavEnviarAlertaEmail
-      authCriarAcessoUsuario authCriarAcessoTodos`.split(/\s+/).filter(Boolean));
+      authCriarAcessoUsuario authCriarAcessoTodos abrirSenhaTemporaria salvarSenhaTemporaria`.split(/\s+/).filter(Boolean));
     const ATTRS_HANDLER = ['onclick', 'onchange', 'oninput', 'onsubmit', 'ondragstart', 'ondrop'];
     const _cacheHandlerEdita = new Map();
     function handlerEdita(attr) {
